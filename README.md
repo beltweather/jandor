@@ -1,2 +1,2 @@
-# jandor
-Jandor: MtG Deck Builder and Playground
+# Jandor
+MtG Deck Builder and Playground
