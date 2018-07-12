@@ -121,7 +121,19 @@ public class SearchHandler<T> extends KeyAdapter {
 				if(combo.isPopupVisible()) {
 					combo.hidePopup();
 				}
-				combo.handleFound((T) combo.getSelectedItem());
+				
+				T selectedItem = (T) combo.getSelectedItem();
+				T firstItem = combo.getItemAt(0);
+				for(int i = 0; i < combo.getModel().getSize(); i++) {
+					if(combo.getItemAt(i).equals(selectedItem)) {
+						combo.handleFound(selectedItem);
+						return;
+					}
+				}
+				
+				// Default to first item in combo if we don't match
+				combo.handleFound(firstItem);
+				
 			} else if(!combo.isPopupVisible()) {
 	        	combo.showPopup();
 			}

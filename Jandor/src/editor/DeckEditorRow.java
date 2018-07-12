@@ -126,7 +126,10 @@ public class DeckEditorRow extends PPanel {
 
 			@Override
 			public void handleFound(String cardName) {
-
+				if(!getText().equals(cardName)) {
+					cardCombo.getTextField().setText(cardName);
+					updateComboColor();
+				}
 			}
 
 			@Override
@@ -213,6 +216,10 @@ public class DeckEditorRow extends PPanel {
 		}
 	}
 	
+	public void hideColorLabel() {
+		colorLabel.setVisible(false);
+	}
+	
 	public boolean isDraft() {
 		return view instanceof DraftEditorView;
 	}
@@ -256,6 +263,7 @@ public class DeckEditorRow extends PPanel {
 			colorLabel.setBackground(ColorUtil.DARK_GRAY_3);
 		}
 		view.revalidate();
+		updateColorLabelTooltip();
 	}
 	
 	public int getCount() {

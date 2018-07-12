@@ -899,6 +899,7 @@ public class DeckEditorView extends JandorView {
 		DeckEditorRow addRow = new DeckEditorRow(this, deck, defaultCardCountPerRow, "");
 		addRow.getCardCombo().getTextField().setEditable(true);
 		addRow.getCardCombo().getTextField().setBorder(BorderFactory.createLineBorder(Color.WHITE));
+		addRow.hideColorLabel();
 		addRowsByTitle.put(title, addRow);
 		
 		PButton addButton = new PButton("+");
@@ -926,6 +927,9 @@ public class DeckEditorView extends JandorView {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				DeckEditorRow addRow = addRowsByTitle.get(title);
+				if(addRow.getCardCombo().getSelectedIndex() > -1 && addRow.getCardCombo().isPopupVisible()) {
+					return;
+				}
 				if(addRow.hasCard() && addRow.getCount() > 0) {
 					deck.add(addRow.getCard(), addRow.getCount());
 					rebuildDeckRows();
