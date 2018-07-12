@@ -380,4 +380,30 @@ public class FileUtil {
 		}
 	}
 	
+	public static void writeString(String text, String toFilename, boolean append) {
+		writeString(text, toFilename == null ? null : new File(toFilename), append);
+	}
+	
+	public static void writeString(String text, File toFile, boolean append) {
+		if(text == null) {
+			return;
+		}
+		
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(toFile, append));
+			writer.write(text);
+		} catch(IOException e) {
+			e.printStackTrace();
+		} finally {
+			if(writer != null) {
+				try {
+					writer.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
 }

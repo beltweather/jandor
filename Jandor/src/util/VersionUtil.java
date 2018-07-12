@@ -13,8 +13,12 @@ public class VersionUtil {
 
 	private VersionUtil() {}
 	
+	public static String readVersionFromFile() {
+		return FileUtil.getFirstLine(FileUtil.getResourceReader(FileUtil.RESOURCE_MTG_JSON_VERSION));
+	}
+	
 	public static void init() {
-		String version = FileUtil.getFirstLine(FileUtil.getResourceReader(FileUtil.RESOURCE_MTG_JSON_VERSION));
+		String version = readVersionFromFile();
 		if(version != null) {
 			MTG_JSON_VERSION = version;
 		}
