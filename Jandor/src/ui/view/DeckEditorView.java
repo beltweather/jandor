@@ -898,11 +898,13 @@ public class DeckEditorView extends JandorView {
 		
 		DeckEditorRow addRow = new DeckEditorRow(this, deck, defaultCardCountPerRow, "");
 		addRow.getCardCombo().getTextField().setEditable(true);
+		addRow.getCardCombo().getTextField().setFocusable(true);
 		addRow.getCardCombo().getTextField().setBorder(BorderFactory.createLineBorder(Color.WHITE));
 		addRow.hideColorLabel();
 		addRowsByTitle.put(title, addRow);
 		
 		PButton addButton = new PButton("+");
+		addButton.setFocusable(false);
 		addButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -949,13 +951,16 @@ public class DeckEditorView extends JandorView {
 		JLabel titleLabel = new JLabel(title);
 		titleLabel.setFont(titleLabel.getFont().deriveFont(20f));
 		
+		JLabel addLabel = new JLabel("Add");
+		addLabel.setFocusable(false);
+		
 		p.c.gridx++;
 		p.c.anchor = G.CENTER;
 		p.c.insets(10, 0, 10, 0);
 		p.add(titleLabel, p.c);
 		p.c.gridy++;
 		p.c.insets(10,0,10,0);
-		p.add(new JLabel("Add"), p.c);
+		p.add(addLabel, p.c);
 		p.c.anchor = G.WEST;
 		p.c.gridx--;
 		p.c.gridy++;
@@ -998,6 +1003,7 @@ public class DeckEditorView extends JandorView {
 					int newJ = p.c.gridy;
 					p.c.gridy = j;
 					JLabel typeLabel = new JLabel(type + "s (" + total + ")");
+					typeLabel.setFocusable(false);
 					p.c.anchor = G.CENTER;
 					p.add(typeLabel, p.c);
 					p.c.anchor = G.WEST;
@@ -1008,7 +1014,9 @@ public class DeckEditorView extends JandorView {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		totalLabels.put(deck.getName(), new JLabel("Cards (" + deck.size() + ")"));
+		JLabel cardTotalLabel = new JLabel("Cards (" + deck.size() + ")");
+		cardTotalLabel.setFocusable(false);
+		totalLabels.put(deck.getName(), cardTotalLabel);
 		
 		p.c.gridy++;
 		p.c.anchor = G.CENTER;

@@ -100,6 +100,7 @@ public abstract class PSpinner extends JSpinner {
 			 flatButton.setCornerRadius(0);
 			 flatButton.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, color));
 			 flatButton.setFocusPainted(true);
+			 flatButton.setFocusable(false);
 			 flatButton.setPreferredSize(new Dimension(15, 20));
 			 installPreviousButtonListeners(flatButton);
 			 return flatButton;
@@ -115,6 +116,7 @@ public abstract class PSpinner extends JSpinner {
 			 flatButton.setCornerRadius(0);
 			 flatButton.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, color));
 			 flatButton.setFocusPainted(true);
+			 flatButton.setFocusable(false);
 			 flatButton.setPreferredSize(new Dimension(15, 20));
 			 installNextButtonListeners(flatButton);
 			 return flatButton;

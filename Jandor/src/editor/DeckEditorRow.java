@@ -48,6 +48,7 @@ public class DeckEditorRow extends PPanel {
 	
 	protected void init(int count) {
 		removeButton = JUtil.buildCloseButton();
+		removeButton.setFocusable(false);
 		removeButton.hide();
 		removeButton.addActionListener(new ActionListener() {
 
@@ -59,6 +60,7 @@ public class DeckEditorRow extends PPanel {
 		});
 		
 		colorLabel = new JLabel("");
+		colorLabel.setFocusable(false);
         //colorLabel.setOpaque(true);
         //colorLabel.setPreferredSize(new Dimension(14, 18));
         //colorLabel.setBorder(BorderFactory.createLineBorder(ColorUtil.DARK_GRAY_0));
@@ -175,6 +177,8 @@ public class DeckEditorRow extends PPanel {
         });
         
         cardCombo.getTextField().setEditable(false);
+        cardCombo.getTextField().setFocusable(false);
+        cardCombo.setFocusable(false);
         
         Dimension dim = new Dimension(200,cardCombo.getPreferredSize().height);
         cardCombo.setPreferredSize(dim);
