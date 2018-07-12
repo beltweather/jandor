@@ -157,7 +157,7 @@ public class CardUtil {
 	}
 	
 	private static void loadAllCards() {
-		allCards = JSONUtil.toJSON("AllCards-x.json");
+		allCards = JSONUtil.toJSON(FileUtil.RESOURCE_CARDS_JSONS);
 	}
 	
 	public static String toCardName(String cardName) {
@@ -246,7 +246,7 @@ public class CardUtil {
 	}
 	
 	private static void loadAllSets() {
-		allSets = JSONUtil.toJSON("AllSets.json");
+		allSets = JSONUtil.toJSON(FileUtil.RESOURCE_SETS_JSONS);
 	}
 	
 	private static void loadImages() {

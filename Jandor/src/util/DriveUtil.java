@@ -64,8 +64,8 @@ public class DriveUtil {
 	
 	public static final String TAB_DEFAULT = "Sheet1";
 
-	public static final String DOWNLOAD_NAME_ALL_CARDS_X_JSON = "AllCards-x.json";
-	public static final String DOWNLOAD_NAME_ALL_SETS_JSON = "AllSets.json";
+	public static final String DOWNLOAD_NAME_ALL_CARDS_X_JSON = FileUtil.RESOURCE_CARDS_JSONS;
+	public static final String DOWNLOAD_NAME_ALL_SETS_JSON = FileUtil.RESOURCE_SETS_JSONS;
 	
 	public static final String FOLDER_ID_INBOXES = "0B7KQ1AZJL7icVlczR1lVNWI1LU0";
 	public static final String FOLDER_ID_BACKUPS = "0B7KQ1AZJL7icOXZFNFhNYUpTYkU";

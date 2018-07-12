@@ -13,12 +13,14 @@ import util.LoginUtil;
 import util.MailUtil;
 import util.JedisUtil;
 import util.UIManagerUtil;
+import util.VersionUtil;
 import accordion.PAccordion;
 
 public class Jandor {
 
 	public static void init() {
 		FileUtil.init();
+		VersionUtil.init();
 		DebugUtil.init();
 		UIManagerUtil.init();
 		CardUtil.init();

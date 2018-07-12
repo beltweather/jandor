@@ -9,9 +9,16 @@ public class VersionUtil {
 	
 	public static final String VERSION = "2.0";
 	
-	public static final String MTG_JSON_VERSION = "3.18";
+	public static String MTG_JSON_VERSION = "3.18";
 
 	private VersionUtil() {}
+	
+	public static void init() {
+		String version = FileUtil.getFirstLine(FileUtil.getResourceReader(FileUtil.RESOURCE_MTG_JSON_VERSION));
+		if(version != null) {
+			MTG_JSON_VERSION = version;
+		}
+	}
 	
 	public static void update() {
 		// Update out of date entities based on version

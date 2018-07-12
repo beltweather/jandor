@@ -4,15 +4,17 @@ import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,6 +26,12 @@ import run.Jandor;
 public class FileUtil {
 
 	private FileUtil() {}
+	
+	public static final String ENV_JANDOR_HOME = "JANDOR_HOME";
+	public static final String FOLDER_JANDOR_DATA = "Jandor-Data";
+	public static final String RESOURCE_CARDS_JSONS = "AllCards-x.json";
+	public static final String RESOURCE_SETS_JSONS = "AllSets.json";
+	public static final String RESOURCE_MTG_JSON_VERSION = "mtg-json-version.txt";
 	
 	public static final String DEFAULT_EXT = "dec";
 	private static final String DEFAULT_EXT_DESCRIPTION = "Apprentice Deck File (*.dec)";
@@ -73,51 +81,55 @@ public class FileUtil {
 	}
 
 	public static File getCredentialsFolder() {
-		return createFolder("Jandor-Data", "Credentials");
+		return createFolder(FOLDER_JANDOR_DATA, "Credentials");
 	}
 	
 	public static File getDraftHeaderFolder() {
-		return createFolder("Jandor-Data", "Drafts", "Headers");
+		return createFolder(FOLDER_JANDOR_DATA, "Drafts", "Headers");
 	}
 	
 	public static File getDraftContentFolder() {
-		return createFolder("Jandor-Data", "Drafts", "Content");
+		return createFolder(FOLDER_JANDOR_DATA, "Drafts", "Content");
 	}
 	
 	public static File getBoosterHeaderFolder() {
-		return createFolder("Jandor-Data", "Boosters", "Headers");
+		return createFolder(FOLDER_JANDOR_DATA, "Boosters", "Headers");
 	}
 	
 	public static File getBoosterContentFolder() {
-		return createFolder("Jandor-Data", "Boosters", "Content");
+		return createFolder(FOLDER_JANDOR_DATA, "Boosters", "Content");
 	}
 	
 	public static File getHeaderFolder() {
-		return createFolder("Jandor-Data", "Collection", "Headers");
+		return createFolder(FOLDER_JANDOR_DATA, "Collection", "Headers");
 	}
 	
 	public static File getTagFolder() {
-		return createFolder("Jandor-Data", "Collection", "Tags");
+		return createFolder(FOLDER_JANDOR_DATA, "Collection", "Tags");
 	}
 	
 	public static File getContentFolder() {
-		return createFolder("Jandor-Data", "Collection", "Content");
+		return createFolder(FOLDER_JANDOR_DATA, "Collection", "Content");
 	}
 	
 	public static File getContactFolder() {
-		return createFolder("Jandor-Data", "Contacts");
+		return createFolder(FOLDER_JANDOR_DATA, "Contacts");
 	}
 	
 	public static File getUserFolder() {
-		return createFolder("Jandor-Data", "Users");
+		return createFolder(FOLDER_JANDOR_DATA, "Users");
 	}
 	
 	public static File getPreferencesFolder() {
-		return createFolder("Jandor-Data", "Preferences");
+		return createFolder(FOLDER_JANDOR_DATA, "Preferences");
 	}
 	
 	public static File getCachedImagesFolder() {
-		return createFolder("Jandor-Data", "CachedImages");
+		return createFolder(FOLDER_JANDOR_DATA, "CachedImages");
+	}
+	
+	public static File getExternalResourcesFolder() {
+		return createFolder(FOLDER_JANDOR_DATA, "Resources");
 	}
 	
 	public static List<File> getHeaderFiles() {
@@ -166,6 +178,10 @@ public class FileUtil {
 	
 	public static List<File> getCachedImageFiles() {
 		return getFiles(getCachedImagesFolder());
+	}
+	
+	public static File getExternalResourcesFile(String filename) {
+		return new File(getExternalResourcesFolder(), filename);
 	}
 	
 	public static File getCachedImageFile(int multiverseId) {
@@ -219,7 +235,22 @@ public class FileUtil {
 	}
 	
 	public static BufferedReader getResourceReader(String filename) {
-		InputStream input = Jandor.class.getResourceAsStream("/" + filename);
+		InputStream input = null;
+		
+		// If we have a copy of this resource in our external resources file,
+		// use this one. Otherwise, use the one from our internal resources folder.
+		// This allows the user to override resources by placing them in "Jandor-Data\Resources"
+		File externalFile = getExternalResourcesFile(filename);
+		if(externalFile != null && externalFile.exists()) {
+			try {
+				input = new FileInputStream(externalFile);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		} else {
+			input = Jandor.class.getResourceAsStream("/" + filename);
+		}
+		
 		BufferedReader reader = null;
 		try {
         	reader = new BufferedReader(new InputStreamReader(input));
@@ -230,8 +261,42 @@ public class FileUtil {
 		return reader;
 	}
 	
+	public static List<String> getLines(BufferedReader reader) {
+		if(reader == null) {
+			return null;
+		}
+		List<String> lines = new ArrayList<String>();
+		String line;
+			
+		try {
+			
+			while((line = reader.readLine()) != null) {
+				lines.add(line);
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return lines;
+	}
+	
+	public static String getFirstLine(BufferedReader reader) {
+		List<String> lines = getLines(reader);
+		if(lines != null && lines.size() > 0) {
+			return lines.get(0);
+		}
+		return null;
+	}
+	
 	public static String getRoot() {
-		String jandorHome = System.getenv("JANDOR_HOME");
+		String jandorHome = System.getenv(ENV_JANDOR_HOME);
 		if(jandorHome != null) {
 			return jandorHome;
 		}

@@ -33,7 +33,7 @@ public class AboutView extends JandorView {
 		
 		addHeader("Jandor");
 		addLine("Software Version", VersionUtil.VERSION);
-		addLine("Data Version", VersionUtil.MTG_JSON_VERSION + " (see: mtgjson.com)");
+		addLine("Data Version", VersionUtil.MTG_JSON_VERSION + " (mtgjson.com)");
 		addLine("Created by", "Jon Harter");
 		addLine("Date", "4/30/2016");
 		c.strengthen();
