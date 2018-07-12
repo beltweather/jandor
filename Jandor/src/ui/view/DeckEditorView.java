@@ -172,6 +172,7 @@ public class DeckEditorView extends JandorView {
 	protected PButton draftButton;
 	protected PButton editDraftButton;
 	protected PButton editDeckButton;
+	protected Map<String, DeckEditorRow> addRowsByTitle = new HashMap<String, DeckEditorRow>();
 	
 	protected DeckHeader deckHeader;
 	protected DeckContent deckContent;
@@ -882,7 +883,7 @@ public class DeckEditorView extends JandorView {
 		
 	}
 	
-	protected void buildEditor(String title, final Deck deck, PPanel p, int defaultCardCountPerRow) {
+	protected void buildEditor(final String title, final Deck deck, PPanel p, int defaultCardCountPerRow) {
 		if(deck == null) {
 			return;
 		}
@@ -895,19 +896,25 @@ public class DeckEditorView extends JandorView {
 		
 		ImageUtil.cacheImageInBackground(deck, 1.0, null);
 		
-		final DeckEditorRow addRow = new DeckEditorRow(this, deck, defaultCardCountPerRow, "");
+		DeckEditorRow addRow = new DeckEditorRow(this, deck, defaultCardCountPerRow, "");
 		addRow.getCardCombo().getTextField().setEditable(true);
 		addRow.getCardCombo().getTextField().setBorder(BorderFactory.createLineBorder(Color.WHITE));
+		addRowsByTitle.put(title, addRow);
 		
 		PButton addButton = new PButton("+");
 		addButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				DeckEditorRow addRow = addRowsByTitle.get(title);
 				if(addRow.hasCard() && addRow.getCount() > 0) {
 					deck.add(addRow.getCard(), addRow.getCount());
 					rebuildDeckRows();
 					flagModified();
+					
+					// We now have a new row, make sure it gets focus
+					addRow = addRowsByTitle.get(title);
+					addRow.getCardCombo().getTextField().requestFocusInWindow();
 				}
 			}
 			
@@ -918,10 +925,15 @@ public class DeckEditorView extends JandorView {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				DeckEditorRow addRow = addRowsByTitle.get(title);
 				if(addRow.hasCard() && addRow.getCount() > 0) {
 					deck.add(addRow.getCard(), addRow.getCount());
 					rebuildDeckRows();
 					flagModified();
+					
+					// We now have a new row, make sure it gets focus
+					addRow = addRowsByTitle.get(title);
+					addRow.getCardCombo().getTextField().requestFocusInWindow();
 				}
 			}
 			

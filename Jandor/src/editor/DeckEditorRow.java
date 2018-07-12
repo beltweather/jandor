@@ -126,7 +126,7 @@ public class DeckEditorRow extends PPanel {
 
 			@Override
 			public void handleFound(String cardName) {
-				
+
 			}
 
 			@Override
