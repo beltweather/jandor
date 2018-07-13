@@ -396,13 +396,7 @@ public class PMenuBar extends JMenuBar {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
-					return;
-				}
-				BoardView boardView = (BoardView) getJandorView();
-				String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
-				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK);
-				JUtil.showDialog(boardView, title, inspectView);
+				actionSearchDeck();
 			}
     	    	
 	    });
@@ -411,13 +405,7 @@ public class PMenuBar extends JMenuBar {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
-					return;
-				}
-				BoardView boardView = (BoardView) getJandorView();
-				String title = JUtil.getFrame(boardView).getTitle() + " - Graveyard";
-				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.GRAVEYARD);
-				JUtil.showDialog(boardView, title, inspectView);
+				actionSearchGraveyard();
 			}
     	    	
 	    });
@@ -426,15 +414,9 @@ public class PMenuBar extends JMenuBar {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
-					return;
-				}
-				BoardView boardView = (BoardView) getJandorView();
-				String title = JUtil.getFrame(boardView).getTitle() + " - Exile";
-				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.EXILE);
-				JUtil.showDialog(boardView, title, inspectView);
+				actionSearchExile();
 			}
-    	    	
+				
 	    });
         
         controls.addActionListener(new ActionListener() {
@@ -823,6 +805,36 @@ public class PMenuBar extends JMenuBar {
 		} else {
 			JandorTabFrame.setShareFrame(JUtil.popupWindow(boardView.getName(), boardView, true));
 		}
+	}
+	
+	public void actionSearchDeck() {
+		if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
+			return;
+		}
+		BoardView boardView = (BoardView) getJandorView();
+		String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
+		InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK);
+		JUtil.showDialog(boardView, title, inspectView);
+	}
+    
+	public void actionSearchGraveyard() {
+		if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
+			return;
+		}
+		BoardView boardView = (BoardView) getJandorView();
+		String title = JUtil.getFrame(boardView).getTitle() + " - Graveyard";
+		InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.GRAVEYARD);
+		JUtil.showDialog(boardView, title, inspectView);
+	}
+    
+	public void actionSearchExile() {
+		if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
+			return;
+		}
+		BoardView boardView = (BoardView) getJandorView();
+		String title = JUtil.getFrame(boardView).getTitle() + " - Exile";
+		InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.EXILE);
+		JUtil.showDialog(boardView, title, inspectView);
 	}
 	
 	public static File chooseFile(Component parent, boolean open) {

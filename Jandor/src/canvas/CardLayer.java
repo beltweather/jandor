@@ -20,21 +20,6 @@ import java.util.Set;
 
 import javax.swing.JLabel;
 
-import session.Session;
-import ui.pwidget.CloseListener;
-import ui.pwidget.ColorUtil;
-import ui.pwidget.JUtil;
-import ui.pwidget.JandorTabFrame;
-import ui.pwidget.PPanel;
-import util.ImageUtil;
-import util.SerializationUtil;
-import util.ShapeUtil;
-import util.ShuffleType;
-import util.ShuffleUtil;
-import zone.Zone;
-import zone.ZoneManager;
-import zone.ZoneRenderer;
-import zone.ZoneType;
 import canvas.animation.Animator;
 import canvas.animation.SpinAnimator;
 import canvas.gesture.Gesture;
@@ -49,6 +34,22 @@ import dice.D10;
 import dice.Die;
 import dice.DieList;
 import dice.Token;
+import session.Session;
+import ui.pwidget.CloseListener;
+import ui.pwidget.ColorUtil;
+import ui.pwidget.JUtil;
+import ui.pwidget.JandorTabFrame;
+import ui.pwidget.PMenuBar;
+import ui.pwidget.PPanel;
+import util.ImageUtil;
+import util.SerializationUtil;
+import util.ShapeUtil;
+import util.ShuffleType;
+import util.ShuffleUtil;
+import zone.Zone;
+import zone.ZoneManager;
+import zone.ZoneRenderer;
+import zone.ZoneType;
 
 public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 
@@ -612,6 +613,20 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	@Override
 	public void repaint() {
 		canvas.repaint();
+	}
+	
+	public void handleDoubleLeftClick(IRenderable r) {
+		if(!(r instanceof Card)) {
+			return;
+		}
+
+		if(r.getRenderer().getZoneType() == ZoneType.DECK) {
+			getMenuBar().actionSearchDeck();
+		} else if(r.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+			getMenuBar().actionSearchGraveyard();
+		} else if(r.getRenderer().getZoneType() == ZoneType.EXILE) {
+			getMenuBar().actionSearchExile();
+		}
 	}
 	
 	public void handleMoved(List objects, boolean isDragging) {
@@ -1464,6 +1479,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				//JUtil.getFrame(layer.getCanvas()).close();
 			}
 		}
+	}
+	
+	public PMenuBar getMenuBar() {
+		JandorTabFrame frame = JUtil.getFrame(getCanvas());
+		PMenuBar menu = (PMenuBar) frame.getJMenuBar();
+		return menu;
 	}
 
 	public String getCurrentUsername() {
