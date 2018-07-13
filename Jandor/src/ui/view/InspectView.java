@@ -2,6 +2,7 @@ package ui.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -11,14 +12,14 @@ import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 
-import ui.CardRow;
+import canvas.CardLayer;
+import deck.Card;
+import ui.ClickableCardRow;
 import ui.pwidget.G;
 import ui.pwidget.PPanel;
 import ui.pwidget.PScrollPane;
 import zone.Zone;
 import zone.ZoneType;
-import canvas.CardLayer;
-import deck.Card;
 
 public class InspectView extends JandorView {
 
@@ -56,26 +57,24 @@ public class InspectView extends JandorView {
 			return;
 		}
 		
-		JLabel labelTop = new JLabel("Top");
-		labelTop.setHorizontalAlignment(JLabel.CENTER);
-		labelTop.setForeground(Color.BLACK);
-		cardPanel.c.anchor = G.CENTER;
-		cardPanel.add(labelTop, cardPanel.c);
-		cardPanel.c.gridy++;
-		
-		cardPanel.c.strengthen();
 		cardPanel.c.weighty = 0.01;
 		cardPanel.c.fill = G.HORIZONTAL;
-		cardPanel.c.anchor = G.WEST;
+		cardPanel.c.anchor = G.CENTER;
+		
+		cardPanel.c.strengthen();
+		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
+		cardPanel.c.gridx++;
+		
+		cardPanel.c.weaken();
 		Zone zone = layer.getCardZoneManager().getZone(zoneType);
-		final List<CardRow> cardRows = new ArrayList<CardRow>();
+		final List<ClickableCardRow> cardRows = new ArrayList<ClickableCardRow>();
 		for(Object o : zone) {
 			Card card = (Card) o;
-			CardRow row = new CardRow(layer, card) {
+			ClickableCardRow row = new ClickableCardRow(layer, card) {
 				
 				@Override
-				public void handleMovedToHand(CardRow r) {
-					for(CardRow row : cardRows) {
+				public void handleMovedToHand(ClickableCardRow r) {
+					for(ClickableCardRow row : cardRows) {
 						if(row.equals(r)) {
 							continue;
 						}
@@ -86,18 +85,14 @@ public class InspectView extends JandorView {
 				
 			};
 			cardPanel.add(row, cardPanel.c);
-			cardPanel.c.gridy++;
+			cardPanel.c.gridx++;
 			
 			cardRows.add(row);
 		}
 		
-		JLabel labelBottom = new JLabel("Bottom");
-		labelBottom.setHorizontalAlignment(JLabel.CENTER);
-		labelBottom.setForeground(Color.BLACK);
-		cardPanel.c.anchor = G.CENTER;
-		cardPanel.add(labelBottom, cardPanel.c);
-		cardPanel.c.gridy++;
+		cardPanel.c.gridx++;
 		cardPanel.c.strengthen();
+		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
 		
 		final JCheckBox showImages = new JCheckBox("Show Full Cards");
 		showImages.setOpaque(false);
@@ -106,7 +101,7 @@ public class InspectView extends JandorView {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				for(CardRow row : cardRows) {
+				for(ClickableCardRow row : cardRows) {
 					row.setShowFullCard(showImages.isSelected());
 				}
 			}
@@ -119,7 +114,7 @@ public class InspectView extends JandorView {
 		shuffle.setSelected(true);
 		
 		PPanel checkPanel = new PPanel();
-		checkPanel.add(showImages, checkPanel.c);
+		//checkPanel.add(showImages, checkPanel.c);
 		checkPanel.c.gridx++;
 		
 		if(zoneType == ZoneType.DECK) {
@@ -130,8 +125,14 @@ public class InspectView extends JandorView {
 		
 		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
 
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		double width = screenSize.getWidth();
+		
+		int windowX = (int) Math.min(Math.round(width * 0.8), 1400);
+		int windowY = 400;
+		
 		c.strengthen();
-		add(new PScrollPane(cardPanel, new Dimension(400, 600)), c);
+		add(new PScrollPane(cardPanel, new Dimension(windowX, windowY)), c);
 		c.gridy++;
 		c.anchor = G.CENTER;
 		c.fill = G.NONE;

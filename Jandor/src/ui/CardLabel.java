@@ -20,8 +20,7 @@ public class CardLabel extends JLabel {
 		super(card.getName());
 		this.card = card;
 		setForeground(DEFAULT_COLOR);
-		String html = "<html><body>" + card.getImageHtml() + "</body></html>";
-		setToolTipText(html);
+		enableTooltip();
 	}
 	
 	public void setShowFullCard(boolean showFullCard) {
@@ -35,6 +34,15 @@ public class CardLabel extends JLabel {
 			setText(card.getName());
 		}
 		
+	}
+	
+	public void disableTooltip() {
+		setToolTipText(null);
+	}
+	
+	public void enableTooltip() {
+		String html = "<html><body>" + card.getImageHtml() + "</body></html>";
+		setToolTipText(html);
 	}
 	
 }
