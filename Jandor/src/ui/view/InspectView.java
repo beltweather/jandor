@@ -132,7 +132,7 @@ public class InspectView extends JandorView {
 		int windowY = 400;
 		
 		c.strengthen();
-		add(new PScrollPane(cardPanel, new Dimension(windowX, windowY)), c);
+		add(new PScrollPane(cardPanel, new Dimension(windowX, windowY), true), c);
 		c.gridy++;
 		c.anchor = G.CENTER;
 		c.fill = G.NONE;

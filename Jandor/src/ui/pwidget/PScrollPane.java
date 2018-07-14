@@ -27,9 +27,13 @@ public class PScrollPane extends JScrollPane {
 	}
 	
 	public PScrollPane(JComponent view, Dimension preferredSize) {
+		this(view, preferredSize, false);
+	}
+	
+	public PScrollPane(JComponent view, Dimension preferredSize, boolean scrollHorizontal) {
 		super(view, 
 			  ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
-			  ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			  scrollHorizontal ? ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED : ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		init();
 		if(preferredSize != null) {
 			setPreferredSize(preferredSize);
