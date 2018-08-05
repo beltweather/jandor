@@ -653,35 +653,35 @@ public class JUtil {
 	}
 	
 	public static boolean showConfirmYesNoDialog(Component parent, String title, String message) {
-		return JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+		return JOptionPane.showConfirmDialog(JUtil.getFrame(parent), message, title, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
 	}
 	
 	public static boolean showConfirmYesNoCancelDialog(Component parent, String title, String message) {
-		return JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.YES_OPTION;
+		return JOptionPane.showConfirmDialog(JUtil.getFrame(parent), message, title, JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.YES_OPTION;
 	}
 	
 	public static boolean showConfirmDialog(Component parent, String title, String text) {
-		return showConfirmDialog(parent, title, new JLabel(text));
+		return showConfirmDialog(JUtil.getFrame(parent), title, new JLabel(text));
 	}
 	
 	public static boolean showConfirmDialog(Component parent, String title, Component component) {
-		return JOptionPane.showConfirmDialog(parent, component, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
+		return JOptionPane.showConfirmDialog(JUtil.getFrame(parent), component, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
 	}
 	
 	public static boolean showWarningDialog(Component parent, String title, Component component) {
-		return JOptionPane.showConfirmDialog(parent, component, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
+		return JOptionPane.showConfirmDialog(JUtil.getFrame(parent), component, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
 	}
 	
 	public static boolean showWarningDialog(Component parent, String title, String message) {
-		 return JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
+		 return JOptionPane.showConfirmDialog(JUtil.getFrame(parent), message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
 	}
 	
 	public static void showMessageDialog(Component parent, String title, String message) {
-		 JOptionPane.showMessageDialog(parent, message, title, JOptionPane.PLAIN_MESSAGE);
+		 JOptionPane.showMessageDialog(JUtil.getFrame(parent), message, title, JOptionPane.PLAIN_MESSAGE);
 	}
 	
 	public static String showInputDialog(Component parent, String title, String message, String defaultText) {
-		Object obj = JOptionPane.showInputDialog(parent, message, title, JOptionPane.PLAIN_MESSAGE, null, null, defaultText);
+		Object obj = JOptionPane.showInputDialog(JUtil.getFrame(parent), message, title, JOptionPane.PLAIN_MESSAGE, null, null, defaultText);
 		if(obj == null) {
 			return null;
 		}
@@ -690,7 +690,7 @@ public class JUtil {
 	
 	public static int showDialog(Component parent, String title, Component component) {
 		//JOptionPane.showMessageDialog(parent, component, title, JOptionPane.DEFAULT_OPTION);
-		int input = JOptionPane.showConfirmDialog(parent, component, title, -1, JOptionPane.PLAIN_MESSAGE);
+		int input = JOptionPane.showConfirmDialog(JUtil.getFrame(parent), component, title, -1, JOptionPane.PLAIN_MESSAGE);
 		if(component instanceof CloseListener) {
 			((CloseListener) component).handleClosed();
 		}

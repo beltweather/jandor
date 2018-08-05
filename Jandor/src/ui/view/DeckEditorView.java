@@ -23,6 +23,16 @@ import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import accordion.PAccordion;
+import accordion.PAccordionData;
+import accordion.PAccordionPanel;
+import analysis.SimPanel;
+import deck.Card;
+import deck.Deck;
+import draft.ConfigureDraftDialog;
+import editor.DeckEditorRow;
+import editor.TagDialog;
+import editor.TagLabel;
 import json.JSONException;
 import run.Jandor;
 import search.ManaPanel;
@@ -50,16 +60,6 @@ import util.TimeUtil;
 import util.event.SessionEvent;
 import util.event.SessionEventListener;
 import util.event.SessionEventManager;
-import accordion.PAccordion;
-import accordion.PAccordionData;
-import accordion.PAccordionPanel;
-import analysis.SimPanel;
-import deck.Card;
-import deck.Deck;
-import draft.ConfigureDraftDialog;
-import editor.DeckEditorRow;
-import editor.TagDialog;
-import editor.TagLabel;
 
 public class DeckEditorView extends JandorView {
 	
@@ -170,6 +170,7 @@ public class DeckEditorView extends JandorView {
 	protected PButton copyButton;
 	protected PButton clearButton;
 	protected PButton draftButton;
+	protected PButton highlanderButton;
 	protected PButton editDraftButton;
 	protected PButton editDeckButton;
 	protected Map<String, DeckEditorRow> addRowsByTitle = new HashMap<String, DeckEditorRow>();
@@ -336,6 +337,17 @@ public class DeckEditorView extends JandorView {
 				
 			});
 			
+			highlanderButton = new PButton("To Highlander");
+			highlanderButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					toHighlander();
+				}
+				
+			});
+			highlanderButton.setToolTipText("There can be only one!");
+			
 			editDeckButton = new PButton("Edit as Deck");
 			editDeckButton.addActionListener(new ActionListener() {
 	
@@ -457,6 +469,8 @@ public class DeckEditorView extends JandorView {
 			headerPanel.c.gridx++;
 			headerPanel.addc(editDraftButton);
 			headerPanel.c.gridx++;
+			headerPanel.addc(highlanderButton);
+			headerPanel.c.gridx++;
 			headerPanel.addc(editDeckButton);
 			headerPanel.c.weightx = 1.0;
 			headerPanel.c.gridx++;
@@ -485,7 +499,7 @@ public class DeckEditorView extends JandorView {
 		p.c.fill = G.VERTICAL;
 		p.c.gridy--;
 		p.c.gridx++;
-		p.c.insets(0, 20, 0, 30);
+		p.c.insets(0, 0, 0, 30);
 		p.add(sideboardPanel, p.c);
 		
 		c.anchor = G.CENTER;
@@ -784,8 +798,9 @@ public class DeckEditorView extends JandorView {
 			sideboardPanel.removeAll();
 			sideboardPanel.c.reset();
 		}
-		buildEditor(getDeckText(), deck, deckPanel, 4);
-		buildEditor(getSideboardText(), deck.getSideboard(), sideboardPanel, 1);
+		
+		buildEditor(getDeckText(), deck, deckPanel, 4, "<html>&rarr;</html>", deck.getSideboard());
+		buildEditor(getSideboardText(), deck.getSideboard(), sideboardPanel, 1, "<html>&larr;</html>", deck);
 		
 		if(revalidate) {
 			deckPanel.revalidate();
@@ -883,7 +898,7 @@ public class DeckEditorView extends JandorView {
 		
 	}
 	
-	protected void buildEditor(final String title, final Deck deck, PPanel p, int defaultCardCountPerRow) {
+	protected void buildEditor(final String title, final Deck deck, PPanel p, int defaultCardCountPerRow, final String otherDeckName, final Deck otherDeck) {
 		if(deck == null) {
 			return;
 		}
@@ -896,11 +911,18 @@ public class DeckEditorView extends JandorView {
 		
 		ImageUtil.cacheImageInBackground(deck, 1.0, null);
 		
+		// Use last value as default if present
+		DeckEditorRow oldAddRow = addRowsByTitle.get(title);
+		if(oldAddRow != null) {
+			defaultCardCountPerRow = oldAddRow.getCount();
+		}
+		
 		DeckEditorRow addRow = new DeckEditorRow(this, deck, defaultCardCountPerRow, "");
 		addRow.getCardCombo().getTextField().setEditable(true);
 		addRow.getCardCombo().getTextField().setFocusable(true);
 		addRow.getCardCombo().getTextField().setBorder(BorderFactory.createLineBorder(Color.WHITE));
 		addRow.hideColorLabel();
+		
 		addRowsByTitle.put(title, addRow);
 		
 		PButton addButton = new PButton("+");
@@ -983,14 +1005,14 @@ public class DeckEditorView extends JandorView {
 				int j = p.c.gridy++;
 				int total = 0;
 				
-				for(Card card : cards.keySet()) {
+				for(final Card card : cards.keySet()) {
 					if(!CardUtil.hasType(card, type) || usedCards.contains(card) || (CardUtil.hasType(card, "Land") && !type.equals("Land"))) {
 							continue;
 					}
 					usedCards.add(card);
 					int count = cards.get(card);
 					total += count;
-					DeckEditorRow row = new DeckEditorRow(this, deck, count, card.getName()); 
+					DeckEditorRow row = new DeckEditorRow(this, deck, count, card.getName(), otherDeckName, otherDeck);
 					p.add(row, p.c);
 					GlassPane gp = row.buildGlassPane();
 					p.add(gp, p.c);
@@ -1131,6 +1153,23 @@ public class DeckEditorView extends JandorView {
 		DraftEditorView.addDraftEditorView(getAccordion(), IDUtil.NONE, deckId, getAccordionData().getParent());
 		getAccordionData().getAccordionPanel().remove();
 		getAccordion().rebuild();
+	}
+	
+	public void toHighlander() {
+		for(Card card : new ArrayList<Card>(deck)) {
+			if(card.isBasicLand()) {
+				continue;
+			}
+			setCardCount(deck, card.getName(), 1);
+		}
+		for(Card card : new ArrayList<Card>(deck.getSideboard())) {
+			if(card.isBasicLand()) {
+				continue;
+			}
+			setCardCount(deck.getSideboard(), card.getName(), 1);
+		}
+		rebuildDeckRows();
+		flagModified();
 	}
 	
 	public void editAsDeck() {

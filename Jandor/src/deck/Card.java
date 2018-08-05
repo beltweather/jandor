@@ -231,6 +231,10 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return false;
 	}
 	
+	public boolean isBasicLand() {
+		return isLand() && CardUtil.isBasicLandName(getName());
+	}
+	
 	public JSONArray getTypes() {
 		return getCardArray("types");
 	}

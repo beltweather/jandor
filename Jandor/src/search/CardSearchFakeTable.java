@@ -122,6 +122,10 @@ public abstract class CardSearchFakeTable extends FakeTable {
 					PPanel panel = new PPanel();
 					panel.addc(label);
 					panel.c.gridx++;
+					panel.c.insets(0,
+								   -labelT.getIcon().getIconWidth() + 5,
+								   0,
+								   0);
 					panel.addc(labelT);
 					panel.setOpaque(true);
 					if(row % 2 == 0) {

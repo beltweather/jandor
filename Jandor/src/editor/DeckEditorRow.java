@@ -10,6 +10,8 @@ import javax.swing.JLabel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import deck.Card;
+import deck.Deck;
 import ui.AutoComboBox;
 import ui.GlassPane;
 import ui.JandorButton;
@@ -21,8 +23,6 @@ import ui.view.DeckEditorView;
 import ui.view.DraftEditorView;
 import util.CardUtil;
 import util.ManaUtil;
-import deck.Card;
-import deck.Deck;
 
 public class DeckEditorRow extends PPanel {
 
@@ -31,18 +31,27 @@ public class DeckEditorRow extends PPanel {
 	private JLabel colorLabel;
 	private DeckEditorView view;
 	private Deck deck;
+	private Deck otherDeck;
 	private JandorButton removeButton;
+	private JandorButton moveButton;
 	private String cardName;
+	private String otherDeckName;
 	
 	public DeckEditorRow(DeckEditorView view, Deck deck) {
 		this(view, deck, 0, "");
 	}
 	
 	public DeckEditorRow(DeckEditorView view, Deck deck, int count, String cardName) {
+		this(view, deck, count, cardName, null, null);
+	}
+	
+	public DeckEditorRow(DeckEditorView view, Deck deck, int count, String cardName, String otherDeckName, Deck otherDeck) {
 		super();
 		this.view = view;
 		this.deck = deck;
 		this.cardName = cardName;
+		this.otherDeckName = otherDeckName;
+		this.otherDeck = otherDeck;
 		init(count);
 	}
 	
@@ -58,6 +67,20 @@ public class DeckEditorRow extends PPanel {
 			}
 			
 		});
+		
+		if(otherDeckName != null) {
+			moveButton = new JandorButton(otherDeckName);
+			moveButton.setFocusable(false);
+			moveButton.hide();
+			moveButton.addActionListener(new ActionListener() {
+	
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					moveToDeck();
+				}
+				
+			});
+		}
 		
 		colorLabel = new JLabel("");
 		colorLabel.setFocusable(false);
@@ -196,6 +219,10 @@ public class DeckEditorRow extends PPanel {
         c.insets(0, 5);
         add(colorLabel, c);
         c.gridx++;
+        if(otherDeckName != null) {
+        	add(moveButton, c);
+        	c.gridx++;
+        }
         c.insets(0, 10);
         c.weaken();
         
@@ -236,6 +263,10 @@ public class DeckEditorRow extends PPanel {
 		return removeButton;
 	}
 	
+	public JandorButton getMoveButton() {
+		return moveButton;
+	}
+	
 	public void remove() {
 		if(isDraft() && !CardUtil.isBasicLandName(cardName)) {
 			// Removing from main deck
@@ -254,6 +285,17 @@ public class DeckEditorRow extends PPanel {
 			view.setCardCount(deck, cardName, 0);
 			view.rebuildDeckRows();
 		}
+	}
+	
+	public void moveToDeck() {
+		if(otherDeck == null) {
+			return;
+		}
+		int count = getCount();
+		view.setCardCount(deck, cardName, 0);
+		view.setCardCount(otherDeck, cardName, count);
+		view.rebuildDeckRows();
+		view.flagModified();
 	}
 	
 	public AutoComboBox<String> getCardCombo() {
@@ -318,12 +360,18 @@ public class DeckEditorRow extends PPanel {
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				removeButton.show();
+				if(moveButton != null) {
+					moveButton.show();
+				}
 				super.mouseEntered(e);
 			}
 
 			@Override
 			public void mouseExited(MouseEvent e) {
 				removeButton.hide();
+				if(moveButton != null) {
+					moveButton.hide();
+				}
 				super.mouseExited(e);
 			}
 				
