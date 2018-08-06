@@ -97,6 +97,8 @@ public class CardRenderer extends AbstractRenderer<Card> {
 				case EXILE:
 					c = Color.PINK;
 					break;
+				case COMMANDER:
+					c = Color.MAGENTA;
 				default:
 					c = null;
 					break;

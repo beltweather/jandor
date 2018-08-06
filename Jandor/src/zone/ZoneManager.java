@@ -34,6 +34,12 @@ public class ZoneManager implements Serializable {
 		return zones.get(type);
 	}
 	
+	public void addZone(ZoneType type) {
+		if(!zones.containsKey(type)) {
+			zones.put(type, new Zone<IRenderable>(type, IRenderable.class));
+		}
+	}
+	
 	public void removeZone(ZoneType type) {
 		if(zones.containsKey(type)) {
 			zones.remove(type);

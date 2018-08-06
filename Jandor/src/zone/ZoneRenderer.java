@@ -216,6 +216,8 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 				return ImageUtil.getResourceUrl("graveyard.png");
 			case EXILE:
 				return ImageUtil.getResourceUrl("exile.png");
+			case COMMANDER:
+				return ImageUtil.getResourceUrl("commander.png");
 			default:
 				return null;
 		}

@@ -27,6 +27,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	private transient JLabel tooltipLabel = null;
 	private boolean transformed = false;
 	private Card transformCard = null;
+	private boolean commander = false;
 	
 	public Card() {
 		this(null);
@@ -64,6 +65,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		Card c = new Card(getName());
 		c.getRenderer().setLocation(getRenderer().getLocation());
 		c.getRenderer().setFaceUp(getRenderer().isFaceUp());
+		c.setCommander(commander);
 		c.setSet(set);
 		return c;
 	}
@@ -478,6 +480,14 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return rarity == null ? "" : rarity;
 	}
 	
+	public void setCommander(boolean commander) {
+		this.commander = commander;
+	}
+	
+	public boolean isCommander() {
+		return commander;
+	}
+	
 	public void setTransformed(boolean transformed) {
 		this.transformed = transformed;
 	}
@@ -524,6 +534,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	public Card getTransformCard() {
 		if(transformCard == null) {
 			transformCard = new Card(getTransformName());
+			transformCard.setCommander(commander);
 		}
 		return transformCard;
 	}

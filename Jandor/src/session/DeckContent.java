@@ -47,12 +47,12 @@ public class DeckContent extends SessionData {
 		cards.clear();
 		Map<Card, Integer> countsByCard = deck.getCountsByCard();
 		for(Card card : countsByCard.keySet()) {
-			addCard(new CardContent(card.getName(), countsByCard.get(card), false));
+			addCard(new CardContent(card.getName(), countsByCard.get(card), false, card.isCommander()));
 		}
 		if(deck.getSideboard() != null) {
 			countsByCard = deck.getSideboard().getCountsByCard();
 			for(Card card : countsByCard.keySet()) {
-				addCard(new CardContent(card.getName(), countsByCard.get(card), true));
+				addCard(new CardContent(card.getName(), countsByCard.get(card), true, card.isCommander()));
 			}
 		}
 	}
@@ -69,6 +69,7 @@ public class DeckContent extends SessionData {
 					System.err.println("Could not find card \"" + card.getName() + "\". Please check that it is a real card and in the current dataset.");
 					continue;
 				}
+				newCard.setCommander(card.isCommander());
 				cardList.add(newCard);
 			}
 		}
@@ -87,6 +88,7 @@ public class DeckContent extends SessionData {
 					System.err.println("Could not find card \"" + card.getName() + "\". Please check that it is a real card and in the current dataset.");
 					continue;
 				}
+				newCard.setCommander(card.isCommander());
 				cardList.add(newCard);
 			}
 		}

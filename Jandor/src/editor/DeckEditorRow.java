@@ -251,6 +251,10 @@ public class DeckEditorRow extends PPanel {
 		colorLabel.setVisible(false);
 	}
 	
+	public void hideSpinner() {
+		countSpinner.setVisible(false);
+	}
+	
 	public boolean isDraft() {
 		return view instanceof DraftEditorView;
 	}

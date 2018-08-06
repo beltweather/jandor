@@ -32,6 +32,7 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	protected boolean tapped;
 	protected boolean hovered;
 	protected int zIndex = 0;
+	protected boolean visible = true;
 	
 	protected IRenderer parent;
 	protected List<IRenderer> children = new ArrayList<IRenderer>();
@@ -406,9 +407,21 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	}
 	
 	@Override
+	public boolean isVisible() {
+		return visible;
+	}
+	
+	@Override
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+	
+	@Override
 	public void paintComponent(CardLayer layer, Graphics2D g, int width, int height) {
 		recomputeBounds();
-		render(layer, g, getObject(), getLocation());
+		if(visible) {
+			render(layer, g, getObject(), getLocation());
+		}
 		zIndex = layer.nextZIndex();
 	}
 	

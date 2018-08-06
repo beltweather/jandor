@@ -173,6 +173,9 @@ public class DeckEditorView extends JandorView {
 	protected PButton highlanderButton;
 	protected PButton editDraftButton;
 	protected PButton editDeckButton;
+	protected PPanel commanderPanel;
+	protected DeckEditorRow commanderEditor;
+	protected JLabel commanderLabel;
 	protected Map<String, DeckEditorRow> addRowsByTitle = new HashMap<String, DeckEditorRow>();
 	
 	protected DeckHeader deckHeader;
@@ -521,8 +524,18 @@ public class DeckEditorView extends JandorView {
 		centeredPanel.c.insets(30);
 		centeredPanel.addc(topInfoPanel);
 		
+		PPanel centeredCommanderPanel = new PPanel();
+		commanderLabel.setFont(commanderLabel.getFont().deriveFont(20f));
+		centeredCommanderPanel.addc(commanderLabel);
+		centeredCommanderPanel.c.gridy++;
+		centeredCommanderPanel.c.insets(30);
+		centeredCommanderPanel.addc(commanderPanel);
+		
 		c.insets(40);
 		add(centeredPanel, c);
+		c.gridy++;
+		c.insets(20, 0, 20);
+		add(centeredCommanderPanel, c);
 		c.gridy++;
 		c.insets(20, 0, 20);
 		add(bottomInfoPanel, c);
@@ -682,7 +695,7 @@ public class DeckEditorView extends JandorView {
 		topInfoPanel.c.gridwidth = 1;
 		topInfoPanel.c.gridheight = 1;
 		topInfoPanel.c.insets(0, 0);
-		topInfoPanel.c.gridy++;		
+		topInfoPanel.c.gridy++;
 		
 		topInfoPanel.c.gridx = 3;
 		topInfoPanel.c.weightx = 1.0;
@@ -903,9 +916,13 @@ public class DeckEditorView extends JandorView {
 			return;
 		}
 		
+		Card commander = null;
 		for(Card card : deck) {
 			if(card.getCardInfo() == null) {
 				System.out.println("No card info for card: " + card.getName());
+			}
+			if(card.isCommander()) {
+				commander = card;
 			}
 		}
 		
@@ -967,6 +984,75 @@ public class DeckEditorView extends JandorView {
 			
 		});
 		
+		if(deck.getSideboard() != null) {
+			commanderEditor = new DeckEditorRow(this, deck, 1, "");
+			commanderEditor.getCardCombo().getTextField().setEditable(true);
+			commanderEditor.getCardCombo().getTextField().setFocusable(true);
+			commanderEditor.getCardCombo().getTextField().setBorder(BorderFactory.createLineBorder(Color.WHITE));
+			commanderEditor.hideColorLabel();
+			commanderEditor.hideSpinner();
+			commanderEditor.getCardCombo().getTextField().addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if(commanderEditor.getCardCombo().getSelectedIndex() > -1 && commanderEditor.getCardCombo().isPopupVisible()) {
+						return;
+					}
+					if(commanderEditor.hasCard()) {
+						Card commander = commanderEditor.getCard();
+						
+						boolean newCommander = false;
+						boolean hadCommander = false;
+						for(Card card : new ArrayList<Card>(deck)) {
+							if(card.isCommander()) {
+								hadCommander = true;
+								if(!card.getName().equals(commander.getName())) {
+									deck.remove(card);
+									newCommander = true;
+								}
+							}
+						}
+						
+						if(!hadCommander || newCommander) {
+							commander.setCommander(true);
+							deck.add(commander, 1);
+							commanderLabel.setText("Commander: " + commander.getName());
+							rebuildDeckRows();
+							flagModified();
+							commanderEditor.getCardCombo().getTextField().requestFocusInWindow();
+						}
+						
+					} else {
+						boolean hadCommander = false;
+						for(Card card : new ArrayList<Card>(deck)) {
+							if(card.isCommander()) {
+								hadCommander = true;
+								deck.remove(card);
+							}
+						}
+						commanderLabel.setText("Commander: None");
+						if(hadCommander) {
+							flagModified();
+						}
+					}
+				}
+				
+			});
+			
+			if(commanderPanel == null) {
+				commanderPanel = new PPanel();
+			} else {
+				commanderPanel.clear();
+			}
+			commanderPanel.addc(commanderEditor);
+		}
+		if(commander != null) {
+			if(commanderLabel == null) {
+				commanderLabel = new JLabel();
+			}
+			commanderLabel.setText("Commander: " + commander.getName());
+		}
+		
 		ShuffleUtil.shuffle(sortHandler.getShuffleType(), deck);
 		Map<Card, Integer> cards = deck.getCountsByCard();
 		
@@ -1006,6 +1092,10 @@ public class DeckEditorView extends JandorView {
 				int total = 0;
 				
 				for(final Card card : cards.keySet()) {
+					if(commander != null && card.getName().equals(commander.getName())) {
+						continue;
+					}
+					
 					if(!CardUtil.hasType(card, type) || usedCards.contains(card) || (CardUtil.hasType(card, "Land") && !type.equals("Land"))) {
 							continue;
 					}

@@ -140,5 +140,8 @@ public interface IRenderer<T> extends Serializable {
 	public boolean isHovered();
 	
 	public int getZIndex();
-
+	
+	public boolean isVisible();
+	
+	public void setVisible(boolean visible);
 }

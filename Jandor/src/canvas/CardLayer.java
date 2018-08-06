@@ -216,11 +216,40 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		dieZoneManager.getZone(ZoneType.DECK).add(die);
 	}
 	
+	private void moveToCommandZone(Card card) {
+		card.getRenderer().setZoneType(ZoneType.BATTLEFIELD);
+		card.getRenderer().rememberLastZoneType();
+		card.getRenderer().setZoneType(ZoneType.COMMANDER);
+		cardZoneManager.getZone(ZoneType.COMMANDER).getRenderer().center(this, card, false);
+		cardZoneManager.getZone(ZoneType.COMMANDER).add(card);
+	}
+	
+	private void moveToZone(Card card, ZoneType zone) {
+		card.rememberLastZoneType();
+		cardZoneManager.getZone(card.getZoneType()).remove(card);
+		cardZoneManager.getZone(zone).add(card);
+		card.setZoneType(zone);
+		handleMoved(Arrays.asList(card), false);
+		repaint();
+	}
 	
 	private void loadCards(final List<Card> newCards) {
 		if(newCards.size() == 0) {
 			updateZoneBounds();
 			return;
+		}
+		
+		boolean hasCommander = false;
+		for(Card c : newCards) {
+			if(c.isCommander()) {
+				hasCommander = true;
+				break;
+			}
+		}
+		if(!hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) != null) {
+			cardZoneManager.removeZone(ZoneType.COMMANDER);
+		} else if(hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) == null) {
+			cardZoneManager.addZone(ZoneType.COMMANDER);
 		}
 		
 		Animator cardLoader = new Animator<Card>(canvas, newCards) {
@@ -236,7 +265,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				card.setLocation(new Location(0, 0));
 				card.setZoneType(ZoneType.BATTLEFIELD);
 				card.rememberLastZoneType();
-				card.setZoneType(ZoneType.DECK);
+				if(card.isCommander()) {
+					card.setZoneType(ZoneType.COMMANDER);
+				} else {
+					card.setZoneType(ZoneType.DECK);
+				}
 				flagChange();
 				return true;
 			}
@@ -766,14 +799,30 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	public void reset() {
 		allCards = new CardList(originalCards);
-		List<Card> cards = getAllCards();
-		for(Card card : cards) {
-			card.setFaceUp(false);
-			card.setTapped(false);
+		List<Card> cardsToShuffle = new ArrayList<Card>();
+		
+		boolean hasCommander = false;
+		for(Card card : allCards) {
+ 			card.setTapped(false);
+			if(card.isCommander()) {
+				hasCommander = true;
+				card.setFaceUp(true);
+				moveToZone(card, ZoneType.COMMANDER);
+			} else {
+				card.setFaceUp(false);
+				cardsToShuffle.add(card);
+			}
 		}
-		shuffleCards(cards, true);
+		
+		if(!hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) != null) {
+			cardZoneManager.removeZone(ZoneType.COMMANDER);
+		} else if(hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) == null) {
+			cardZoneManager.addZone(ZoneType.COMMANDER);
+		}
+		
+		shuffleCards(cardsToShuffle, true);
 		allObjects.clear();
-		allObjects.addAll(cards);
+		allObjects.addAll(allCards);
 		
 		List<Die> dice = new ArrayList<Die>();
 		dice.addAll(d10s);
@@ -1112,8 +1161,13 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				break;
 			case EXILE:
 				zone.setLocation(new Location(0, 0));
-				zone.setWidth(zw/3);
-				zone.setHeight(zh/3);
+				zone.setWidth(zw/2);
+				zone.setHeight(zh/2);
+				break;
+			case COMMANDER:
+				zone.setLocation(new Location(screenW - zw/2, 0));
+				zone.setWidth(zw/2);
+				zone.setHeight(zh/2);
 				break;
 			default:
 				break;
@@ -1190,6 +1244,20 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setScale(0.2);
 					card.setAngle(ShuffleUtil.randInt(-10, 10));
 					//card.restoreAngle();
+					card.recomputeBounds();
+				}
+				if(!isDragging) {
+					zone.getRenderer().center(this, card, animate);
+				}
+				break;
+			case COMMANDER:
+				if(zoneChanged) {
+					if(!isDragging || !isHideHand()) {
+						card.setFaceUp(true);
+					}
+					card.setTapped(false);
+					card.setScale(0.2);
+					card.setAngle(0);
 					card.recomputeBounds();
 				}
 				if(!isDragging) {
@@ -1305,6 +1373,27 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 						die.restoreScale();
 					}
 					die.restoreAngle();
+				}
+				break;
+			case COMMANDER:
+				if(zoneChanged) {
+					die.recomputeBounds();
+					if(dieObject instanceof Token) {
+						die.setScale(0.1);
+					} else {
+						die.restoreScale();
+					}
+					die.restoreAngle();
+				}
+				if(!isDragging) {
+					if(dieObject instanceof Token) {
+						die.setZoneType(ZoneType.GRAVEYARD);
+						dieZoneManager.getZone(ZoneType.DECK).remove(die);
+						dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
+						dieZoneManager.getZone(ZoneType.GRAVEYARD).getRenderer().bottomLeft(this, dieObject, animate, 60, 10);
+					} else {
+						zone.getRenderer().bottom(this, dieObject, animate, 125);
+					}
 				}
 				break;
 			default:

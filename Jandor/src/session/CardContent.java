@@ -6,15 +6,21 @@ public class CardContent {
 	private String name;
 	private int count;
 	private boolean sideboard;
+	private boolean commander;
 	
 	public CardContent() {
 		
 	}
 	
 	public CardContent(String name, int count, boolean sideboard) {
+		this(name, count, sideboard, false);
+	}
+	
+	public CardContent(String name, int count, boolean sideboard, boolean commander) {
 		this.name = name;
 		this.count = count;
 		this.sideboard = sideboard;
+		this.commander = commander;
 	}
 
 	public String getName() {
@@ -41,5 +47,12 @@ public class CardContent {
 		this.sideboard = sideboard;
 	}
 
+	public boolean isCommander() {
+		return commander;
+	}
+	
+	public void setCommander(boolean commander) {
+		this.commander = commander;
+	}
 	
 }

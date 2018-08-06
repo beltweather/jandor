@@ -24,6 +24,7 @@ public class CardList extends RenderableList<Card> {
 	public Map<Card, Integer> getCountsByCard() {
 		Map<String, Integer> counts = new LinkedHashMap<String, Integer>();
 		CardList d = new CardList(getCopy());
+		String commanderName = null;
 		for(Card card : d) {
 			String c = card.getName();
 			if(!counts.containsKey(c)) {
@@ -31,11 +32,18 @@ public class CardList extends RenderableList<Card> {
 			} else {
 				counts.put(c, counts.get(c) + 1);
 			}
+			if(card.isCommander()) {
+				commanderName = c;
+			}
 		}
 		
 		Map<Card, Integer> countsByCard = new LinkedHashMap<Card, Integer>();
 		for(String name : counts.keySet()) {
-			countsByCard.put(new Card(name), counts.get(name));
+			Card card = new Card(name);
+			if(commanderName != null && name.equals(commanderName)) {
+				card.setCommander(true);
+			}
+			countsByCard.put(card, counts.get(name));
 		}
 		return countsByCard;
 	}
