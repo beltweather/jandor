@@ -1,6 +1,7 @@
 package ui;
 
 import java.awt.Container;
+import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,8 +29,7 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 	protected CardLayer layer;
 	protected Card card;
 	
-	protected PButton addHandButton;
-	protected PButton addOtherButton;
+	protected PPanel buttonPanel;
 	
 	public ClickableCardRow(CardLayer layer, Card card) {
 		super();
@@ -86,27 +86,49 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 		layer.repaint();
 	}*/
 	
-	private void handleOther() {
+	private PPanel buildButtonPanel() {
 		PPanel p = new PPanel();
-			
+		
+		PButton hand = new PButton("+ Hand");
 		PButton topDeck = new PButton("+ Top Deck");
 		PButton bottomDeck = new PButton("+ Bottom Deck");
 		PButton graveyard = new PButton("+ Graveyard");
 		PButton exile = new PButton("+ Exile");
-		PButton battlefield = new PButton("+ Battlefield");
+		PButton more = new PButton(" More... ");
 		
+		hand.addMouseListener(this);
+		topDeck.addMouseListener(this);
+		bottomDeck.addMouseListener(this);
+		graveyard.addMouseListener(this);
+		exile.addMouseListener(this);
+		more.addMouseListener(this);
+		
+		p.c.anchor = GridBagConstraints.CENTER;
+		p.c.strengthen();
+		p.c.insets(0, 0, 5, 0);
+		p.addc(hand);
+		p.c.gridx++;
+		p.c.insets(0, 5, 5, 0);
+		p.addc(graveyard);
+		p.c.gridx++;
+		p.c.insets(0, 5, 5, 0);
+		p.addc(exile);
+		p.c.gridx = 0;
+		p.c.gridy++;
 		p.c.insets(0, 0, 5, 0);
 		p.addc(topDeck);
-		p.c.gridy++;
+		p.c.gridx++;
+		p.c.insets(0, 5, 5, 0);
 		p.addc(bottomDeck);
-		p.c.gridy++;
-		p.addc(graveyard);
-		p.c.gridy++;
-		p.addc(exile);
-		//p.c.gridy++;
-		//p.addc(battlefield);
 		
-		final JDialog d = JUtil.buildBlankDialog(this, card.getName() + " - More Actions", p);
+		hand.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				handleAddToZone(ZoneType.HAND);
+			}
+			
+		});
 		
 		topDeck.addActionListener(new ActionListener() {
 
@@ -114,7 +136,6 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 			public void actionPerformed(ActionEvent e) {
 				handleAddToZone(ZoneType.DECK);
 				layer.move(card, 0);
-				d.setVisible(false);
 			}
 			
 		});
@@ -125,7 +146,6 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 			public void actionPerformed(ActionEvent e) {
 				handleAddToZone(ZoneType.DECK);
 				layer.move(card, layer.getCardZoneManager().getZone(ZoneType.DECK).size());
-				d.setVisible(false);
 			}
 			
 		});
@@ -135,7 +155,6 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				handleAddToZone(ZoneType.GRAVEYARD);
-				d.setVisible(false);
 			}
 			
 		});
@@ -145,21 +164,26 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				handleAddToZone(ZoneType.EXILE);
-				d.setVisible(false);
 			}
 			
 		});
 		
-		battlefield.addActionListener(new ActionListener() {
+		more.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleAddToZone(ZoneType.BATTLEFIELD);
-				d.setVisible(false);
+				handleMore();
 			}
 			
 		});
 		
+		return p;
+	}
+	
+	private void handleMore() {
+		PPanel p = new PPanel();
+			
+		final JDialog d = JUtil.buildBlankDialog(this, card.getName() + " - More Actions", p);
 		d.setVisible(true);
 	}
 	
@@ -170,29 +194,8 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 		label.setShowFullCard(true);
 		label.disableTooltip();
 		
-		addHandButton = new PButton(" + Hand ");
-		addOtherButton = new PButton(" More... ");
-		
-		addHandButton.setVisible(false);
-		addOtherButton.setVisible(false);
-		
-		addHandButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				handleAddToZone(ZoneType.HAND);
-			}
-			
-		});
-		
-		addOtherButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				handleOther();
-			}
-			
-		});
+		buttonPanel = buildButtonPanel();
+		buttonPanel.setVisible(false);
 		
 		c.anchor = G.NORTH;
 		c.strengthen();
@@ -208,20 +211,16 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 		fill();
 		c.gridx++;
 		c.weaken();
-		addc(addHandButton);
+		addc(buttonPanel);
 		c.gridx++;
 		c.insets(0);
-		addc(Box.createVerticalStrut(30));
-		c.gridx++;
-		c.insets = new Insets(5, 5, 0, 0);
-		addc(addOtherButton);
+		addc(Box.createVerticalStrut(60));
 		c.gridx++;
 		fill();
 		
 		addMouseListener(this);
 		label.addMouseListener(this);
-		addHandButton.addMouseListener(this);
-		addOtherButton.addMouseListener(this);
+		buttonPanel.addMouseListener(this);
 	}
 	
 	public void update() {
@@ -230,18 +229,12 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		//clickLabel.setVisible(true);
-		addHandButton.setVisible(true);
-		addOtherButton.setVisible(true);
-		//setBorder(BorderFactory.createLineBorder(Color.WHITE));
+		buttonPanel.setVisible(true);
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		//clickLabel.setVisible(false);
-		addHandButton.setVisible(false);
-		addOtherButton.setVisible(false);
-		//setBorder(BorderFactory.createLineBorder(ColorUtil.DARK_GRAY_3));
+		buttonPanel.setVisible(false);
 	}
 	
 	public void setShowFullCard(boolean showFullCard) {

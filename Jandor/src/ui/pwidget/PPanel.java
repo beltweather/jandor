@@ -33,6 +33,11 @@ public class PPanel extends JPanel implements MouseListener /*implements ICreate
 		addMouseListener(this);
 	}
 	
+	public PPanel(Component comp) {
+		this();
+		addc(comp);
+	}
+	
 	private void init() {
 		setToolTipText(null);
 		showTooltip = false;

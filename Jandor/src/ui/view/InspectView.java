@@ -1,18 +1,18 @@
 package ui.view;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 
 import canvas.CardLayer;
 import deck.Card;
@@ -101,6 +101,13 @@ public class InspectView extends JandorView {
 					}
 					cardRows.remove(r);
 					cardSearchPanel.setCardsToSearch(cardsToSearch);
+					
+					if(cardRows.size() == 0) {
+						Component root = SwingUtilities.getRoot(InspectView.this);
+						if(root != null) {
+							root.setVisible(false);
+						}
+					}
 				}
 				
 			};
@@ -178,7 +185,7 @@ public class InspectView extends JandorView {
 		c.fill = G.NONE;
 		add(checkPanel, c);
 		c.gridy++;
-		addc(cardSearchPanel);
+		addc(new PScrollPane(new PPanel(cardSearchPanel), new Dimension(windowX, 150), true));
 	}
 
 	@Override
