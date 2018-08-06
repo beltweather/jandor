@@ -525,10 +525,12 @@ public class DeckEditorView extends JandorView {
 		centeredPanel.addc(topInfoPanel);
 		
 		PPanel centeredCommanderPanel = new PPanel();
-		commanderLabel.setFont(commanderLabel.getFont().deriveFont(20f));
+		if(commanderLabel == null) {
+			commanderLabel = new JLabel("Commander: None");
+		}
 		centeredCommanderPanel.addc(commanderLabel);
 		centeredCommanderPanel.c.gridy++;
-		centeredCommanderPanel.c.insets(30);
+		centeredCommanderPanel.c.insets(10);
 		centeredCommanderPanel.addc(commanderPanel);
 		
 		c.insets(40);

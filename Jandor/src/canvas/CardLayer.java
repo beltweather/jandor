@@ -163,7 +163,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		setLightView(Session.getInstance().getPreferences().isLightView());
 	}
 	
-	private void initDice() {
+	private void initDice(boolean hasCommander) {
 		if(opponentView) {
 			return;
 		}
@@ -193,6 +193,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		moveToGraveyard(counter);
 		moveToGraveyard(token);
 		
+		if(hasCommander) {
+			Die commanderCounter = new Counter(Color.YELLOW, 0);
+			counters.add(commanderCounter);
+			moveToCommander(commanderCounter);
+		}
+		
 		handleMoved(d10s, false, false);
 		handleMoved(counters, false, false);
 		handleMoved(tokens, false, false);
@@ -208,20 +214,18 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		die.getRenderer().setZoneType(ZoneType.GRAVEYARD);
 	}
 	
+	private void moveToCommander(Die die) {
+		die.getRenderer().setZoneType(ZoneType.BATTLEFIELD);
+		die.getRenderer().rememberLastZoneType();
+		die.getRenderer().setZoneType(ZoneType.COMMANDER);
+	}
+	
 	private void moveToDeck(Die die) {
 		die.getRenderer().setZoneType(ZoneType.BATTLEFIELD);
 		die.getRenderer().rememberLastZoneType();
 		die.getRenderer().setZoneType(ZoneType.DECK);
 		dieZoneManager.getZone(ZoneType.DECK).getRenderer().bottom(this, die, false, 10);
 		dieZoneManager.getZone(ZoneType.DECK).add(die);
-	}
-	
-	private void moveToCommandZone(Card card) {
-		card.getRenderer().setZoneType(ZoneType.BATTLEFIELD);
-		card.getRenderer().rememberLastZoneType();
-		card.getRenderer().setZoneType(ZoneType.COMMANDER);
-		cardZoneManager.getZone(ZoneType.COMMANDER).getRenderer().center(this, card, false);
-		cardZoneManager.getZone(ZoneType.COMMANDER).add(card);
 	}
 	
 	private void moveToZone(Card card, ZoneType zone) {
@@ -233,23 +237,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		repaint();
 	}
 	
-	private void loadCards(final List<Card> newCards) {
+	private void loadCards(final List<Card> newCards, boolean hasCommander) {
 		if(newCards.size() == 0) {
 			updateZoneBounds();
 			return;
-		}
-		
-		boolean hasCommander = false;
-		for(Card c : newCards) {
-			if(c.isCommander()) {
-				hasCommander = true;
-				break;
-			}
-		}
-		if(!hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) != null) {
-			cardZoneManager.removeZone(ZoneType.COMMANDER);
-		} else if(hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) == null) {
-			cardZoneManager.addZone(ZoneType.COMMANDER);
 		}
 		
 		Animator cardLoader = new Animator<Card>(canvas, newCards) {
@@ -637,8 +628,22 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		if(!initialized) {
 			initialized = true;
-			initDice();
-			loadCards(cardsToInitialize);
+			
+			boolean hasCommander = false;
+			for(Card c : cardsToInitialize) {
+				if(c.isCommander()) {
+					hasCommander = true;
+					break;
+				}
+			}
+			if(!hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) != null) {
+				cardZoneManager.removeZone(ZoneType.COMMANDER);
+			} else if(hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) == null) {
+				cardZoneManager.addZone(ZoneType.COMMANDER);
+			}
+			
+			initDice(hasCommander);
+			loadCards(cardsToInitialize, hasCommander);
 			cardsToInitialize = null;
 		}
 	}
@@ -831,7 +836,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		for(Die die : dice) {
 			remove(die);
 		}
-		initDice();
+		initDice(hasCommander);
 		flagChange();
 	}
 	
