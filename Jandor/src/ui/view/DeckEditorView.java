@@ -1086,6 +1086,7 @@ public class DeckEditorView extends JandorView {
 		p.c.insets(0,0,10,0);
 		
 		typeLabels.put(deck.getName(), new HashMap<String, JLabel>());
+		int allTotal = 0;
 		try {
 			Set<Card> usedCards = new HashSet<Card>();
 			for(String type : types) {
@@ -1112,6 +1113,7 @@ public class DeckEditorView extends JandorView {
 					p.c.gridy++;
 					useType = true;
 				}
+				allTotal += total;
 
 				if(useType) {
 					int newJ = p.c.gridy;
@@ -1128,7 +1130,7 @@ public class DeckEditorView extends JandorView {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		JLabel cardTotalLabel = new JLabel("Cards (" + deck.size() + ")");
+		JLabel cardTotalLabel = new JLabel("Cards (" + allTotal + ")");
 		cardTotalLabel.setFocusable(false);
 		totalLabels.put(deck.getName(), cardTotalLabel);
 		
@@ -1186,6 +1188,7 @@ public class DeckEditorView extends JandorView {
 		try {
 			Map<Card, Integer> cards = deck.getCountsByCard();
 			Set<Card> usedCards = new HashSet<Card>();
+			int allTotal = 0;
 			for(String type : types) {
 				if(!typeLabels.get(deck.getName()).containsKey(type)) {
 					continue;
@@ -1195,9 +1198,9 @@ public class DeckEditorView extends JandorView {
 				int total = 0;
 				
 				for(Card card : cards.keySet()) {
-						if(!CardUtil.hasType(card, type) || usedCards.contains(card) || (CardUtil.hasType(card, "Land") && !type.equals("Land"))) {
-								continue;
-						}
+					if(!CardUtil.hasType(card, type) || usedCards.contains(card) || (CardUtil.hasType(card, "Land") && !type.equals("Land")) || card.isCommander()) {
+						continue;
+					}
 					usedCards.add(card);
 					int count = cards.get(card);
 					total += count;
@@ -1205,8 +1208,9 @@ public class DeckEditorView extends JandorView {
 	
 				typeLabel.setText(type + "s (" + total + ")");
 				typeLabel.setVisible(total > 0);
+				allTotal += total;
 			}
-			totalLabels.get(deck.getName()).setText("Cards (" + deck.size() + ")");
+			totalLabels.get(deck.getName()).setText("Cards (" + allTotal + ")");
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
