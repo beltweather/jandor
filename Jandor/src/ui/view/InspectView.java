@@ -6,7 +6,9 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.JCheckBox;
@@ -14,6 +16,8 @@ import javax.swing.JLabel;
 
 import canvas.CardLayer;
 import deck.Card;
+import deck.Deck;
+import search.CardSearchPanel;
 import ui.ClickableCardRow;
 import ui.pwidget.G;
 import ui.pwidget.PPanel;
@@ -26,6 +30,7 @@ public class InspectView extends JandorView {
 	protected ZoneType zoneType;
 	protected CardLayer layer;
 	protected JCheckBox shuffle;
+	protected CardSearchPanel cardSearchPanel;
 	
 	public InspectView(String name, CardLayer layer, ZoneType zoneType) {
 		super(name, true);
@@ -68,19 +73,24 @@ public class InspectView extends JandorView {
 		cardPanel.c.weaken();
 		Zone zone = layer.getCardZoneManager().getZone(zoneType);
 		final List<ClickableCardRow> cardRows = new ArrayList<ClickableCardRow>();
+		List<Card> cards = new ArrayList<Card>();
 		for(Object o : zone) {
 			Card card = (Card) o;
+			cards.add(card);
 			ClickableCardRow row = new ClickableCardRow(layer, card) {
 				
 				@Override
-				public void handleMovedToHand(ClickableCardRow r) {
+				public void handleMovedToZone(ClickableCardRow r, ZoneType zone) {
+					List<Card> cardsToSearch = new ArrayList<Card>();
 					for(ClickableCardRow row : cardRows) {
 						if(row.equals(r)) {
 							continue;
 						}
+						cardsToSearch.add(row.getCard());
 						row.update();
 					}
 					cardRows.remove(r);
+					cardSearchPanel.setCardsToSearch(cardsToSearch);
 				}
 				
 			};
@@ -123,6 +133,25 @@ public class InspectView extends JandorView {
 			shuffle.setSelected(false);
 		}
 		
+		cardSearchPanel = new CardSearchPanel(cards) {
+
+			@Override
+			protected void handleResults(Deck results) {
+				if(results == null) {
+					return;
+				}
+				for(ClickableCardRow row : cardRows) {
+					if(results.getCount(row.getCard().getName()) > 0) {
+						row.setVisible(true);
+					} else {
+						row.setVisible(false);
+					}
+				}
+				repaint();
+			}
+			
+		};
+		
 		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
 
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -137,6 +166,8 @@ public class InspectView extends JandorView {
 		c.anchor = G.CENTER;
 		c.fill = G.NONE;
 		add(checkPanel, c);
+		c.gridy++;
+		addc(cardSearchPanel);
 	}
 
 	@Override

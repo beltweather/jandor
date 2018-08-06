@@ -86,6 +86,20 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELD_NAMES.add("Flavor");
 	}
 	
+	protected List<Card> cardsToSearch;
+	
+	public CardSearchPanel() {
+		this(null);
+	}
+	
+	public CardSearchPanel(List<Card> cardsToSearch) {
+		this.cardsToSearch = cardsToSearch;
+	}
+	
+	public void setCardsToSearch(List<Card> cardsToSearch) {
+		this.cardsToSearch = cardsToSearch;
+	}
+	
 	@Override
 	protected boolean match(JSONObject info, String att, JComponent editor) throws Exception {
 		att = DEFAULT_FIELDS.get(DEFAULT_FIELD_NAMES.indexOf(att));
@@ -295,7 +309,18 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	protected Deck search(SearchNode<JSONObject> rootNode, ProgressTask task) {
 		Deck deck = new Deck();
 		try {
-			List<String> cardNames = CardUtil.getAllCardNames();
+			List<String> cardNames;
+			if(cardsToSearch != null) {
+				cardNames = new ArrayList<String>();
+				for(Card card : cardsToSearch) {
+					String name = card.getName();
+					if(!cardNames.contains(name)) {
+						cardNames.add(name);
+					}
+				}
+			} else {
+				cardNames = CardUtil.getAllCardNames(); 
+			}
 			int total = cardNames.size();
 			int i = 0;
 			for(String cardName : cardNames) {
