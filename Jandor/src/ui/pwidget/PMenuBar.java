@@ -21,6 +21,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -30,6 +31,11 @@ import javax.swing.KeyStroke;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import accordion.PAccordion;
+import accordion.PAccordionPanel;
+import canvas.CardLayer;
+import deck.Card;
+import deck.Deck;
 import json.JSONObject;
 import session.Session;
 import ui.AutoComboBox;
@@ -53,11 +59,6 @@ import util.ImageUtil;
 import util.LoginUtil;
 import util.VersionUtil;
 import zone.ZoneType;
-import accordion.PAccordion;
-import accordion.PAccordionPanel;
-import canvas.CardLayer;
-import deck.Card;
-import deck.Deck;
 
 public class PMenuBar extends JMenuBar {
 
@@ -811,10 +812,67 @@ public class PMenuBar extends JMenuBar {
 		if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
 			return;
 		}
-		BoardView boardView = (BoardView) getJandorView();
-		String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
-		InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK);
-		JUtil.showDialog(boardView, title, inspectView);
+		
+		PPanel p = new PPanel();
+			
+		PButton top = new PButton("View Top");
+		final PSpinner topSpinner = new PSpinner(1, 1, 9999) {
+
+			@Override
+			protected void handleChange(int value) {
+				
+			}
+			
+		};
+		
+		PButton all = new PButton("View All");
+		
+		p.fill();
+		p.c.gridx++;
+		p.c.insets(0, 0, 5, 0);
+		p.addc(top);
+		p.c.gridx++;
+		p.c.insets(0, 5, 5, 0);
+		p.addc(topSpinner);
+		p.c.insets(0, 0, 5, 0);
+		p.c.gridx = 1;
+		p.c.gridwidth = 2;
+		p.c.gridy++;
+		p.addc(all);
+		p.c.gridwidth = 1;
+		p.c.gridx = 3;
+		p.fill();
+		
+		final JDialog d = JUtil.buildBlankDialog(this, "Inspect Deck", p);
+		
+		top.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int topCount = (int) topSpinner.getValue();
+				BoardView boardView = (BoardView) getJandorView();
+				String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
+				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK, topCount);
+				JUtil.showDialog(boardView, title, inspectView);
+				d.setVisible(false);
+			}
+			
+		});
+		
+		all.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				BoardView boardView = (BoardView) getJandorView();
+				String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
+				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK);
+				JUtil.showDialog(boardView, title, inspectView);
+				d.setVisible(false);
+			}
+			
+		});
+		
+		d.setVisible(true);
 	}
     
 	public void actionSearchGraveyard() {

@@ -31,11 +31,17 @@ public class InspectView extends JandorView {
 	protected CardLayer layer;
 	protected JCheckBox shuffle;
 	protected CardSearchPanel cardSearchPanel;
+	protected int topCount;
 	
 	public InspectView(String name, CardLayer layer, ZoneType zoneType) {
+		this(name, layer, zoneType, -1);
+	}
+	
+	public InspectView(String name, CardLayer layer, ZoneType zoneType, int topCount) {
 		super(name, true);
 		this.layer = layer;
 		this.zoneType = zoneType;
+		this.topCount = topCount;
 		rebuild();
 	}
 
@@ -74,7 +80,11 @@ public class InspectView extends JandorView {
 		Zone zone = layer.getCardZoneManager().getZone(zoneType);
 		final List<ClickableCardRow> cardRows = new ArrayList<ClickableCardRow>();
 		List<Card> cards = new ArrayList<Card>();
+		int i = 0;
 		for(Object o : zone) {
+			if(topCount > 0 && i >= topCount) {
+				break;
+			}
 			Card card = (Card) o;
 			cards.add(card);
 			ClickableCardRow row = new ClickableCardRow(layer, card) {
@@ -98,6 +108,7 @@ public class InspectView extends JandorView {
 			cardPanel.c.gridx++;
 			
 			cardRows.add(row);
+			i++;
 		}
 		
 		cardPanel.c.gridx++;
@@ -121,7 +132,7 @@ public class InspectView extends JandorView {
 		shuffle = new JCheckBox("Shuffle");
 		shuffle.setOpaque(false);
 		shuffle.setForeground(Color.BLACK);
-		shuffle.setSelected(true);
+		shuffle.setSelected(topCount <= 0);
 		
 		PPanel checkPanel = new PPanel();
 		//checkPanel.add(showImages, checkPanel.c);
