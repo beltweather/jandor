@@ -54,6 +54,7 @@ public class CardUtil {
 		keysWithValues.add("rarity");
 		keysWithValues.add("set");
 		keysWithValues.add("manaCost");
+		keysWithValues.add("layout");
 	}
 	
 	private static List<String> basicLandNames = new ArrayList<String>();
@@ -533,6 +534,13 @@ public class CardUtil {
 	public static String toGathererLink(String multiverseId, String linkText) {
 		return "<a href=\"" + GATHERER_URL + multiverseId + "\">" + linkText + "</a>";
 	}
-
-
+	
+	public static boolean isDoubleFaced(JSONObject info) throws JSONException {
+		return info.has("layout") && info.get("layout").equals("double-faced");
+	}
+	
+	public static boolean isSplit(JSONObject info) throws JSONException {
+		return info.has("layout") && (info.get("layout").equals("split") || info.get("layout").equals("aftermath"));
+	}
+ 
 } 

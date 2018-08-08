@@ -18,6 +18,8 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
+import org.apache.commons.lang.StringUtils;
+
 import json.JSONArray;
 import json.JSONException;
 import json.JSONObject;
@@ -39,7 +41,6 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		
 		DEFAULT_FIELDS.add("");
 		DEFAULT_FIELDS.add("general");
-		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("name"); 
 		DEFAULT_FIELDS.add("text");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
@@ -48,6 +49,8 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELDS.add("subtypes");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("colors");
+		DEFAULT_FIELDS.add("colorIdentity");
+		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("cmc");
 		DEFAULT_FIELDS.add("X or *");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
@@ -55,9 +58,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELDS.add("toughness");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("set");
-		DEFAULT_FIELDS.add("colorIdentity");
 		DEFAULT_FIELDS.add("rarity");
 		DEFAULT_FIELDS.add("flavor");
+		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
+		DEFAULT_FIELDS.add("layout");
 	}
 	
 	private static final List<String> DEFAULT_FIELD_NAMES = new ArrayList<String>();
@@ -65,8 +69,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		
 		DEFAULT_FIELD_NAMES.add("");
 		DEFAULT_FIELD_NAMES.add("All Text");
-		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
-		DEFAULT_FIELD_NAMES.add("Name"); 
+		DEFAULT_FIELD_NAMES.add("Name Text"); 
 		DEFAULT_FIELD_NAMES.add("Ability Text");
 		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELD_NAMES.add("Supertype");
@@ -74,6 +77,8 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELD_NAMES.add("Subtype");
 		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELD_NAMES.add("Colors");
+		DEFAULT_FIELD_NAMES.add("Color Identity");
+		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELD_NAMES.add("Mana Cost");
 		DEFAULT_FIELD_NAMES.add("Mana X or *");
 		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
@@ -81,9 +86,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELD_NAMES.add("Toughness");
 		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELD_NAMES.add("Set");
-		DEFAULT_FIELD_NAMES.add("Color Identity");
 		DEFAULT_FIELD_NAMES.add("Rarity");
-		DEFAULT_FIELD_NAMES.add("Flavor");
+		DEFAULT_FIELD_NAMES.add("Flavor Text");
+		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
+		DEFAULT_FIELD_NAMES.add("Layout");
 	}
 	
 	protected List<Card> cardsToSearch;
@@ -149,7 +155,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			return matchInt(info, att, editor);
 		} else if(att.equals("name") || att.equals("subtype") || att.equals("text") || att.equals("flavor")) {
 			return matchString(info, att, editor);
-		} else if(att.equals("types") || att.equals("supertypes") || att.equals("subtypes") || att.equals("rarity") || att.equals("set") || att.equals("printings")) {
+		} else if(att.equals("types") || att.equals("supertypes") || att.equals("subtypes") || att.equals("rarity") || att.equals("set") || att.equals("printings") || att.equals("layout")) {
 			return matchSet(info, att, editor);
 		} else if(att.equals("colors") || att.equals("colorIdentity")) {
 			return matchColor(info, att, editor);
@@ -256,11 +262,24 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	}
 	
 	private boolean matchSet(JSONObject info, String att, JComponent editor) throws JSONException {
-		if(((JComboBox) editor).getSelectedItem() == null || ((JComboBox) editor).getSelectedItem().equals("")) {
+		Object selectedItem = ((JComboBox) editor).getSelectedItem();
+		if(selectedItem == null || selectedItem.equals("")) {
 			return true;
 		}
 		
-		JSONArray set = info.has(att) ? info.getJSONArray(att) : new JSONArray();
+		Object obj = info.get(att);
+		JSONArray set;
+		if(obj == null) {
+			set = new JSONArray();
+		} else if(obj instanceof String) {
+			set = new JSONArray();
+			set.put(obj);
+		} else if(obj instanceof JSONArray) {
+			set = (JSONArray) obj;
+		} else {
+			return false;
+		}
+		
 		String value = unfilter(att, ((JComboBox) editor).getSelectedItem().toString()).toLowerCase();
 		if(value.equals("")) {
 			return true;
@@ -289,7 +308,35 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		if(!info.has(att)) {
 			return ((NumberPanel) editor).match(0);
 		}
-		Object val = info.get(att);
+		
+		// Special case for split cards and converted manacost
+		if(att.equals("cmc") && CardUtil.isSplit(info)) {
+			return matchSplitCmc(info, editor);
+		}
+		
+		return ((NumberPanel) editor).match(toInt(info.get(att)));
+	}
+	
+	private boolean matchSplitCmc(JSONObject info, JComponent editor) throws JSONException {
+		JSONArray names = info.getJSONArray("names");
+		int allCmc = 0;
+		for(int i = 0; i < names.length(); i++) {
+			String name = names.getString(i);
+			JSONObject cardInfo = CardUtil.getCardInfo(name);
+			int cmc = toInt(cardInfo.get("cmc"));
+			
+			// Allow ourselves to match on either individual cards in
+			// the split card, in addition to the some of the two cards
+			if(((NumberPanel) editor).match(cmc)) {
+				return true;
+			}
+			
+			allCmc += cmc;
+		}
+		return ((NumberPanel) editor).match(allCmc);
+	}
+	
+	private int toInt(Object val) {
 		if(val instanceof String) {
 			if(val.equals("*")) {
 				val = 0;
@@ -310,7 +357,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			}
 		}
 		int intVal = Integer.valueOf(val.toString());
-		return ((NumberPanel) editor).match(intVal);
+		return intVal;
 	}
 
 	@Override
@@ -367,10 +414,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 				}
 				
 			});
-		} else if(att.equals("types") || att.equals("supertypes") || att.equals("subtypes") || att.equals("rarity") || att.equals("set")) {
+		} else if(att.equals("types") || att.equals("supertypes") || att.equals("subtypes") || att.equals("rarity") || att.equals("set") || att.equals("layout")) {
 			final List<String> items = new ArrayList<String>();
 			for(String value : CardUtil.getValues(att)) {
-				items.add(filter(att, value));
+				items.add(StringUtils.capitalize(filter(att, value)));
 			}
 			Collections.sort(items);
 			items.add(0, "");
