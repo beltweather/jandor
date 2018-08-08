@@ -52,7 +52,7 @@ public class InspectView extends JandorView {
 		}
 		
 		if(shuffle.isSelected()) {
-			layer.shuffleCards(layer.getCardZoneManager().getZone(zoneType), true);
+			layer.shuffleCards(layer.getCardZoneManager().getZone(zoneType), true, false);
 		}
 	}
 

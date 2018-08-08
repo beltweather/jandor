@@ -129,11 +129,19 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		
 		if(!att.equals("printings")) {
 			JSONArray sets = info.getJSONArray("printings");
+			boolean isSilly = false;
+			boolean isAlsoNotSilly = false;
 			for(int i = 0; i < sets.length(); i++) {
 				String set = sets.getString(i);
-				if(set.equals("UNG") || set.equals("UNH") || set.equals("UGL")) {
-					return false;
+				if(set.equals("UNG") || set.equals("UNH") || set.equals("UGL") || set.equals("UST")) {
+					isSilly = true;
+				} else {
+					isAlsoNotSilly = true;
 				}
+			}
+			
+			if(isSilly && !isAlsoNotSilly) {
+				return false;
 			}
 		}
 		
@@ -313,10 +321,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			if(cardsToSearch != null) {
 				cardNames = new ArrayList<String>();
 				for(Card card : cardsToSearch) {
-					String name = card.getName();
-					if(!cardNames.contains(name)) {
-						cardNames.add(name);
-					}
+					cardNames.add(card.getName());
 				}
 			} else {
 				cardNames = CardUtil.getAllCardNames(); 

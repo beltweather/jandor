@@ -1100,7 +1100,7 @@ public class DeckEditorView extends JandorView {
 					}
 					
 					if(!CardUtil.hasType(card, type) || usedCards.contains(card) || (CardUtil.hasType(card, "Land") && !type.equals("Land"))) {
-							continue;
+						continue;
 					}
 					usedCards.add(card);
 					int count = cards.get(card);

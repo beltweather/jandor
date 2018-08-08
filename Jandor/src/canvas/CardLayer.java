@@ -168,7 +168,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			return;
 		}
 		
-		Die die0 = new D10(Die.DEFAULT_LIFE_COLOR, 2);
+		Die die0 = new D10(Die.DEFAULT_LIFE_COLOR, hasCommander ? 4 : 2);
 		d10s.add(die0);
 		
 		Die die1 = new D10(Die.DEFAULT_LIFE_COLOR, 0);
@@ -194,7 +194,15 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		moveToGraveyard(token);
 		
 		if(hasCommander) {
-			Die commanderCounter = new Counter(Color.YELLOW, 0);
+			Die cDie0 = new D10(Die.DEFAULT_COMMANDER_COLOR, 2);
+			d10s.add(cDie0);
+			moveToDeck(cDie0);	
+			
+			Die cDie1 = new D10(Die.DEFAULT_COMMANDER_COLOR, 1);
+			d10s.add(cDie1);
+			moveToDeck(cDie1);
+			
+			Die commanderCounter = new Counter(Die.DEFAULT_COMMANDER_COLOR, 0);
 			counters.add(commanderCounter);
 			moveToCommander(commanderCounter);
 		}
@@ -228,12 +236,28 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		dieZoneManager.getZone(ZoneType.DECK).add(die);
 	}
 	
+	
 	private void moveToZone(Card card, ZoneType zone) {
+		moveToZone(card, zone, true);
+	}
+	
+	private void moveToZone(Card card, ZoneType zone, boolean animate) {
 		card.rememberLastZoneType();
 		cardZoneManager.getZone(card.getZoneType()).remove(card);
 		cardZoneManager.getZone(zone).add(card);
 		card.setZoneType(zone);
-		handleMoved(Arrays.asList(card), false);
+		handleMoved(Arrays.asList(card), false, animate);
+		repaint();
+	}
+
+	private void moveToZone(List<Card> cards, ZoneType zone, boolean animate) {
+		for(Card card : cards) {
+			card.rememberLastZoneType();
+			cardZoneManager.getZone(card.getZoneType()).remove(card);
+			cardZoneManager.getZone(zone).add(card);
+			card.setZoneType(zone);
+		}
+		handleMoved(cards, false, animate);
 		repaint();
 	}
 	
@@ -705,12 +729,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		}
 		for(Zone zone : cardZoneManager.getZones()) {
-			if(zone.getRenderer().isShouldFan()) {
+			if(animate && zone.getRenderer().isShouldFan()) {
 				zone.getRenderer().fan(this, zone, animate);
 			}
 		}
 		for(Zone zone : dieZoneManager.getZones()) {
-			if(zone.getRenderer().isShouldFan()) {
+			if(animate && zone.getRenderer().isShouldFan()) {
 				zone.getRenderer().fan(this, zone, animate);
 			}
 		}
@@ -805,8 +829,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	public void reset() {
 		allCards = new CardList(originalCards);
 		List<Card> cardsToShuffle = new ArrayList<Card>();
+		List<Card> cardsToDraw = new ArrayList<Card>();
 		
 		boolean hasCommander = false;
+		allCards.shuffle();
+		int maxHandSize = 7;
+		int handSize = 0;
 		for(Card card : allCards) {
  			card.setTapped(false);
 			if(card.isCommander()) {
@@ -814,8 +842,14 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				card.setFaceUp(true);
 				moveToZone(card, ZoneType.COMMANDER);
 			} else {
-				card.setFaceUp(false);
-				cardsToShuffle.add(card);
+				if(handSize < maxHandSize) {
+					card.setFaceUp(true);
+					cardsToDraw.add(card);
+					handSize++;
+				} else {
+					card.setFaceUp(false);
+					cardsToShuffle.add(card);
+				}
 			}
 		}
 		
@@ -825,7 +859,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			cardZoneManager.addZone(ZoneType.COMMANDER);
 		}
 		
-		shuffleCards(cardsToShuffle, true);
+		shuffleCards(cardsToShuffle, true, true);
+		
 		allObjects.clear();
 		allObjects.addAll(allCards);
 		
@@ -837,6 +872,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			remove(die);
 		}
 		initDice(hasCommander);
+		
+		cardZoneManager.getZone(ZoneType.HAND).clear();
+		moveToZone(cardsToDraw, ZoneType.HAND, false);
+		cardZoneManager.getZone(ZoneType.HAND).getRenderer().fan(this, cardsToDraw, true);
+		
 		flagChange();
 	}
 	
@@ -984,7 +1024,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			@Override
 			public void performAction() {
 				if(handler.isDragging()) {
-					shuffleCards(handler.getSelectedCards(), false);
+					shuffleCards(handler.getSelectedCards(), false, true);
 					List<Die> dice = handler.getDraggedDice();
 					for(Die die : dice) {
 						if(die instanceof D10) {
@@ -1001,7 +1041,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		return gesture;
 	}
 
-	public void shuffleCards(List<Card> cardsToShuffle, boolean forceIntoDeck) {
+	public void shuffleCards(List<Card> cardsToShuffle, boolean forceIntoDeck, boolean animate) {
 		// Do nothing for empty card list
 		CardList cardList = new CardList(cardsToShuffle);
 		if(cardList.size() == 0) {
@@ -1052,7 +1092,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 		
 		if(forceIntoDeck) {
-			handleMoved(cardList, false);
+			handleMoved(cardList, false, animate);
 		}
 		
 		// Now re-zone the cards based on their new zone
@@ -1284,7 +1324,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				for(IRenderer child : children) {
 					childrenObjects.add((IRenderable) child.getObject());
 				}
-				handleMoved(childrenObjects, false, true);
+				handleMoved(childrenObjects, false, animate);
 			}
 			card.forgetLastZoneType();
 		} else {

@@ -229,7 +229,7 @@ public class CardUtil {
 					if(sets.length() == 1) {
 						for(int i = 0; i < sets.length(); i++) {
 							String set = sets.getString(i);
-							if(set.equals("UNH") || set.equals("UGL")/* || set.equals("pCEL")*/) {
+							if(set.equals("UNH") || set.equals("UGL") || set.equals("UST")/* || set.equals("pCEL")*/) {
 								//it.remove();
 								continue top;
 							}

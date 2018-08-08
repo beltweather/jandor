@@ -13,6 +13,7 @@ public class Die implements IRenderable<Die> {
 
 	public static final Color DEFAULT_DIE_COLOR = Color.WHITE;
 	public static final Color DEFAULT_LIFE_COLOR = Color.RED;
+	public static final Color DEFAULT_COMMANDER_COLOR = Color.YELLOW;
 	
 	public static final List<Color> colorOrder = new ArrayList<Color>();
 	static {

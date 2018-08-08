@@ -383,7 +383,7 @@ public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 			}
 			break;
 		case KeyEvent.VK_S:
-			layer.shuffleCards(getSelectedCards(), false);
+			layer.shuffleCards(getSelectedCards(), false, false);
 			List<Die> dice = getDraggedDice();
 			for(Die die : dice) {
 				if(die instanceof D10) {
