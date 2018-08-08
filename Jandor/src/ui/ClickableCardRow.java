@@ -136,6 +136,7 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 			public void actionPerformed(ActionEvent e) {
 				handleAddToZone(ZoneType.DECK);
 				layer.move(card, 0);
+				handleMovedToTopOrBottom(ClickableCardRow.this, ZoneType.DECK, true);
 			}
 			
 		});
@@ -146,6 +147,7 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 			public void actionPerformed(ActionEvent e) {
 				handleAddToZone(ZoneType.DECK);
 				layer.move(card, layer.getCardZoneManager().getZone(ZoneType.DECK).size());
+				handleMovedToTopOrBottom(ClickableCardRow.this, ZoneType.DECK, false);
 			}
 			
 		});
@@ -251,6 +253,10 @@ public class ClickableCardRow extends PPanel implements MouseListener {
 	public void mouseReleased(MouseEvent e) {}
 		
 	public void handleMovedToZone(ClickableCardRow row, ZoneType zone) {
+		
+	}
+	
+	public void handleMovedToTopOrBottom(ClickableCardRow row, ZoneType zone, boolean top) {
 		
 	}
 }

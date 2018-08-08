@@ -40,6 +40,9 @@ public class RenderableList<T extends IRenderable> extends ArrayList<T> implemen
 	}
 	
 	public void move(T obj, int index) {
+		if(index < 0) {
+			index = size() + index;
+		}
 		if(obj == null || index < 0 || index >= size()) {
 			return;
 		}

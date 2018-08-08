@@ -32,6 +32,8 @@ public class InspectView extends JandorView {
 	protected JCheckBox shuffle;
 	protected CardSearchPanel cardSearchPanel;
 	protected int topCount;
+	protected List<Card> topDeckCards = new ArrayList<Card>();
+	protected List<Card> bottomDeckCards = new ArrayList<Card>();
 	
 	public InspectView(String name, CardLayer layer, ZoneType zoneType) {
 		this(name, layer, zoneType, -1);
@@ -53,6 +55,12 @@ public class InspectView extends JandorView {
 		
 		if(shuffle.isSelected()) {
 			layer.shuffleCards(layer.getCardZoneManager().getZone(zoneType), true, false);
+			for(Card card : topDeckCards) {
+				layer.move(card, 0);
+			}
+			for(Card card : bottomDeckCards) {
+				layer.move(card, -1);
+			}
 		}
 	}
 
@@ -92,14 +100,11 @@ public class InspectView extends JandorView {
 				@Override
 				public void handleMovedToZone(ClickableCardRow r, ZoneType zone) {
 					List<Card> cardsToSearch = new ArrayList<Card>();
+					cardRows.remove(r);
 					for(ClickableCardRow row : cardRows) {
-						if(row.equals(r)) {
-							continue;
-						}
 						cardsToSearch.add(row.getCard());
 						row.update();
 					}
-					cardRows.remove(r);
 					cardSearchPanel.setCardsToSearch(cardsToSearch);
 					
 					if(cardRows.size() == 0) {
@@ -107,6 +112,15 @@ public class InspectView extends JandorView {
 						if(root != null) {
 							root.setVisible(false);
 						}
+					}
+				}
+				
+				@Override
+				public void handleMovedToTopOrBottom(ClickableCardRow row, ZoneType zone, boolean top) {
+					if(top) {
+						topDeckCards.add(row.getCard());
+					} else {
+						bottomDeckCards.add(row.getCard());
 					}
 				}
 				
