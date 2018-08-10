@@ -1,14 +1,14 @@
 package zone;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import util.ImageUtil;
-import util.ShuffleUtil;
 import canvas.AbstractRenderer;
 import canvas.CardLayer;
 import canvas.IRenderable;
@@ -16,6 +16,8 @@ import canvas.Location;
 import canvas.animation.Animator;
 import deck.Card;
 import dice.Token;
+import util.ImageUtil;
+import util.ShuffleUtil;
 
 public class ZoneRenderer extends AbstractRenderer<Zone> {
 
@@ -43,7 +45,7 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 	}
 
 	@Override
-	public void render(CardLayer layer, Graphics2D g, Zone object, Location location) {
+	public void render(CardLayer layer, Graphics2D g, Zone zone, Location location) {
 		BufferedImage img = getImage();
 		if(img == null) {
 			return;
@@ -62,6 +64,15 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 		int y = (int) (b.getY() + (b.getHeight() - img.getHeight()) / 2);
 		g.drawImage(img, x, y, null);
 		//g.draw(getBounds());
+		
+		if(CardLayer.isShowCardCounts() && zone.getType().isCountable()) {
+			String cardCount = "" + zone.size();
+			g.setColor(CardLayer.isLightView() ? Color.BLACK : Color.WHITE);
+			FontMetrics fm = g.getFontMetrics();
+			int textWidth = fm.stringWidth(cardCount);
+			int textHeight = fm.getHeight();
+			g.drawString(cardCount, (int) (b.getX() + (b.getWidth() - textWidth)/2), (int) Math.max(20, b.getY() + textHeight/2));
+		}
 	}
 	
 	public Location getCenter() {

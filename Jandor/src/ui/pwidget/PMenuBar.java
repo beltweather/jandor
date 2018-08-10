@@ -126,6 +126,10 @@ public class PMenuBar extends JMenuBar {
         final JCheckBoxMenuItem lightBoard = new JCheckBoxMenuItem("Light Background");
         lightBoard.setSelected(Session.getInstance().getPreferences().isLightView());
         viewMenu.add(lightBoard);
+        
+        final JCheckBoxMenuItem cardCounts = new JCheckBoxMenuItem("Card Counts");
+        lightBoard.setSelected(Session.getInstance().getPreferences().isShowCardCounts());
+        viewMenu.add(cardCounts);
 
         //JMenuItem addContactAction = new JMenuItem("New Contact");
         JMenuItem viewFriendsAction = new JMenuItem("View Friends");
@@ -293,6 +297,17 @@ public class PMenuBar extends JMenuBar {
 			public void actionPerformed(ActionEvent e) {
 				CardLayer.setLightView(lightBoard.isSelected());
 				Session.getInstance().getPreferences().setLightView(lightBoard.isSelected());
+				Session.getInstance().getPreferences().save();
+			}
+        	
+        });
+        
+        cardCounts.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				CardLayer.setShowCardCounts(cardCounts.isSelected());
+				Session.getInstance().getPreferences().setShowCardCounts(cardCounts.isSelected());
 				Session.getInstance().getPreferences().save();
 			}
         	

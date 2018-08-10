@@ -65,7 +65,19 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	protected static String BACKGROUND_FILENAME = "background-0-dark.png";
 	protected static String OPPONENT_BACKGROUND_FILENAME = "background-0-light.png";
 	
+	protected static boolean SHOW_CARD_COUNTS = false;
+	protected static boolean LIGHT_VIEW = false;
+	
+	public static boolean isLightView() {
+		return LIGHT_VIEW;
+	}
+	
+	public static boolean isShowCardCounts() {
+		return SHOW_CARD_COUNTS;
+	}
+	
 	public static void setLightView(boolean lightView) {
+		LIGHT_VIEW = lightView;
 		if(lightView) {
 			BACKGROUND_FILENAME = "background-0-light.png";
 			OPPONENT_BACKGROUND_FILENAME = "background-0-dark.png";
@@ -73,6 +85,14 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			BACKGROUND_FILENAME = "background-0-dark.png";
 			OPPONENT_BACKGROUND_FILENAME = "background-0-light.png";
 		}
+		CardLayer layer = getActiveCardLayer();
+		if(layer != null) {
+			layer.repaint();
+		}
+	}
+
+	public static void setShowCardCounts(boolean showCardCounts) {
+		SHOW_CARD_COUNTS = showCardCounts;
 		CardLayer layer = getActiveCardLayer();
 		if(layer != null) {
 			layer.repaint();
@@ -161,6 +181,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		shuffleGesture = buildShuffleGesture();
 
 		setLightView(Session.getInstance().getPreferences().isLightView());
+		setShowCardCounts(Session.getInstance().getPreferences().isShowCardCounts());
 	}
 	
 	private void initDice(boolean hasCommander) {
