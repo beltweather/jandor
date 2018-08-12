@@ -591,7 +591,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void paintDie(Graphics2D g, int width, int height, Die die) {
+		boolean revert = !die.getRenderer().isTransformedProjection();
 		if(revert) {
+			getCanvas().getZoom().revert(g);
 		}
 		die.getRenderer().paintComponent(this, g, width, height);
 		if(handler.isSelected(die)) {
