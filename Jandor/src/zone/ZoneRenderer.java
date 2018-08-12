@@ -63,7 +63,7 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 		int x = (int) (b.getX() + (b.getWidth() - img.getWidth()) / 2);
 		int y = (int) (b.getY() + (b.getHeight() - img.getHeight()) / 2);
 		g.drawImage(img, x, y, null);
-		//g.draw(getBounds());
+		g.draw(getBounds());
 		
 		if(CardLayer.isShowCardCounts() && zone.getType().isCountable()) {
 			String cardCount = "" + zone.size();
@@ -248,6 +248,5 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 	public String getBackImageAlias() {
 		return null;
 	}
-	
 
 }

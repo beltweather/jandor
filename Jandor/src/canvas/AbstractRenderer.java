@@ -13,6 +13,8 @@ import zone.ZoneType;
 
 public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	
+	private static final long serialVersionUID = 1L;
+
 	public static final int TAP_ANGLE = 45;
 	public static final int FULL_SCALE = -1;
 	
@@ -27,12 +29,15 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	protected boolean canDrag = true;
 	protected boolean faceUp = true;
 	protected ZoneType zoneType = ZoneType.NONE;
-	protected ZoneType lastZoneType = null;
+	protected ZoneType lastZoneType = ZoneType.NONE;
+	protected ZoneType lastPendingZoneType = ZoneType.NONE; 
 	protected boolean pendingZoneChange = false;
 	protected boolean tapped;
 	protected boolean hovered;
 	protected int zIndex = 0;
 	protected boolean visible = true;
+	protected Location zoneChangeLocation = new Location(0, 0);
+	protected boolean transformedProjection = false;
 	
 	protected IRenderer parent;
 	protected List<IRenderer> children = new ArrayList<IRenderer>();
@@ -63,6 +68,7 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	
 	@Override
 	public void setScreenX(int screenX) {
+		int lastScreenX = getScreenX();
 		location.setScreenX(screenX);
 		flagRecomputeBounds();
 	}
@@ -71,6 +77,11 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	public void setScreenY(int screenY) {
 		location.setScreenY(screenY);
 		flagRecomputeBounds();
+	}
+	
+	@Override
+	public void setTransformedProjection(boolean transformedProjection) {
+		this.transformedProjection = transformedProjection;
 	}
 	
 	@Override
@@ -84,13 +95,23 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 		location.setScreenY(screenY);
 		flagRecomputeBounds();
 	}
-
+	
 	@Override
 	public void setLocation(Location location) {
 		this.location = location;
 		flagRecomputeBounds();
 	}
 	
+	public void setCenter(int screenX, int screenY) {
+		int x = screenX - getWidth() / 2;
+		int y = screenY - getHeight() / 2;
+		setLocation(x, y);
+	}
+	
+	public void setCenter(Location center) {
+		setCenter(center.getScreenX(), center.getScreenY());
+	}
+	 
 	@Override
 	public Shape getBounds() {
 		if(bounds == null) {
@@ -243,9 +264,27 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	@Override
 	public void setZoneType(ZoneType zoneType) {
 		if(this.zoneType != zoneType) {
+			rememberLastPendingZoneType();
 			this.zoneType = zoneType;
 			flagPendingZoneChange();
 		}
+	}
+	
+	@Override
+	public void setZoneChangeLocation(Location location) {
+		this.zoneChangeLocation = location;
+	}
+	
+	@Override
+	public boolean hasMovedEnoughToFindNewZone(Location location) {
+		if(zoneChangeLocation == null) {
+			return true;
+		}
+		double dist = location.toPoint().distance(zoneChangeLocation.toPoint());
+		if(dist > 50) {
+			return true;
+		}
+		return false;
 	}
 	
 	@Override
@@ -267,6 +306,21 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	public void forgetLastZoneType() {
 		lastZoneType = null;
 	}
+	
+	@Override
+	public ZoneType getLastPendingZoneType() {
+		return lastPendingZoneType;
+	}
+	
+	@Override
+	public void rememberLastPendingZoneType() {
+		lastPendingZoneType = zoneType; 
+	}
+	
+	@Override
+	public void forgetLastPendingZoneType() {
+		lastPendingZoneType = null;
+	}
 		
 	@Override
 	public void flagPendingZoneChange() {
@@ -276,6 +330,7 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	@Override
 	public void clearPendingFlagZoneChange() {
 		pendingZoneChange = false;
+		forgetLastPendingZoneType();
 	}
 	
 	@Override
@@ -414,6 +469,11 @@ public abstract class AbstractRenderer<T> implements IRenderer<T> {
 	@Override
 	public void setVisible(boolean visible) {
 		this.visible = visible;
+	}
+
+	@Override
+	public boolean isTransformedProjection() {
+		return transformedProjection; //getZoneType().isTransformedProjection();
 	}
 	
 	@Override

@@ -50,9 +50,9 @@ public class CardRenderer extends AbstractRenderer<Card> {
 
 	@Override
 	protected Shape computeBounds() {
-		if(getScreenX() == -1 || getScreenY() == -1) {
+		/*if(getScreenX() == -1 || getScreenY() == -1) {
 			return null;
-		}
+		}*/
 		getImage(); // For width and height
 		Shape s = new RoundRectangle2D.Float(getScreenX(), getScreenY(), origImageW, origImageH, ImageUtil.getCardCornerRadius(getScale()), ImageUtil.getCardCornerRadius(getScale()));
 		if(getAngle() != 0) {
@@ -67,6 +67,7 @@ public class CardRenderer extends AbstractRenderer<Card> {
 		if(card == null) {
 			return;
 		}
+		
 		BufferedImage img = getImage(!hideCard(layer, card));
 		Rectangle bounds = getBounds().getBounds();
 		g.drawImage(img, (int) bounds.getX(), (int) bounds.getY(), null);
@@ -76,7 +77,9 @@ public class CardRenderer extends AbstractRenderer<Card> {
 			g.fill(getBounds());
 			g.setColor(Color.GREEN);
 			g.setStroke(new BasicStroke(1));
-			//g.draw(getBounds());
+			if(RENDER_BOUNDS) {
+				g.draw(getBounds());
+			}
 		}
 		
 		if(RENDER_ZONE_TYPE) {
@@ -109,6 +112,7 @@ public class CardRenderer extends AbstractRenderer<Card> {
 				g.draw(getBounds());
 			}
 		}
+		
 	}
 	
 	public boolean hideCard(CardLayer layer, Card card) {
@@ -139,5 +143,5 @@ public class CardRenderer extends AbstractRenderer<Card> {
 	public void toggleFaceUp() {
 		this.faceUp = !this.faceUp;
 	}
-	
+
 }

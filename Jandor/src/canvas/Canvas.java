@@ -7,6 +7,7 @@ import java.awt.RenderingHints;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.AffineTransform;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +16,14 @@ import javax.swing.JPanel;
 
 import util.MouseDetective;
 import canvas.handler.MouseHandler;
+import canvas.zoom.ZoomAndPanListener;
 
 public class Canvas extends JPanel implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private List<ICanvasLayer> layers;
+	private ZoomAndPanListener zoomAndPanListener;
 	
 	public Canvas(ICanvasLayer... layers) {
 		super();
@@ -29,6 +32,13 @@ public class Canvas extends JPanel implements Serializable {
 		for(ICanvasLayer layer : layers) {
 			addLayer(layer);
 		}
+		
+		zoomAndPanListener = new ZoomAndPanListener(this);
+		//zoomAndPanListener.setMoveCameraEnabled(false);
+	}
+	
+	public ZoomAndPanListener getZoom() {
+		return zoomAndPanListener;
 	}
 	
 	@Override
@@ -46,13 +56,16 @@ public class Canvas extends JPanel implements Serializable {
 	    
 	    g2.setRenderingHints(rh);
 		
-	    
 		int width = getWidth();
 		int height = getHeight();
+		
+		zoomAndPanListener.transform(g2);
 		
 		for(ICanvasLayer layer : layers) {
 			layer.paintComponent(g2, width, height);
 		}
+		
+		zoomAndPanListener.revert(g2);
 	}
 	
 	public void addLayer(ICanvasLayer layer) {

@@ -159,7 +159,7 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 			
 			if(dragObject == null && !manager.isDragging() && !managerDraggingSelected && MouseUtil.isLeft(e) && enableDragSelect) {
 				dragMode = DRAG_MODE_SELECT;
-				dragStart = new Location(e.getX(), e.getY());
+				dragStart = inverse(new Location(e.getX(), e.getY()));
 				for(T obj : getSelected()) {
 					obj.getRenderer().rememberLastZoneType();
 				}
@@ -209,7 +209,7 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 					obj.getRenderer().setZoneType(zoneOverride);
 				}
 			} else {
-				zoneManager.setZones(getObjects());
+				zoneManager.setZones(getCanvas(), false, getObjects());
 			}
 			mouseStopDragLeft(e, dragObjects);
 		}
@@ -243,7 +243,12 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		lastDragEnd = dragEnd;
-		dragEnd = new Location(e.getX(), e.getY());
+		if(dragObject != null && !dragObject.getRenderer().isTransformedProjection()) {
+			dragEnd = new Location(e.getX(), e.getY());
+		} else {
+			dragEnd = inverse(new Location(e.getX(), e.getY()));
+		}
+		
 		mouseDraggedLeft(e);
 		updateDraggedObjectLocations();
 		
@@ -312,16 +317,28 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	// SEARCH METHODS
 	
 	public T find(MouseEvent e) {
-		return find(new Location(e));
+		T obj = find(e, false);
+		if(obj != null) {
+			return obj;
+		}
+		return find(e, true);
 	}
 	
-	public T find(Location location) {
+	public T find(MouseEvent e, boolean transformed) {
+		Location location = new Location(e);
+		Location inverseLocation = inverse(location);
 		for(T obj : getViewOrderedObjects()) {
-			if(obj.getRenderer().overlaps(location)) {
+			if(obj.getRenderer().getZoneType().isTransformedProjection() && obj.getRenderer().overlaps(inverseLocation)) {
+				return obj;
+			} else if(!obj.getRenderer().getZoneType().isTransformedProjection() && obj.getRenderer().overlaps(location)) {
 				return obj;
 			}
 		}
 		return null;
+	}
+	
+	public Location inverse(Location location) {
+		return getCanvas().getZoom().inverseTransform(location);
 	}
 	
 	// SELECT METHODS
@@ -423,8 +440,8 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 		int	dragOffsetX = getDragScreenOffsetX();
 		int	dragOffsetY = getDragScreenOffsetY();
 		
-		int screenW = getLayer().getScreenWidth();
-		int screenH = getLayer().getScreenHeight();
+		//int screenW = getCanvas().getZoom().inverseTransformDimension(getLayer().getScreenWidth());
+		//int screenH = getCanvas().getZoom().inverseTransformDimension(getLayer().getScreenHeight());
 		
 		if(!isDraggingCard && !isDraggingSelection) {
 			return;
@@ -436,10 +453,10 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 				int x = r.getScreenX() + dragOffsetX;
 				int y = r.getScreenY() + dragOffsetY;
 				
-				if(x < 0) { x = 0;}
+				/*if(x < 0) { x = 0;}
 				if(y < 0) { y = 0;}
 				if(x + r.getWidth() >= screenW) { x = screenW - r.getWidth() - 1; }
-				if(y + r.getHeight() >= screenH) { y = screenH - r.getHeight() - 1; }
+				if(y + r.getHeight() >= screenH) { y = screenH - r.getHeight() - 1; }*/
 				
 				r.setScreenX(x);
 				r.setScreenY(y);

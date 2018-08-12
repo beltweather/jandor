@@ -427,8 +427,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		dicePaintSecond.clear();
 		
 		clearZIndex();
+		getCanvas().getZoom().revert(g);
 		paintBackground(g, screenW, screenH);
 		paintZones(g, screenW, screenH);
+		getCanvas().getZoom().transform(g);
 		paintCards(g, screenW, screenH);
 		paintDice(g, screenW, screenH);
 		paintSecond(g, screenW, screenH);
@@ -518,10 +520,17 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void paintCard(Graphics2D g, int width, int height, Card card) {
+		boolean revert = !card.isTransformedProjection();
+		if(revert) {
+			getCanvas().getZoom().revert(g);
+		}
 		card.paintComponent(this, g, width, height);
 		if(handler.isSelected(card)) {
 			paintSelected(g, card);
-		} 
+		}
+		if(revert) {
+			getCanvas().getZoom().transform(g);
+		}
 	}
 	
 	private void paintSelected(Graphics2D g, IRenderable renderable) {
@@ -582,13 +591,22 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void paintDie(Graphics2D g, int width, int height, Die die) {
+		if(revert) {
+		}
 		die.getRenderer().paintComponent(this, g, width, height);
 		if(handler.isSelected(die)) {
 			paintSelected(g, die);
 		} 
+		if(revert) {
+			getCanvas().getZoom().transform(g);
+		}
 	}
 	
 	protected void update(int width, int height) {
+		/*Location dim = getCanvas().getZoom().inverseTransform(width, height);
+		width = dim.getScreenX();
+		height = dim.getScreenY();*/
+		
 		int lastScreenW = screenW;
 		int lastScreenH = screenH;
 		//if(!opponentView) {
@@ -618,7 +636,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			
 			for(Card card : getAllCards()) {
 				if(dx != 0) {
-					if(card.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+					if(card.getRenderer().getZoneType() == ZoneType.GRAVEYARD || card.getRenderer().getZoneType() == ZoneType.COMMANDER) {
 						card.getRenderer().setScreenX(Math.max(0, card.getRenderer().getScreenX() + dx));
 					} else if(card.getRenderer().getZoneType() == ZoneType.HAND) {
 						card.getRenderer().setScreenX(Math.max(0, card.getRenderer().getScreenX() + dx/2));
@@ -630,7 +648,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		
 			for(Die die : d10s) {
-				if(dx != 0 && die.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER)) {
 					die.getRenderer().setScreenX(Math.max(0, die.getRenderer().getScreenX() + dx));
 				}
 				if(dy != 0) {
@@ -639,7 +657,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		
 			for(Die die : counters) {
-				if(dx != 0 && die.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER)) {
 					die.getRenderer().setScreenX(Math.max(0, die.getRenderer().getScreenX() + dx));
 				}
 				if(dy != 0) {
@@ -648,7 +666,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 			
 			for(Die die : tokens) {
-				if(dx != 0 && die.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER)) {
 					die.getRenderer().setScreenX(Math.max(0, die.getRenderer().getScreenX() + dx));
 				}
 				if(dy != 0) {
@@ -658,15 +676,16 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		}
 		
-		cardZoneManager.setZones(getAllCards());
-		dieZoneManager.setZones(d10s);
-		dieZoneManager.setZones(counters, false);
-		dieZoneManager.setZones(tokens, false);
-		
 		screenSizeChanged = false;
 		
-		if(handler.isDragging()) {
-			handleMoved(allObjects, handler.isDragging());
+		boolean isDragging = handler.isDragging();
+		cardZoneManager.setZones(getCanvas(), isDragging, getAllCards());
+		dieZoneManager.setZones(getCanvas(), isDragging, d10s);
+		dieZoneManager.setZones(getCanvas(), isDragging, counters, false);
+		dieZoneManager.setZones(getCanvas(), isDragging, tokens, false);
+		
+		if(isDragging) {
+			handleMoved(allObjects, isDragging);
 		}
 		
 		synchronize();
@@ -1249,6 +1268,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		ZoneType type = card.getZoneType();
 		Zone zone = cardZoneManager.getZone(type);
 		boolean zoneChanged = (!isDragging && card.hasChangedZones()) || (card.hasPendingZoneChange());
+	
+		//Location center = card.getCenter();
 		
 		switch(type) {
 			case DECK:
@@ -1257,7 +1278,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.setScale(0.7);
 					card.restoreAngle();
-					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1271,7 +1291,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.setScale(0.7);
 					card.setAngle(180 + ShuffleUtil.randInt(-10, 10));
-					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1285,7 +1304,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.restoreScale();
 					card.restoreAngle();
-					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().setShouldFan(true);
@@ -1298,7 +1316,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					}*/
 					card.setScale(0.7);
 					card.restoreAngle();
-					card.recomputeBounds();
 				}
 				break;
 			case EXILE:
@@ -1310,7 +1327,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setScale(0.2);
 					card.setAngle(ShuffleUtil.randInt(-10, 10));
 					//card.restoreAngle();
-					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1324,7 +1340,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.setScale(0.2);
 					card.setAngle(0);
-					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1332,6 +1347,15 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				break;
 			default:
 				break;
+		}
+		
+		if(zoneChanged) {
+			if(isDragging) {
+				//card.recomputeBounds();
+				//card.setCenter(center);
+			} 
+			card.recomputeBounds();
+			card.setTransformedProjection(zone.getType().isTransformedProjection());
 		}
 		
 		if(!isDragging) {

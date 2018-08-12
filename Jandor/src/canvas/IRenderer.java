@@ -22,6 +22,8 @@ public interface IRenderer<T> extends Serializable {
 	
 	public void setScreenY(int screenY);
 	
+	public void setTransformedProjection(boolean transformedProjection);
+	
 	public Location getLocation();
 	
 	public void setLocation(int screenX, int screenY);
@@ -81,6 +83,16 @@ public interface IRenderer<T> extends Serializable {
 	public void rememberLastZoneType();
 	
 	public void forgetLastZoneType();
+	
+	public ZoneType getLastPendingZoneType();
+	
+	public void rememberLastPendingZoneType();
+	
+	public void forgetLastPendingZoneType();
+	
+	public void setZoneChangeLocation(Location location);
+	
+	public boolean hasMovedEnoughToFindNewZone(Location location);
 	
 	public void flagPendingZoneChange();
 	
@@ -144,4 +156,6 @@ public interface IRenderer<T> extends Serializable {
 	public boolean isVisible();
 	
 	public void setVisible(boolean visible);
+	
+	public boolean isTransformedProjection();
 }

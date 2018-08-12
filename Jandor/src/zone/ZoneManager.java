@@ -7,14 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import canvas.Canvas;
 import canvas.IRenderable;
 import canvas.Location;
+import deck.Card;
 
 public class ZoneManager implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	Map<ZoneType, Zone> zones = new LinkedHashMap<ZoneType, Zone>();
+	private Map<ZoneType, Zone> zones = new LinkedHashMap<ZoneType, Zone>();
 	
 	public ZoneManager() {
 		for(ZoneType type : ZoneType.getSortedValues()) {
@@ -56,11 +58,11 @@ public class ZoneManager implements Serializable {
 		}
 	}
 	
-	public <T extends IRenderable> void setZones(List<T> objects) {	
-		setZones(objects, true);
+	public <T extends IRenderable> void setZones(Canvas canvas, boolean isDragging, List<T> objects) {	
+		setZones(canvas, isDragging, objects, true);
 	}
 	
-	public <T extends IRenderable> void setZones(List<T> objects, boolean clearZones) {
+	public <T extends IRenderable> void setZones(Canvas canvas, boolean isDragging, List<T> objects, boolean clearZones) {
 		if(clearZones) {
 			clearZones();
 		}
@@ -69,7 +71,7 @@ public class ZoneManager implements Serializable {
 		}
 		
 		for(IRenderable obj : objects) {
-			Zone zone = findClosestZone(obj);
+			Zone zone = findClosestZone(canvas, isDragging, obj);
 			if(zone != null) {
 				zone.add(obj);
 				obj.getRenderer().setZoneType(zone.getType());
@@ -77,19 +79,41 @@ public class ZoneManager implements Serializable {
 		}
 	}
 	
-	public Zone findClosestZone(IRenderable obj) {
-		Location center = new Location(obj.getRenderer().getScreenX() + obj.getRenderer().getWidth() / 2, 
-									   obj.getRenderer().getScreenY() + obj.getRenderer().getHeight() / 2);
+	public Zone findClosestZone(Canvas canvas, boolean isDragging, IRenderable obj) {
+		Location center = new Location((int) Math.round(obj.getRenderer().getScreenX() + obj.getRenderer().getWidth() / 2.0), 
+									   (int) Math.round(obj.getRenderer().getScreenY() + obj.getRenderer().getHeight() / 2.0));
+		
+		Location centerNoTransform = center;
+		if(obj.getRenderer().isTransformedProjection()) {
+			centerNoTransform = canvas.getZoom().transform(center);
+		}
+		
+		if(isDragging && !obj.getRenderer().hasMovedEnoughToFindNewZone(centerNoTransform)) {
+			if(obj.getRenderer().getZoneType() == null || obj.getRenderer().getZoneType() == ZoneType.NONE) {
+				return zones.get(ZoneType.BATTLEFIELD);
+			}
+			return zones.get(obj.getRenderer().getZoneType());
+		}
 		
 		Class klass = obj.getClass();
 		for(Zone zone : zones.values()) {
 			Class zoneKlass = zone.getObjectClass();
-			if(zoneKlass.isAssignableFrom(klass) && zone.overlaps(center)) {
+			
+			// We'll use battlefield as the default, so we never need to check if it's there,
+			// we just need to check that it's not in any other zone.
+			if(zone.getType() == ZoneType.BATTLEFIELD) {
+				continue;
+			}
+			
+			if(zoneKlass.isAssignableFrom(klass) && zone.overlaps(centerNoTransform)) {
+				obj.getRenderer().setZoneChangeLocation(centerNoTransform);
 				return zone;
 			}
 		}
 		
-		return null;
+		// Return battlefield as the default zone when not in any other.
+		obj.getRenderer().setZoneChangeLocation(centerNoTransform);
+		return zones.get(ZoneType.BATTLEFIELD);
 	}
 	
 	public Zone getZone(IRenderable obj) {

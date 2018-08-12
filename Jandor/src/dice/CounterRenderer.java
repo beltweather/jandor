@@ -31,9 +31,9 @@ public class CounterRenderer extends AbstractRenderer<Die> {
 	
 	@Override
 	public Shape computeBounds() {
-		if(getScreenX() == -1 || getScreenY() == -1) {
+		/*if(getScreenX() == -1 || getScreenY() == -1) {
 			return null;
-		}
+		}*/
 		getImage(); // For width and height
 		Shape s;
 		
