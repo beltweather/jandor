@@ -145,6 +145,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	private transient Canvas canvas;
 	
+	private transient CardList cardsPaintFirst = new CardList();
+	private transient CardList dicePaintFirst = new CardList();
+	
 	private transient CardList cardsPaintSecond = new CardList();
 	private transient DieList dicePaintSecond = new DieList();
 	
@@ -1361,10 +1364,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 		
 		if(zoneChanged) {
-			if(isDragging) {
-				//card.recomputeBounds();
-				//card.setCenter(center);
-			} 
 			card.recomputeBounds();
 		}
 		
