@@ -159,7 +159,7 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 			
 			if(dragObject == null && !manager.isDragging() && !managerDraggingSelected && MouseUtil.isLeft(e) && enableDragSelect) {
 				dragMode = DRAG_MODE_SELECT;
-				dragStart = inverse(new Location(e.getX(), e.getY()));
+				dragStart = new Location(e.getX(), e.getY()); //inverse(new Location(e.getX(), e.getY()));
 				for(T obj : getSelected()) {
 					obj.getRenderer().rememberLastZoneType();
 				}
@@ -243,11 +243,12 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		lastDragEnd = dragEnd;
-		if(dragObject != null && !dragObject.getRenderer().isTransformedProjection()) {
+		/*if(dragObject != null && !dragObject.getRenderer().isTransformedProjection()) {
 			dragEnd = new Location(e.getX(), e.getY());
 		} else {
 			dragEnd = inverse(new Location(e.getX(), e.getY()));
-		}
+		}*/
+		dragEnd = new Location(e.getX(), e.getY());
 		
 		mouseDraggedLeft(e);
 		updateDraggedObjectLocations();
@@ -439,9 +440,8 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 		boolean isDraggingSelection = isDraggingObjectSelection() || manager.isDraggingSelection();
 		int	dragOffsetX = getDragScreenOffsetX();
 		int	dragOffsetY = getDragScreenOffsetY();
-		
-		//int screenW = getCanvas().getZoom().inverseTransformDimension(getLayer().getScreenWidth());
-		//int screenH = getCanvas().getZoom().inverseTransformDimension(getLayer().getScreenHeight());
+		int tDragOffsetX = getTransformedDragScreenOffsetX();
+		int tDragOffsetY = getTransformedDragScreenOffsetY();
 		
 		if(!isDraggingCard && !isDraggingSelection) {
 			return;
@@ -450,23 +450,39 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 		for(T obj : getObjects()) {
 			if(obj.equals(dragObject) || (isDraggingSelection && isSelected(obj))) {
 				IRenderer r = obj.getRenderer();
-				int x = r.getScreenX() + dragOffsetX;
-				int y = r.getScreenY() + dragOffsetY;
+				boolean transformed = r.isTransformedProjection();
 				
-				/*if(x < 0) { x = 0;}
-				if(y < 0) { y = 0;}
-				if(x + r.getWidth() >= screenW) { x = screenW - r.getWidth() - 1; }
-				if(y + r.getHeight() >= screenH) { y = screenH - r.getHeight() - 1; }*/
+				int x = r.getScreenX() + (transformed ? tDragOffsetX : dragOffsetX);
+				int y = r.getScreenY() + (transformed ? tDragOffsetY : dragOffsetY);
 				
 				r.setScreenX(x);
 				r.setScreenY(y);
+				
+				if(r.isTransformedProjection() && !r.getZoneType().isTransformedProjection()) {
+					r.setLocation(getCanvas().getZoom().transform(r.getLocation()));
+					r.setTransformedProjection(false);
+				} else if(!r.isTransformedProjection() && r.getZoneType().isTransformedProjection()) {
+					r.setLocation(getCanvas().getZoom().inverseTransform(r.getLocation()));
+					r.setTransformedProjection(true);
+				}
 				
 				if(r.hasChildren()) {
 					for(Object o : r.getChildren()) {
 						IRenderer child = (IRenderer) o;
 						if(!isDragged((T) child.getObject())) {
+							x = child.getScreenX() + (transformed ? tDragOffsetX : dragOffsetX);
+							y = child.getScreenY() + (transformed ? tDragOffsetY : dragOffsetY);
+							
 							child.setScreenX(child.getScreenX() + dragOffsetX);
 							child.setScreenY(child.getScreenY() + dragOffsetY);
+							
+							if(child.isTransformedProjection() && !child.getZoneType().isTransformedProjection()) {
+								child.setLocation(getCanvas().getZoom().transform(child.getLocation()));
+								child.setTransformedProjection(false);
+							} else if(!child.isTransformedProjection() && child.getZoneType().isTransformedProjection()) {
+								child.setLocation(getCanvas().getZoom().inverseTransform(child.getLocation()));
+								child.setTransformedProjection(true);
+							}
 						}
 					}
 				}
@@ -515,6 +531,23 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 		}
 		return dragEnd.getScreenY() - lastDragEnd.getScreenY();
 	}
+	
+	private int getTransformedDragScreenOffsetX() {
+		if(dragEnd == null || lastDragEnd == null) {
+			return 0;
+		}
+		return getCanvas().getZoom().inverseTransform(dragEnd.getScreenX(), 0).getScreenX() - 
+			   getCanvas().getZoom().inverseTransform(lastDragEnd.getScreenX(), 0).getScreenX();
+	}
+	
+	private int getTransformedDragScreenOffsetY() {
+		if(dragEnd == null || lastDragEnd == null) {
+			return 0;
+		}
+		return getCanvas().getZoom().inverseTransform(0, dragEnd.getScreenY()).getScreenY() - 
+			   getCanvas().getZoom().inverseTransform(0, lastDragEnd.getScreenY()).getScreenY();
+	}
+
 	
 	public void clear() {
 		clear(false);
