@@ -28,7 +28,7 @@ public class ZoomAndPanListener implements MouseListener, MouseMotionListener, M
 	
 	private static final long serialVersionUID = 1L;
 	
-	public static final int DEFAULT_MIN_ZOOM_LEVEL = 0;//-20;
+	public static final int DEFAULT_MIN_ZOOM_LEVEL = -3;//-20;
 	public static final int DEFAULT_MAX_ZOOM_LEVEL = 5;//20;
 	public static final double DEFAULT_ZOOM_MULTIPLICATION_FACTOR = 1.2;
 

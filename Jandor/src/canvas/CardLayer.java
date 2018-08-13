@@ -1325,6 +1325,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 						card.setFaceUp(true);
 					}*/
 					//card.setScale(0.7);
+					card.restoreScale();
 					card.restoreAngle();
 				}
 				break;
