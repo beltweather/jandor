@@ -227,14 +227,16 @@ public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 
 	@Override
 	public void mouseDraggedOverMiddle(MouseEvent e, IRenderable c) {
-		if(!canEdit()) {
+		// We want to use middle drag for the time being to move the camera,
+		// so comment this out.
+		/*if(!canEdit()) {
 			return;
 		}
 		
 		if(c != null && c.getRenderer().getZoneType() != ZoneType.GRAVEYARD) {
 			c.getRenderer().setFaceUp(!c.getRenderer().isFaceUp());
 			getLayer().flagChange();
-		}
+		}*/
 	}
 
 	@Override

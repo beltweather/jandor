@@ -88,7 +88,7 @@ public class ZoneManager implements Serializable {
 			centerNoTransform = canvas.getZoom().transform(center);
 		}
 		
-		if(isDragging && !obj.getRenderer().hasMovedEnoughToFindNewZone(centerNoTransform)) {
+		if(!isDragging || (isDragging && !obj.getRenderer().hasMovedEnoughToFindNewZone(centerNoTransform))) {
 			if(obj.getRenderer().getZoneType() == null || obj.getRenderer().getZoneType() == ZoneType.NONE) {
 				return zones.get(ZoneType.BATTLEFIELD);
 			}

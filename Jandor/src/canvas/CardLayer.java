@@ -145,43 +145,85 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	private transient Canvas canvas;
 	
-	private transient CardList cardsPaintFirst = new CardList();
-	private transient CardList dicePaintFirst = new CardList();
+	private transient CardList battlefieldCards = new CardList();
+	private transient CardList normalCards = new CardList();
+	private transient CardList draggedCards = new CardList();
 	
-	private transient CardList cardsPaintSecond = new CardList();
-	private transient DieList dicePaintSecond = new DieList();
+	private transient DieList battlefieldDice = new DieList();
+	private transient DieList normalDice = new DieList();
+	private transient DieList draggedDice = new DieList();
 	
 	private transient List<Card> pendingCards;
 	
 	private transient boolean opponentView = true;
 	
-	private transient ZoneManager cardZoneManager = new ZoneManager();
-	private transient ZoneManager dieZoneManager = new ZoneManager();
+	private transient ZoneManager cardZoneManager;
+	private transient ZoneManager dieZoneManager;
 	
 	private transient List<CardLayer> syncedLayers = new ArrayList<CardLayer>();
 	
-	private transient boolean initialized = false;
+	private transient boolean initialized;
 	
 	private transient List<Card> cardsToInitialize;
 	
-	private transient CardList originalCards = new CardList();
+	private transient CardList originalCards;
+	
+	private transient boolean newGame;
 	
 	public CardLayer(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
+		init(canvas, cards, enableListeners);
+	}
+	
+	private void init(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
 		this.canvas = canvas;
-		this.originalCards = new CardList(cards);
 		
-		this.allObjects = new RenderableList<IRenderable>();
-		this.opponentView = !enableListeners;
+		originalCards = new CardList(cards.getCopy());
+		
+		allObjects = new RenderableList<IRenderable>();
+		allCards = new CardList();
+
+		d10s = new DieList();
+		counters = new DieList();
+		tokens = new DieList();
+
+		opponentView = !enableListeners;
+		
 		cardsToInitialize = cards;
+		initialized = false;
 		
-		handlerManager = new MouseHandlerManager();
-		handler = new RenderableHandler(handlerManager, this);
-		handlerManager.add(handler);
+		if(handler == null) {
+			handler = new RenderableHandler(handlerManager, this);
+			handlerManager.add(handler);
+		}
+		
+		cardZoneManager = new ZoneManager();
+		dieZoneManager = new ZoneManager();
 		
 		dieZoneManager.removeZone(ZoneType.EXILE);
 		dieZoneManager.getZone(ZoneType.DECK).getRenderer().setSnapAnchor(ZoneRenderer.ANCHOR_BOTTOM);
 		
 		shuffleGesture = buildShuffleGesture();
+		
+		zIndex = 0;
+		screenW = 0;
+		screenH = 0;
+		
+		loadingCard = null;
+		loading = null; // XXX Hard to serialize
+
+		changed = false;
+		
+		battlefieldCards = new CardList();
+		normalCards = new CardList();
+		draggedCards = new CardList();
+		
+		battlefieldDice = new DieList();
+		normalDice = new DieList();
+		draggedDice = new DieList();
+		
+		pendingCards = null;
+		
+		initialized = false;
 
 		setLightView(Session.getInstance().getPreferences().isLightView());
 		setShowCardCounts(Session.getInstance().getPreferences().isShowCardCounts());
@@ -274,22 +316,32 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		repaint();
 	}
 
-	private void moveToZone(List<Card> cards, ZoneType zone, boolean animate) {
+	private void moveToZone(List<Card> cards, ZoneType zone, boolean animate, boolean isDragging) {
 		for(Card card : cards) {
 			card.rememberLastZoneType();
 			cardZoneManager.getZone(card.getZoneType()).remove(card);
 			cardZoneManager.getZone(zone).add(card);
 			card.setZoneType(zone);
 		}
-		handleMoved(cards, false, animate);
+		handleMoved(cards, isDragging, animate);
 		repaint();
 	}
 	
-	private void loadCards(final List<Card> newCards, boolean hasCommander) {
+	private void loadCards(final List<Card> newCards) {
 		if(newCards.size() == 0) {
 			updateZoneBounds();
 			return;
 		}
+		
+		boolean needsLoading = false;
+		for(Card card : newCards) {
+			String name = card.getName() + ":" + card.getSet();
+			if(!loadedCardNames.contains(name)) {
+				needsLoading = true;
+				break;
+			}
+		}
+		final boolean needsLoadingCard = needsLoading;
 		
 		Animator cardLoader = new Animator<Card>(canvas, newCards) {
 
@@ -315,13 +367,17 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			
 			@Override
 			public void startUpdate() {
-				showLoadingCard();
+				if(needsLoadingCard) {
+					showLoadingCard();
+				}
 			}
 			
 			@Override
 			public void stopUpdate() {
 				setPendingCards(newCards);
-				hideLoadingCard();
+				if(needsLoadingCard) {
+					hideLoadingCard();
+				}
 				flagChange();
 				canvas.repaint();
 			}
@@ -426,18 +482,21 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 			g.setClip(0, 0, screenW, screenH);
 		}*/
-		cardsPaintSecond.clear();
-		dicePaintSecond.clear();
+		
+		determineCardsAndDiceDrawOrder(g, width, height);
 		
 		clearZIndex();
 		getCanvas().getZoom().revert(g);
 		paintBackground(g, screenW, screenH);
 		paintBattlefield(g, screenW, screenH);
+		getCanvas().getZoom().transform(g);
+		paintBattlefieldCardsAndDice(g, screenW, screenH);
+		getCanvas().getZoom().revert(g);
 		paintZones(g, screenW, screenH);
 		getCanvas().getZoom().transform(g);
-		paintCards(g, screenW, screenH);
-		paintDice(g, screenW, screenH);
-		paintSecond(g, screenW, screenH);
+		paintNormalCardsAndDice(g, screenW, screenH);
+		paintDraggedCardsAndDice(g, screenW, screenH);
+		getCanvas().getZoom().revert(g);
 		paintDrag(g, screenW, screenH);
 		paintLoading(g, screenW, screenH);
 		
@@ -498,27 +557,97 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 
 	}
 	
-	private void paintCards(Graphics2D g, int width, int height) {
+	private void determineCardsAndDiceDrawOrder(Graphics2D g, int width, int height) {
+		battlefieldCards.clear();
+		normalCards.clear();
+		draggedCards.clear();
+		
+		battlefieldDice.clear();
+		normalDice.clear();
+		draggedDice.clear();
+		
 		for(int i = getAllCards().size() - 1; i >= 0; i--) {
 			Card c = getAllCards().get(i);
 			if(handler.isDragged(c)) {
-				cardsPaintSecond.add(c);
-				if(c.getRenderer().hasChildren()) {
-					for(IRenderer child : c.getRenderer().getChildren()) {
-						dicePaintSecond.add((Die) child.getObject());
+				draggedCards.add(c);
+				if(c.hasChildren()) {
+					for(IRenderer child : c.getChildren()) {
+						draggedDice.add((Die) child.getObject());
 					}
 				}
+			} else if(c.getZoneType() == ZoneType.BATTLEFIELD) {
+				battlefieldCards.add(c);
 			} else {
-				paintCard(g, width, height, c);
+				normalCards.add(c);
 			}
+		}
+		
+		for(int i = tokens.size() - 1; i >= 0; i--) {
+			Die d = tokens.get(i);
+			if(handler.isDragged(d)) {
+				draggedDice.add(d);
+				if(d.getRenderer().hasChildren()) {
+					for(IRenderer child : d.getRenderer().getChildren()) {
+						draggedDice.add((Die) child.getObject());
+					}
+				}
+			} else if(d.getRenderer().getZoneType() == ZoneType.BATTLEFIELD) {
+				battlefieldDice.add(d);
+			} else {
+				normalDice.add(d);
+			}
+		}
+		
+		for(int i = d10s.size() - 1; i >= 0; i--) {
+			Die d = d10s.get(i);
+			if(handler.isDragged(d)) {
+				draggedDice.add(d);
+			} else if(d.getRenderer().getZoneType() == ZoneType.BATTLEFIELD) {
+				battlefieldDice.add(d);
+			} else {
+				normalDice.add(d);
+			}
+		}
+		
+		for(int i = counters.size() - 1; i >= 0; i--) {
+			Die d = counters.get(i);
+			if(handler.isDragged(d)) {
+				draggedDice.add(d);
+			} else if(d.getRenderer().getZoneType() == ZoneType.BATTLEFIELD) {
+				battlefieldDice.add(d);
+			} else {
+				normalDice.add(d);
+			}
+		}
+		
+	}
+	
+	private void paintBattlefieldCardsAndDice(Graphics2D g, int width, int height) {
+		for(Card c : battlefieldCards) {
+			paintCard(g, width, height, c);
+		}
+		
+		for(Die d : battlefieldDice) {
+			paintDie(g, width, height, d);
 		}
 	}
 	
-	private void paintSecond(Graphics2D g, int width, int height) {
-		for(Card c : cardsPaintSecond) {
+	private void paintNormalCardsAndDice(Graphics2D g, int width, int height) {
+		for(Card c : normalCards) {
 			paintCard(g, width, height, c);
 		}
-		for(Die d : dicePaintSecond) {
+		
+		for(Die d : normalDice) {
+			paintDie(g, width, height, d);
+		}
+	}
+	
+	private void paintDraggedCardsAndDice(Graphics2D g, int width, int height) {
+		for(Card c : draggedCards) {
+			paintCard(g, width, height, c);
+		}
+		
+		for(Die d : draggedDice) {
 			paintDie(g, width, height, d);
 		}
 	}
@@ -568,7 +697,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		g.drawString("Loading Deck...", screenW/2 - 150, screenH/2 - 250);
 	}
 	
-	private void paintDice(Graphics2D g, int width, int height) {
+	/*private void paintDice(Graphics2D g, int width, int height) {
 		for(int i = tokens.size() - 1; i >= 0; i--) {
 			Die d = tokens.get(i);
 			if(handler.isDragged(d)) {
@@ -601,7 +730,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		}
 		
-	}
+	}*/
 	
 	private void paintDie(Graphics2D g, int width, int height, Die die) {
 		boolean revert = !die.getRenderer().isTransformedProjection();
@@ -639,6 +768,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			allObjects.addAll(counters);
 			updateZoneBounds();
 			handleMoved(getAllCards(), false, false);
+			
+			if(newGame) {
+				newGame = false;
+				shuffleDeckAndDrawStartingHand();
+			}
 		} else {
 			updateZoneBounds();
 		}
@@ -707,6 +841,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		if(!initialized) {
 			initialized = true;
+			newGame = true;
 			
 			boolean hasCommander = false;
 			for(Card c : cardsToInitialize) {
@@ -722,7 +857,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 			
 			initDice(hasCommander);
-			loadCards(cardsToInitialize, hasCommander);
+			loadCards(cardsToInitialize);
 			cardsToInitialize = null;
 		}
 	}
@@ -882,7 +1017,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	public void reset() {
-		allCards = new CardList(originalCards);
+		CardList cards = new CardList(originalCards);
+		cards.shuffle();
+		init(canvas, cards, !opponentView);
+	}
+	
+	public void shuffleDeckAndDrawStartingHand() {
 		List<Card> cardsToShuffle = new ArrayList<Card>();
 		List<Card> cardsToDraw = new ArrayList<Card>();
 		
@@ -906,6 +1046,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					cardsToShuffle.add(card);
 				}
 			}
+			card.setTransformedProjection(false);
 		}
 		
 		if(!hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) != null) {
@@ -914,23 +1055,14 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			cardZoneManager.addZone(ZoneType.COMMANDER);
 		}
 		
-		shuffleCards(cardsToShuffle, true, true);
-		
-		allObjects.clear();
-		allObjects.addAll(allCards);
-		
-		List<Die> dice = new ArrayList<Die>();
-		dice.addAll(d10s);
-		dice.addAll(counters);
-		dice.addAll(tokens);
-		for(Die die : dice) {
-			remove(die);
-		}
-		initDice(hasCommander);
+		shuffleCards(cardsToShuffle, false, true);
 		
 		cardZoneManager.getZone(ZoneType.HAND).clear();
-		moveToZone(cardsToDraw, ZoneType.HAND, false);
+		moveToZone(cardsToDraw, ZoneType.HAND, false, true);
 		cardZoneManager.getZone(ZoneType.HAND).getRenderer().fan(this, cardsToDraw, true);
+		
+		cardZoneManager.getZone(ZoneType.DECK).clear();
+		moveToZone(cardsToShuffle, ZoneType.DECK, false, true);
 		
 		flagChange();
 	}
@@ -1126,7 +1258,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 			
 			// Spin the cards
-			spin(cardList, 360, true, 10);
+			if(animate) {
+				spin(cardList, 360, true, 10);
+			}
 			
 			// Stop drag, snapping them to the deck
 			if(!forceIntoDeck) {
