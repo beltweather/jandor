@@ -28,6 +28,7 @@ public class FileUtil {
 	private FileUtil() {}
 	
 	public static final String ENV_JANDOR_HOME = "JANDOR_HOME";
+	public static String jandorHomePath = null;
 	public static final String FOLDER_JANDOR_DATA = "Jandor-Data";
 	public static final String RESOURCE_CARDS_JSONS = "AllCards-x.json";
 	public static final String RESOURCE_SETS_JSONS = "AllSets.json";
@@ -40,7 +41,8 @@ public class FileUtil {
 		chooser.setFileFilter(new FileNameExtensionFilter(DEFAULT_EXT_DESCRIPTION, DEFAULT_EXT));
 	}
 	
-	public static void init() {
+	public static void init(String jandorHomePath) {
+		FileUtil.jandorHomePath = jandorHomePath;
 		initCredentialsFile();
 	}
 	
@@ -296,6 +298,9 @@ public class FileUtil {
 	}
 	
 	public static String getRoot() {
+		if(jandorHomePath != null) {
+			return jandorHomePath;
+		}
 		String jandorHome = System.getenv(ENV_JANDOR_HOME);
 		if(jandorHome != null) {
 			return jandorHome;

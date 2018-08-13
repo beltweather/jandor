@@ -18,9 +18,13 @@ import util.WebUtil;
 import accordion.PAccordion;
 
 public class Jandor {
-
+	
 	public static void init() {
-		FileUtil.init();
+		init(null);
+	}
+
+	public static void init(String jandorHomePath) {
+		FileUtil.init(jandorHomePath);
 		WebUtil.init();
 		VersionUtil.init();
 		DebugUtil.init();
@@ -38,7 +42,7 @@ public class Jandor {
 	private Jandor() {}
 	
 	public static void main(String[] args) {
-		init();
+		init(args.length > 0 ? args[0] : null);
 		
 		PAccordion accordion = new PAccordion();
 		CollectionEditorView.addCollectionEditorView(accordion);
