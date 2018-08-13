@@ -70,6 +70,9 @@ public class CardRenderer extends AbstractRenderer<Card> {
 		
 		BufferedImage img = getImage(!hideCard(layer, card));
 		Rectangle bounds = getBounds().getBounds();
+		if(isHovered() && card.getZoneType() == ZoneType.HAND) {
+			bounds.y -= card.getHeight() - 200;
+		}
 		g.drawImage(img, (int) bounds.getX(), (int) bounds.getY(), null);
 		
 		if(isHovered() || RENDER_BOUNDS) {

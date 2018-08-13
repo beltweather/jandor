@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.Serializable;
@@ -161,6 +162,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	private transient ZoneManager dieZoneManager;
 	
 	private transient List<CardLayer> syncedLayers = new ArrayList<CardLayer>();
+	
+	public /*transient*/ static CardLayer opponentLayer = null;
 	
 	private transient boolean initialized;
 	
@@ -486,7 +489,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		clearZIndex();
 		getCanvas().getZoom().revert(g);
-		paintBackground(g, screenW, screenH);
+		if(!opponentView) {
+			paintBackground(g, screenW, screenH);
+		}
 		paintBattlefield(g, screenW, screenH);
 		getCanvas().getZoom().transform(g);
 		paintBattlefieldCardsAndDice(g, screenW, screenH);
@@ -498,10 +503,15 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		getCanvas().getZoom().revert(g);
 		paintDrag(g, screenW, screenH);
 		paintLoading(g, screenW, screenH);
+		getCanvas().getZoom().transform(g);
 		
 		if(opponentView) {// && height > screenH) {
 			paintOpponentViewBanner(g, width, height);
-		}
+		} 
+		
+		/*else if(opponentLayer != null) {
+			opponentLayer.paintComponent(g, width, height);
+		}*/
 	}
 	
 	private void paintOpponentViewBanner(Graphics g, int width, int height) {
@@ -622,6 +632,26 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void paintBattlefieldCardsAndDice(Graphics2D g, int width, int height) {
+		if(!opponentView && opponentLayer != null) {
+			//AffineTransform at = g.getTransform();
+			//g.setTransform(g.getTransform().getRotateInstance(Math.PI, width/2, height/2).);
+			g.rotate(Math.PI, width/2, height/2);
+			g.translate(0, height);
+			for(IRenderable r : opponentLayer.getAllObjects()) {
+				if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD) {
+					continue;
+				}
+				if(r instanceof Card) {
+					paintCard(g, width, height, (Card) r);
+				} else if(r instanceof Die) {
+					paintDie(g, width, height, (Die) r);
+				}
+			}
+			g.translate(0, -height);
+			g.rotate(-Math.PI, width/2, height/2);
+			//g.setTransform(at);
+		}
+		
 		for(Card c : battlefieldCards) {
 			paintCard(g, width, height, c);
 		}
@@ -629,6 +659,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		for(Die d : battlefieldDice) {
 			paintDie(g, width, height, d);
 		}
+		
 	}
 	
 	private void paintNormalCardsAndDice(Graphics2D g, int width, int height) {
@@ -827,10 +858,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		screenSizeChanged = false;
 		
 		boolean isDragging = handler.isDragging();
-		cardZoneManager.setZones(getCanvas(), isDragging, getAllCards());
-		dieZoneManager.setZones(getCanvas(), isDragging, d10s);
-		dieZoneManager.setZones(getCanvas(), isDragging, counters, false);
-		dieZoneManager.setZones(getCanvas(), isDragging, tokens, false);
+		cardZoneManager.setZones(getCanvas(), this, isDragging, getAllCards());
+		dieZoneManager.setZones(getCanvas(), this, isDragging, d10s);
+		dieZoneManager.setZones(getCanvas(), this, isDragging, counters, false);
+		dieZoneManager.setZones(getCanvas(), this, isDragging, tokens, false);
 		
 		if(isDragging) {
 			handleMoved(allObjects, isDragging);
@@ -1383,7 +1414,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				zone.setHeight(zh);
 				break;
 			case HAND:
-				zone.setLocation(new Location(zw, screenH - zh));
+				zone.setLocation(new Location(zw, screenH - zh + 125));
 				zone.setWidth(screenW - zw - zw);
 				zone.setHeight(zh);
 				break;
@@ -1843,4 +1874,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	public RenderableList<IRenderable> getExtraRenderables() {
 		return empty;
 	}
+	
+	public void setOpponentLayer(CardLayer opponentLayer) {
+		this.opponentLayer = opponentLayer;
+	}
+	
 }

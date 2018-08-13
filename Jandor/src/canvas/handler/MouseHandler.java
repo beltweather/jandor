@@ -209,7 +209,7 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 					obj.getRenderer().setZoneType(zoneOverride);
 				}
 			} else {
-				zoneManager.setZones(getCanvas(), false, getObjects());
+				zoneManager.setZones(getCanvas(), null, false, getObjects());
 			}
 			mouseStopDragLeft(e, dragObjects);
 		}

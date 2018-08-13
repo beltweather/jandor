@@ -174,6 +174,11 @@ public class FriendUtil {
 		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
 		boardView.getCardLayer().setCurrentUsername(currentUsername);
 		((LightCardLayer) boardView.getCardLayer()).setSerializedCardList(serializedRenderables);
+		CardLayer.opponentLayer = boardView.getCardLayer();
+		CardLayer active = CardLayer.getActiveCardLayer();
+		if(active != null) {
+			active.repaint();
+		}
 		boardView.repaint();
 	}
 }

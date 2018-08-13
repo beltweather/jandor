@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Set;
 
 import canvas.Canvas;
+import canvas.CardLayer;
 import canvas.IRenderable;
 import canvas.Location;
-import deck.Card;
 
 public class ZoneManager implements Serializable {
 
@@ -58,11 +58,11 @@ public class ZoneManager implements Serializable {
 		}
 	}
 	
-	public <T extends IRenderable> void setZones(Canvas canvas, boolean isDragging, List<T> objects) {	
-		setZones(canvas, isDragging, objects, true);
+	public <T extends IRenderable> void setZones(Canvas canvas, CardLayer layer, boolean isDragging, List<T> objects) {	
+		setZones(canvas, layer, isDragging, objects, true);
 	}
 	
-	public <T extends IRenderable> void setZones(Canvas canvas, boolean isDragging, List<T> objects, boolean clearZones) {
+	public <T extends IRenderable> void setZones(Canvas canvas, CardLayer layer, boolean isDragging, List<T> objects, boolean clearZones) {
 		if(clearZones) {
 			clearZones();
 		}
@@ -71,7 +71,7 @@ public class ZoneManager implements Serializable {
 		}
 		
 		for(IRenderable obj : objects) {
-			Zone zone = findClosestZone(canvas, isDragging, obj);
+			Zone zone = findClosestZone(canvas, isDragging && layer != null && layer.getHandler().isDragged(obj), obj);
 			if(zone != null) {
 				zone.add(obj);
 				obj.getRenderer().setZoneType(zone.getType());
