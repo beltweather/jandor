@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.Serializable;
@@ -49,16 +48,10 @@ public class LightCardLayer extends CardLayer implements ICanvasLayer, CloseList
 	public void paintComponent(Graphics2D g, int width, int height) {
 		update(width, height);
 		
-		//paintBackground(g, screenW, screenH);
-		getCanvas().getZoom().revert(g);
+		paintBackground(g, screenW, screenH);
 		paintZones(g, screenW, screenH);
-		getCanvas().getZoom().transform(g);
-		
-		//getCanvas().getZoom().revert(g);
-		//g.transform(AffineTransform.getRotateInstance(Math.PI, width/2, height/2));
-		//getCanvas().getZoom().transform(g);
 		paintRenderables(g, screenW, screenH);
-		//paintBanner(g, width, height);
+		paintBanner(g, width, height);
 	}
 	
 	@Override

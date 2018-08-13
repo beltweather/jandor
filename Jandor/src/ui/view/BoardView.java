@@ -3,18 +3,19 @@ package ui.view;
 import java.awt.Dimension;
 import java.util.List;
 
+import canvas.Canvas;
+import canvas.CardLayer;
+import canvas.LightCardLayer;
+import deck.Deck;
 import session.DeckHeader;
 import session.Session;
+import ui.pwidget.G;
 import ui.pwidget.JUtil;
 import ui.pwidget.PTabPane;
 import util.FriendUtil;
 import util.event.SessionEvent;
 import util.event.SessionEventListener;
 import util.event.SessionEventManager;
-import canvas.Canvas;
-import canvas.CardLayer;
-import canvas.LightCardLayer;
-import deck.Deck;
 
 public class BoardView extends JandorView {
 	
@@ -81,6 +82,7 @@ public class BoardView extends JandorView {
 		List<CardLayer> syncedLayers = null;
 		if(cardLayer != null) {
 			syncedLayers = cardLayer.getSyncedLayers();
+			CardLayer.unregister(cardLayer);
 		}
 		
 		//cardLayer = new CardLayer(canvas, deck.getCopy(), enableListeners);
@@ -90,6 +92,8 @@ public class BoardView extends JandorView {
 			cardLayer = new LightCardLayer(canvas);
 		}
 		
+		CardLayer.register(cardLayer);
+		
 		canvas.addLayer(cardLayer);
 		
 		if(syncedLayers != null) {
@@ -98,8 +102,40 @@ public class BoardView extends JandorView {
 			}
 		}
 		
+		/*PPanel p = new PPanel();
+		p.addc(Box.createVerticalStrut(30));
+		
+		PRadio b1 = new PRadio("None");
+		PRadio b2 = new PRadio("Mike");
+		PRadio b3 = new PRadio("Brad");
+		
+		b1.setSelected(true);
+		
+		ButtonGroup group = new ButtonGroup();
+		group.add(b1);
+		group.add(b2);
+		group.add(b3);
+		
+		PPanel buttonPanel = new PPanel();
+		buttonPanel.addc(b1);
+		buttonPanel.c.gridx++;
+		buttonPanel.c.insets = new Insets(0,5,0,0);
+		buttonPanel.addc(b2);
+		buttonPanel.c.gridx++;
+		buttonPanel.addc(b3);
+		
+		p.fill();
+		p.c.gridx++;
+		p.addc(buttonPanel);*/
+		
 		c.strengthen();
 		add(canvas, c);
+		c.gridy++;
+		c.weaken();
+		c.fill = G.HORIZONTAL;
+		add(cardLayer.getButtonPanel(), c);
+		
+		//add(canvas, c);
 		
 		revalidate();
 	}

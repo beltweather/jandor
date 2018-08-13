@@ -6,7 +6,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.Serializable;
@@ -27,6 +26,7 @@ import canvas.gesture.Gesture;
 import canvas.gesture.ShakeGesture;
 import canvas.handler.MouseHandlerManager;
 import canvas.handler.RenderableHandler;
+import canvas.zoom.ZoomAndPanListener;
 import deck.Card;
 import deck.CardList;
 import deck.RenderableList;
@@ -112,6 +112,24 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		activeCardLayer = null;
 	}
 	
+	private static List<CardLayer> allCardLayers = new ArrayList<CardLayer>();
+	
+	public static void register(CardLayer layer) {
+		if(!allCardLayers.contains(layer)) {
+			allCardLayers.add(layer);
+		}
+	}
+	
+	public static void unregister(CardLayer layer) {
+		if(allCardLayers.contains(layer)) {
+			allCardLayers.remove(layer);
+		}
+	}
+	
+	public static List<CardLayer> getAllCardLayers() {
+		return new ArrayList<CardLayer>(allCardLayers);
+	}
+	
 	// SERIALIZED FIELDS
 	
 	protected int zIndex = 0;
@@ -163,7 +181,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	private transient List<CardLayer> syncedLayers = new ArrayList<CardLayer>();
 	
-	public /*transient*/ static CardLayer opponentLayer = null;
+	public transient CardLayer opponentLayer = null;
 	
 	private transient boolean initialized;
 	
@@ -172,6 +190,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	private transient CardList originalCards;
 	
 	private transient boolean newGame;
+	
+	private transient CardLayerButtonPanel buttonPanel;
 	
 	public CardLayer(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
 		init(canvas, cards, enableListeners);
@@ -229,6 +249,18 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 
 		setLightView(Session.getInstance().getPreferences().isLightView());
 		setShowCardCounts(Session.getInstance().getPreferences().isShowCardCounts());
+
+		if(buttonPanel == null) {
+			initButtonPanel();
+		}
+		
+		adjustCameraForOpponent();
+	}
+	
+	public void adjustCameraForOpponent() {
+		if(this.opponentLayer != null) {
+			//getCanvas().getZoom().setZoomLevel(ZoomAndPanListener.DEFAULT_MIN_ZOOM_LEVEL + 1);
+		}
 	}
 	
 	private void initDice(boolean hasCommander) {
@@ -636,7 +668,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			//AffineTransform at = g.getTransform();
 			//g.setTransform(g.getTransform().getRotateInstance(Math.PI, width/2, height/2).);
 			g.rotate(Math.PI, width/2, height/2);
-			g.translate(0, height);
+			g.translate(0, height/2);
 			for(IRenderable r : opponentLayer.getAllObjects()) {
 				if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD) {
 					continue;
@@ -647,7 +679,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					paintDie(g, width, height, (Die) r);
 				}
 			}
-			g.translate(0, -height);
+			g.translate(0, -height/2);
 			g.rotate(-Math.PI, width/2, height/2);
 			//g.setTransform(at);
 		}
@@ -1414,7 +1446,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				zone.setHeight(zh);
 				break;
 			case HAND:
-				zone.setLocation(new Location(zw, screenH - zh + 125));
+				zone.setLocation(new Location(zw, screenH - zh + 200));
 				zone.setWidth(screenW - zw - zw);
 				zone.setHeight(zh);
 				break;
@@ -1877,6 +1909,14 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	public void setOpponentLayer(CardLayer opponentLayer) {
 		this.opponentLayer = opponentLayer;
+	}
+	
+	private void initButtonPanel() {
+		buttonPanel = new CardLayerButtonPanel(this);
+	}
+	
+	public CardLayerButtonPanel getButtonPanel() {
+		return buttonPanel;
 	}
 	
 }

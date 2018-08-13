@@ -16,7 +16,6 @@ import java.awt.geom.Point2D;
 import java.io.Serializable;
 
 import canvas.Location;
-
 import util.MouseUtil;
 import util.ZoomUtil;
 
@@ -153,15 +152,39 @@ public class ZoomAndPanListener implements MouseListener, MouseMotionListener, M
 		if(!isZoomCameraEnabled()) {
 			return;
 		}
+		
+		int wheelRotation = e.getWheelRotation();
+		Point p = e.getPoint();
+		
+		if(!isZoomAtCursorPosition()) {
+			p = new Point(0, 0);
+		}
+		
+		zoomCamera(wheelRotation, p, e.isControlDown(), e.isShiftDown());
+	}
+	
+	public void virtualZoomIn() {
+		virtualZoomIn(0, 0);
+	}
+	
+	public void virtualZoomIn(int x, int y) {
+		zoomCamera(-1, new Point(x, y), false, false);
+	}
+	
+	public void virtualZoomOut() {
+		virtualZoomOut(0, 0);
+	}
+	
+	public void virtualZoomOut(int x, int y) {
+		zoomCamera(1, new Point(x, y), false, false);
+	}
+	
+	private void zoomCamera(int wheelRotation, Point p, boolean isControlDown, boolean isShiftDown) {
+		if(!isZoomCameraEnabled()) {
+			return;
+		}
 		try {
-			int wheelRotation = e.getWheelRotation();
-			Point p = e.getPoint();
-			
-			if(!isZoomAtCursorPosition()) {
-				p = new Point(0, 0);
-			}
-			
-			if(e.isControlDown() || e.isShiftDown()) {
+			if(isControlDown || isShiftDown) {
 				Point2D p1 = transformPoint(p);
 				double deltaTheta = Math.PI/10;
 				if(wheelRotation > 0) {
@@ -266,9 +289,14 @@ public class ZoomAndPanListener implements MouseListener, MouseMotionListener, M
 		if (init) {
 			init = false;
 			setCoordTransform(g.getTransform());
+			handleInit();
 		} else {
 			g.setTransform(getCoordTransform());
 		}
+	}
+	
+	public void handleInit() {
+		
 	}
 	
 	public void revert(Graphics2D g) {

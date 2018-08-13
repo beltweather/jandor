@@ -70,12 +70,13 @@ public class CardRenderer extends AbstractRenderer<Card> {
 		
 		BufferedImage img = getImage(!hideCard(layer, card));
 		Rectangle bounds = getBounds().getBounds();
+		int yOffset = 0;
 		if(isHovered() && card.getZoneType() == ZoneType.HAND) {
-			bounds.y -= card.getHeight() - 200;
+			yOffset = 125 - card.getHeight();;
 		}
-		g.drawImage(img, (int) bounds.getX(), (int) bounds.getY(), null);
+		g.drawImage(img, (int) bounds.getX(), (int) bounds.getY() + yOffset, null);
 		
-		if(isHovered() || RENDER_BOUNDS) {
+		if((isHovered() && card.getZoneType() != ZoneType.HAND) || RENDER_BOUNDS) {
 			g.setColor(new Color(255,255,255,20));
 			g.fill(getBounds());
 			g.setColor(Color.GREEN);

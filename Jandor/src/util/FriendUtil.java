@@ -113,6 +113,11 @@ public class FriendUtil {
 		tabPane.addTab(title, boardView);
 		tabPane.setSelectedIndex(tabPane.getTabCount() - 1);
 		
+		for(CardLayer layer : CardLayer.getAllCardLayers()) {
+			layer.getButtonPanel().rebuild();
+			layer.repaint();
+		}
+		
 		JedisUtil.subscribe(JedisUtil.toStreamChannel(user), new BinarySubscriber() {
 
 			@Override
@@ -136,6 +141,12 @@ public class FriendUtil {
 		}
 		if(userGUID != null) {
 			connectedViewsByUserGUID.remove(userGUID);
+			
+			for(CardLayer layer : CardLayer.getAllCardLayers()) {
+				layer.getButtonPanel().rebuild();
+				layer.repaint();
+			}
+			
 			JedisUtil.unsubscribe(JedisUtil.toStreamChannel(userGUID));
 			JUtil.showMessageDialog(null, "Disconnected from Friend", "Disconnected from friend \"" + UserUtil.getUserByGUID(userGUID).getUsername() + "\"");
 		}
@@ -174,11 +185,25 @@ public class FriendUtil {
 		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
 		boardView.getCardLayer().setCurrentUsername(currentUsername);
 		((LightCardLayer) boardView.getCardLayer()).setSerializedCardList(serializedRenderables);
-		CardLayer.opponentLayer = boardView.getCardLayer();
-		CardLayer active = CardLayer.getActiveCardLayer();
-		if(active != null) {
-			active.repaint();
+		
+		// XXX Gross code that needs to be changed and removed!
+		for(CardLayer layer : CardLayer.getAllCardLayers()) {
+			String opponentGUID = layer.getButtonPanel().getOpponentGUID();
+			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
+				layer.opponentLayer = boardView.getCardLayer();
+				layer.repaint();
+			}
 		}
+		
 		boardView.repaint();
 	}
+	
+	public static CardLayer getFriendLayer(String userGUID) {
+		if(!connectedViewsByUserGUID.containsKey(userGUID)) {
+			return null;
+		}
+		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
+		return boardView.getCardLayer();
+	}
+	
 }

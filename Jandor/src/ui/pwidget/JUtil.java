@@ -424,7 +424,7 @@ public class JUtil {
 		//g.setPaint(null);
 		ColorUtil.radialGradientTwoShades(g, 0, 0, w, h, w);
 		
-		g.fillArc(2, 2, w-5, h-5, 0, -180);
+		//g.fillArc(2, 2, w-5, h-5, 0, -180);
 		g.setColor(c);
 		ColorUtil.radialGradientTwoShades(g, 0, 0, w, h, w);
 		

@@ -401,10 +401,13 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 		}
 		
 		Rectangle selectBox = new Rectangle(x0, y0, x1 - x0, y1 - y0);
-		Rectangle tSelectBox = getCanvas().getZoom().transform(selectBox).getBounds();
+		Rectangle tSelectBox = getCanvas().getZoom().inverseTransform(selectBox).getBounds();
 		for(T obj : getObjects()) {
 			IRenderer r = obj.getRenderer();
-			if(r.isTransformedProjection() && tSelectBox.contains(r.getBounds().getBounds())) {
+			
+			if(r instanceof Card && r.getZoneType() == ZoneType.HAND && selectBox.intersects(r.getBounds().getBounds())) {
+				selectedObjects.add(obj);
+			} else if(r.isTransformedProjection() && tSelectBox.contains(r.getBounds().getBounds())) {
 				selectedObjects.add(obj);
 			} else if(!r.isTransformedProjection() && selectBox.contains(r.getBounds().getBounds())) {
 				selectedObjects.add(obj);
