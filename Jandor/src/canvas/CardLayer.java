@@ -185,13 +185,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		d10s = new DieList();
 		counters = new DieList();
 		tokens = new DieList();
-
-		opponentView = !enableListeners;
 		
 		cardsToInitialize = cards;
 		initialized = false;
 		
 		if(handler == null) {
+			opponentView = !enableListeners;
 			handler = new RenderableHandler(handlerManager, this);
 			handlerManager.add(handler);
 		}

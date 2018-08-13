@@ -83,6 +83,7 @@ public class JedisUtil {
 			return;
 		}
 		subscribersByChannel.get(channel).unsubscribeFromChannel(channel);
+		subscribersByChannel.remove(channel);
 		System.out.println("User " + LoginUtil.getUser().getUsername() + " unsubscribed from " + channel);
 	}
 	
