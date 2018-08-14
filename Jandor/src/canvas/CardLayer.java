@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -40,7 +39,7 @@ import ui.pwidget.CloseListener;
 import ui.pwidget.ColorUtil;
 import ui.pwidget.JUtil;
 import ui.pwidget.JandorTabFrame;
-import ui.pwidget.PMenuBar;
+import ui.pwidget.JandorMenuBar;
 import ui.pwidget.PPanel;
 import util.ImageUtil;
 import util.SerializationUtil;
@@ -191,7 +190,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	private transient boolean newGame;
 	
-	private transient CardLayerButtonPanel buttonPanel;
+	private transient PlayerCardLayerButtonPanel playerButtonPanel;
+
+	private transient OpponentCardLayerButtonPanel opponentButtonPanel;
 	
 	public CardLayer(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
 		init(canvas, cards, enableListeners);
@@ -250,8 +251,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		setLightView(Session.getInstance().getPreferences().isLightView());
 		setShowCardCounts(Session.getInstance().getPreferences().isShowCardCounts());
 
-		if(buttonPanel == null) {
+		if(playerButtonPanel == null) {
 			initButtonPanel();
+			initOpponentButtonPanel();
 		}
 		
 		adjustCameraForOpponent();
@@ -702,9 +704,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		if(!hasRenderables) {
 			getCanvas().getZoom().revert(g);
 			g.setColor(Color.RED);
-			g.setFont(g.getFont().deriveFont(30f));
+			Font f = g.getFont();
+			g.setFont(f.deriveFont(30f));
 			String s = "Opponent has no cards on the battlefield";
 			g.drawString(s, (width - g.getFontMetrics(g.getFont()).stringWidth(s))/2, 50);
+			g.setFont(f);
 			getCanvas().getZoom().transform(g);
 		}
 		
@@ -1501,7 +1505,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				if(zoneChanged) {
 					card.setFaceUp(false);
 					card.setTapped(false);
-					card.setScale(0.7);
+					card.setScale(0.5);//0.7);
 					card.restoreAngle();
 				}
 				if(!isDragging) {
@@ -1514,7 +1518,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 						card.setFaceUp(true);
 					}
 					card.setTapped(false);
-					card.setScale(0.7);
+					card.setScale(0.5);//0.7);
 					card.setAngle(180 + ShuffleUtil.randInt(-10, 10));
 				}
 				if(!isDragging) {
@@ -1881,9 +1885,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 	}
 	
-	public PMenuBar getMenuBar() {
+	public JandorMenuBar getMenuBar() {
 		JandorTabFrame frame = JUtil.getFrame(getCanvas());
-		PMenuBar menu = (PMenuBar) frame.getJMenuBar();
+		JandorMenuBar menu = (JandorMenuBar) frame.getJMenuBar();
 		return menu;
 	}
 
@@ -1928,11 +1932,52 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void initButtonPanel() {
-		buttonPanel = new CardLayerButtonPanel(this);
+		playerButtonPanel = new PlayerCardLayerButtonPanel(this);
 	}
 	
-	public CardLayerButtonPanel getButtonPanel() {
-		return buttonPanel;
+	public PlayerCardLayerButtonPanel getButtonPanel() {
+		return playerButtonPanel;
+	}
+	
+	private void initOpponentButtonPanel() {
+		opponentButtonPanel = new OpponentCardLayerButtonPanel(this);
+	}
+	
+	public OpponentCardLayerButtonPanel getOpponentButtonPanel() {
+		return opponentButtonPanel;
+	}
+	
+	public void untap() {
+		boolean untapped = false;
+		for(IRenderable r : getAllObjects()) {
+			if(r.getRenderer().getZoneType() == ZoneType.BATTLEFIELD && r.getRenderer().isTapped()) {
+				r.getRenderer().setTapped(false);
+				untapped = true;
+			}
+		}
+		if(untapped) {
+			repaint();
+		}
+	}
+	
+	public void draw() {
+		Zone deck = getCardZoneManager().getZone(ZoneType.DECK);
+		if(deck.size() > 0) {
+			moveToZone((Card) deck.get(0), ZoneType.HAND);
+			repaint();
+		}
+	}
+	
+	public void shuffle() {
+		shuffleCards(getCardZoneManager().getZone(ZoneType.DECK), false, true);
+	}
+	
+	public void discardRandom() {
+		Zone hand = getCardZoneManager().getZone(ZoneType.HAND);
+		if(hand.size() > 0) {
+			moveToZone((Card) hand.get(ShuffleUtil.randInt(hand.size()-1)), ZoneType.GRAVEYARD);
+			repaint();
+		}
 	}
 	
 }

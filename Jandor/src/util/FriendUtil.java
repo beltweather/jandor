@@ -114,7 +114,7 @@ public class FriendUtil {
 		tabPane.setSelectedIndex(tabPane.getTabCount() - 1);
 		
 		for(CardLayer layer : CardLayer.getAllCardLayers()) {
-			layer.getButtonPanel().rebuild();
+			layer.getOpponentButtonPanel().rebuild();
 			layer.repaint();
 		}
 		
@@ -143,7 +143,8 @@ public class FriendUtil {
 			connectedViewsByUserGUID.remove(userGUID);
 			
 			for(CardLayer layer : CardLayer.getAllCardLayers()) {
-				layer.getButtonPanel().rebuild();
+				layer.getOpponentButtonPanel().rebuild();
+				layer.opponentLayer = null;
 				layer.repaint();
 			}
 			
@@ -188,7 +189,7 @@ public class FriendUtil {
 		
 		// XXX Gross code that needs to be changed and removed!
 		for(CardLayer layer : CardLayer.getAllCardLayers()) {
-			String opponentGUID = layer.getButtonPanel().getOpponentGUID();
+			String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
 			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
 				layer.opponentLayer = boardView.getCardLayer();
 				layer.repaint();

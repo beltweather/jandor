@@ -3,6 +3,9 @@ package ui.view;
 import java.awt.Dimension;
 import java.util.List;
 
+import javax.swing.Box;
+import javax.swing.JLayeredPane;
+
 import canvas.Canvas;
 import canvas.CardLayer;
 import canvas.LightCardLayer;
@@ -102,40 +105,16 @@ public class BoardView extends JandorView {
 			}
 		}
 		
-		/*PPanel p = new PPanel();
-		p.addc(Box.createVerticalStrut(30));
-		
-		PRadio b1 = new PRadio("None");
-		PRadio b2 = new PRadio("Mike");
-		PRadio b3 = new PRadio("Brad");
-		
-		b1.setSelected(true);
-		
-		ButtonGroup group = new ButtonGroup();
-		group.add(b1);
-		group.add(b2);
-		group.add(b3);
-		
-		PPanel buttonPanel = new PPanel();
-		buttonPanel.addc(b1);
-		buttonPanel.c.gridx++;
-		buttonPanel.c.insets = new Insets(0,5,0,0);
-		buttonPanel.addc(b2);
-		buttonPanel.c.gridx++;
-		buttonPanel.addc(b3);
-		
-		p.fill();
-		p.c.gridx++;
-		p.addc(buttonPanel);*/
-		
+		c.weaken();
+		c.fill = G.HORIZONTAL;
+		addc(cardLayer.getOpponentButtonPanel());
+		c.gridy++;
 		c.strengthen();
-		add(canvas, c);
+		addc(canvas);
 		c.gridy++;
 		c.weaken();
 		c.fill = G.HORIZONTAL;
-		add(cardLayer.getButtonPanel(), c);
-		
-		//add(canvas, c);
+		addc(cardLayer.getButtonPanel());
 		
 		revalidate();
 	}

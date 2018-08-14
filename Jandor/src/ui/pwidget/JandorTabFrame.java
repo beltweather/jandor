@@ -147,7 +147,7 @@ public class JandorTabFrame extends JFrame implements CloseListener {
 		setIconImage(ImageUtil.getJandorIcon());
 
 		if(showMenu) {
-			setJMenuBar(new PMenuBar(this));
+			setJMenuBar(new JandorMenuBar(this));
 		}
 		
 		setMinimumSize(new Dimension(1100, 700));

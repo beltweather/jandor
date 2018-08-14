@@ -18,26 +18,17 @@ import ui.pwidget.PRadio;
 import util.FriendUtil;
 import util.UserUtil;
 
-public class CardLayerButtonPanel extends PPanel {
+public class OpponentCardLayerButtonPanel extends AbstractCardLayerButtonPanel {
 	
-	private CardLayer layer;
 	private ButtonGroup opponentRadioGroup;
-	private Map<String, PRadio> opponentRadiosByGUID = new HashMap<String, PRadio>();
-	
-	public CardLayerButtonPanel(CardLayer layer) {
-		super();
-		this.layer = layer;
-		init();
+	private Map<String, PRadio> opponentRadiosByGUID;
+	public OpponentCardLayerButtonPanel(CardLayer layer) {
+		super(layer);
 	}
 	
-	public void rebuild() {
-		init();
-		revalidate();
-	}
-	
-	private void init() {
+	@Override
+	protected void init() {
 		String previousGUID = getOpponentGUID();
-		removeAll();
 		
 		PPanel buttonPanel = new PPanel();
 
@@ -51,9 +42,6 @@ public class CardLayerButtonPanel extends PPanel {
 			}
 			
 		});
-		
-		opponentRadiosByGUID = new HashMap<String, PRadio>();
-		opponentRadioGroup = new ButtonGroup();
 		PRadio radioNone = new PRadio("None");
 		radioNone.addActionListener(new ActionListener() {
 
@@ -65,6 +53,8 @@ public class CardLayerButtonPanel extends PPanel {
 			
 		});
 		
+		opponentRadiosByGUID = new HashMap<String, PRadio>();
+		opponentRadioGroup = new ButtonGroup();
 		opponentRadioGroup.add(radioNone);
 		
 		buttonPanel.c.insets = new Insets(0,5,0,0);
@@ -110,6 +100,9 @@ public class CardLayerButtonPanel extends PPanel {
 	}
 	
 	public String getOpponentGUID() {
+		if(opponentRadiosByGUID == null) {
+			return null;
+		}
 		for(String guid : opponentRadiosByGUID.keySet()) {
 			if(opponentRadiosByGUID.get(guid).isSelected()) {
 				return guid;

@@ -60,12 +60,12 @@ import util.LoginUtil;
 import util.VersionUtil;
 import zone.ZoneType;
 
-public class PMenuBar extends JMenuBar {
+public class JandorMenuBar extends JMenuBar {
 
 	private JandorTabFrame frame;
 	protected JCheckBox shareCheck;
 	
-	public PMenuBar(JandorTabFrame frame) {
+	public JandorMenuBar(JandorTabFrame frame) {
 		super();
 		this.frame = frame;
 		init();
@@ -317,13 +317,7 @@ public class PMenuBar extends JMenuBar {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//ContactsDialog dialog = new ContactsDialog();
-				if(DebugUtil.OFFLINE_MODE) {
-					JUtil.showMessageDialog(null, "View Friends", "Cannot view users while offline. Please go online to view users.");
-					return;
-				}
-				UsersDialog dialog = new UsersDialog();
-				dialog.showDialog();
+				actionViewFriends();
 			}
         	
         });
@@ -378,7 +372,7 @@ public class PMenuBar extends JMenuBar {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(JandorTabFrame.confirmReset(PMenuBar.this)) {
+				if(JandorTabFrame.confirmReset(JandorMenuBar.this)) {
 					JandorTabFrame.reset();
 				}
 			}
@@ -662,11 +656,11 @@ public class PMenuBar extends JMenuBar {
 		return null;
 	}
 	
-	private List<PMenuBar> getOtherMenuBars() {
-		List<PMenuBar> bars = new LinkedList<PMenuBar>();
+	private List<JandorMenuBar> getOtherMenuBars() {
+		List<JandorMenuBar> bars = new LinkedList<JandorMenuBar>();
 		for(JandorTabFrame frame : JandorTabFrame.getAllFrames()) {
 			if(!frame.getJMenuBar().equals(this)) {
-				bars.add((PMenuBar) frame.getJMenuBar());
+				bars.add((JandorMenuBar) frame.getJMenuBar());
 			}
 		}
 		return bars;
@@ -908,6 +902,16 @@ public class PMenuBar extends JMenuBar {
 		String title = JUtil.getFrame(boardView).getTitle() + " - Exile";
 		InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.EXILE);
 		JUtil.showDialog(boardView, title, inspectView);
+	}
+	
+	public void actionViewFriends() {
+		//ContactsDialog dialog = new ContactsDialog();
+		if(DebugUtil.OFFLINE_MODE) {
+			JUtil.showMessageDialog(null, "View Friends", "Cannot view users while offline. Please go online to view users.");
+			return;
+		}
+		UsersDialog dialog = new UsersDialog();
+		dialog.showDialog();
 	}
 	
 	public static File chooseFile(Component parent, boolean open) {

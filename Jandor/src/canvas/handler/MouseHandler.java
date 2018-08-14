@@ -267,7 +267,7 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	}
 
 	private boolean hideTooltip(T obj) {
-		if(!obj.getRenderer().isFaceUp()) {
+		if(!obj.getRenderer().isFaceUp() || obj.getRenderer().getZoneType() == ZoneType.HAND) {
 			return true;
 		}
 		if(layer instanceof CardLayer && obj instanceof Card && obj.getRenderer() instanceof CardRenderer) {
