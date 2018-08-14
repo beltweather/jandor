@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -26,7 +27,6 @@ import canvas.gesture.Gesture;
 import canvas.gesture.ShakeGesture;
 import canvas.handler.MouseHandlerManager;
 import canvas.handler.RenderableHandler;
-import canvas.zoom.ZoomAndPanListener;
 import deck.Card;
 import deck.CardList;
 import deck.RenderableList;
@@ -664,25 +664,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void paintBattlefieldCardsAndDice(Graphics2D g, int width, int height) {
-		if(!opponentView && opponentLayer != null) {
-			//AffineTransform at = g.getTransform();
-			//g.setTransform(g.getTransform().getRotateInstance(Math.PI, width/2, height/2).);
-			g.rotate(Math.PI, width/2, height/2);
-			g.translate(0, height/2);
-			for(IRenderable r : opponentLayer.getAllObjects()) {
-				if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD) {
-					continue;
-				}
-				if(r instanceof Card) {
-					paintCard(g, width, height, (Card) r);
-				} else if(r instanceof Die) {
-					paintDie(g, width, height, (Die) r);
-				}
-			}
-			g.translate(0, -height/2);
-			g.rotate(-Math.PI, width/2, height/2);
-			//g.setTransform(at);
-		}
+		paintOpponentCardsAndDice(g, width, height);
 		
 		for(Card c : battlefieldCards) {
 			paintCard(g, width, height, c);
@@ -690,6 +672,40 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		for(Die d : battlefieldDice) {
 			paintDie(g, width, height, d);
+		}
+		
+	}
+	
+	private void paintOpponentCardsAndDice(Graphics2D g, int width, int height) {
+		if(opponentView || opponentLayer == null) {
+			return;
+		}
+		
+		g.rotate(Math.PI, width/2, height/2);
+		g.translate(0, height/2);
+		boolean hasRenderables = false;
+		for(IRenderable r : opponentLayer.getAllObjects()) {
+			if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD || !r.getRenderer().isTransformedProjection()) {
+				continue;
+			}
+			if(r instanceof Card) {
+				hasRenderables = true;
+				paintCard(g, width, height, (Card) r);
+			} else if(r instanceof Die) {
+				hasRenderables = true;
+				paintDie(g, width, height, (Die) r);
+			}
+		}
+		g.translate(0, -height/2);
+		g.rotate(-Math.PI, width/2, height/2);
+		
+		if(!hasRenderables) {
+			getCanvas().getZoom().revert(g);
+			g.setColor(Color.RED);
+			g.setFont(g.getFont().deriveFont(30f));
+			String s = "Opponent has no cards on the battlefield";
+			g.drawString(s, (width - g.getFontMetrics(g.getFont()).stringWidth(s))/2, 50);
+			getCanvas().getZoom().transform(g);
 		}
 		
 	}
