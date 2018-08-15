@@ -87,4 +87,8 @@ public class MultiplayerMessage implements Serializable {
 		return this;
 	}
 	
+	public MultiplayerMessage setCommanderDamageByGUID(Map<String, Integer> commanderDamageByGUID) {
+		this.commanderDamageByGUID = commanderDamageByGUID;
+		return this;
+	}
 }

@@ -26,15 +26,15 @@ import util.UserUtil;
 
 public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 	
-	private ButtonGroup opponentRadioGroup;
-	private Map<String, PRadio> opponentRadiosByGUID = new HashMap<String, PRadio>();
-	
 	private PCheckBox handViewableCheck;
 	private PCheckBox deckViewableCheck;
 	private PCheckBox graveyardViewableCheck;
 	private PCheckBox exileViewableCheck;
 	
 	private PSpinner lifeSpinner;
+	
+	private Map<String, Integer> commanderDamageByGUID;
+	private Map<String, PSpinner> commanderDamageSpinnersByGUID;
 	
 	public PlayerButtonPanel(CardLayer layer) {
 		super(layer);
@@ -136,6 +136,17 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		});
 
 		PPanel disconnectPanel = new PPanel();
+		PPanel commanderPanel = new PPanel();
+		
+		if(commanderDamageSpinnersByGUID == null) {
+			commanderDamageSpinnersByGUID = new HashMap<String, PSpinner>();
+			commanderDamageByGUID = new HashMap<String, Integer>();
+		} else {
+			commanderDamageSpinnersByGUID.clear();
+			commanderDamageByGUID.clear();
+		}
+		
+		boolean first = true;
 		for(final String guid : guids) {
 			final User user = UserUtil.getUserByGUID(guid);
 			PButton db = new PButton(user.getFirstName());
@@ -156,6 +167,33 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 			disconnectPanel.addc(db);
 			disconnectPanel.c.insets(0,10);
 			disconnectPanel.c.gridx++;
+			
+			if(!commanderDamageByGUID.containsKey(guid)) {
+				commanderDamageByGUID.put(guid, 21);
+			}
+			
+			PSpinner commanderLifeSpinner = new PSpinner(commanderDamageByGUID.get(guid), 0, 21) {
+
+				@Override
+				protected void handleChange(int value) {
+					commanderDamageByGUID.put(guid, value);
+					layer.flagChange();
+				}
+				
+			};
+			
+			commanderPanel.addc(new PLabel((first ? "Commander Damage from " : ", ") + user.getInitials() + ": "));
+			commanderPanel.c.gridx++;
+			commanderPanel.c.insets(0,0,0,0);
+			commanderPanel.addc(commanderLifeSpinner);
+			commanderPanel.c.gridx++;
+			commanderPanel.c.insets();
+			
+			commanderDamageSpinnersByGUID.put(guid, commanderLifeSpinner);
+			
+			if(first) {
+				first = false;
+			}
 		}
 		
 		handViewableCheck = new PCheckBox("Reveal Hand");
@@ -233,6 +271,13 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		metaPanel.addc(exileViewableCheck);
 		
 		PPanel mainPanel = new PPanel();
+		
+		if(layer.isCommander()) {
+			mainPanel.c.insets(topMargin, 0, 0, 30);
+			mainPanel.addc(commanderPanel);
+			mainPanel.c.gridx++;
+		}
+		
 		mainPanel.c.insets(topMargin);
 		mainPanel.addc(new PLabel("Life: "));
 		mainPanel.c.gridx++;
@@ -269,13 +314,6 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		add(subPanel, c);
 	}
 	
-	public void maybeRebuild(String guid) {
-		if(opponentRadiosByGUID.containsKey(guid)) {
-			return;
-		}
-		rebuild();
-	}
-	
 	public boolean isHandViewable() {
 		return handViewableCheck == null ? false : handViewableCheck.isSelected();
 	}
@@ -300,4 +338,7 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		this.lifeSpinner.setValue(lifeTotal);
 	}
 	
+	public Map<String, Integer> getCommanderDamageByGUID() {
+		return this.commanderDamageByGUID;
+	}
 }

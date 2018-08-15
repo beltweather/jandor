@@ -27,6 +27,8 @@ public class User extends SessionData {
 	private String lastName;
 	private String email;
 	
+	private transient String initials;
+	
 	private boolean defaultUser;
 	
 	public User() {
@@ -89,6 +91,17 @@ public class User extends SessionData {
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+	
+	public String getInitials() {
+		return getInitials(false);
+	}
+	
+	public String getInitials(boolean period) {
+		if(initials == null) {
+			initials = firstName.substring(0,1).toUpperCase() + (period ? ". " : "") + lastName.substring(0,1).toUpperCase() + (period ? "." : "");
+		}
+		return initials;
 	}
 	
 	public boolean isDefaultUser() {

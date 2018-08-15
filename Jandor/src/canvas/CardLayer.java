@@ -195,6 +195,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 
 	private transient OpponentButtonPanel opponentButtonPanel;
 	
+	private transient boolean commander;
+	
 	public CardLayer(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
 		init(canvas, cards, enableListeners);
 	}
@@ -212,6 +214,15 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		tokens = new DieList();
 		
 		cardsToInitialize = cards;
+		
+		commander = false;
+		for(Card c : cardsToInitialize) {
+			if(c.isCommander()) {
+				commander = true;
+				break;
+			}
+		}
+		
 		initialized = false;
 		
 		if(handler == null) {
@@ -258,6 +269,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 		
 		//adjustCameraForOpponent();
+	}
+	
+	public boolean isCommander() {
+		return commander;
 	}
 	
 	/*public void adjustCameraForOpponent() {
@@ -934,13 +949,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			initialized = true;
 			newGame = true;
 			
-			boolean hasCommander = false;
-			for(Card c : cardsToInitialize) {
-				if(c.isCommander()) {
-					hasCommander = true;
-					break;
-				}
-			}
+			boolean hasCommander = isCommander();
 			if(!hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) != null) {
 				cardZoneManager.removeZone(ZoneType.COMMANDER);
 			} else if(hasCommander && cardZoneManager.getZone(ZoneType.COMMANDER) == null) {
@@ -1949,7 +1958,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 											.setDeckViewable(getPlayerButtonPanel().isDeckViewable())
 											.setGraveyardViewable(getPlayerButtonPanel().isGraveyardViewable())
 											.setExileViewable(getPlayerButtonPanel().isExileViewable())
-											.setLifeTotal(getPlayerButtonPanel().getLifeTotal()));
+											.setLifeTotal(getPlayerButtonPanel().getLifeTotal())
+											.setCommanderDamageByGUID(getPlayerButtonPanel().getCommanderDamageByGUID()));
 	}
 	
 	private static final RenderableList<IRenderable> empty = new RenderableList<IRenderable>();

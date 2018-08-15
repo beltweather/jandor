@@ -15,6 +15,7 @@ import javax.swing.ButtonGroup;
 import deck.Card;
 import deck.CardList;
 import multiplayer.MultiplayerMessage;
+import session.User;
 import ui.pwidget.PButton;
 import ui.pwidget.PLabel;
 import ui.pwidget.PPanel;
@@ -48,8 +49,12 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 	private boolean graveyardViewable = true;
 	private boolean exileViewable = true;
 	
+	private Map<String, Integer> commanderDamageByGUID = new HashMap<String, Integer>();
+	
 	private int lifeTotal;
 	private PLabel lifeTotalLabel;
+	
+	private PLabel commanderDamageLabel;
 	
 	public OpponentButtonPanel(CardLayer layer) {
 		super(layer);
@@ -166,11 +171,14 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		});
 		
 		lifeTotalLabel = new PLabel("");
+		commanderDamageLabel = new PLabel("");
 		
-		zonePanel.c.insets(0,10, 0, 20);
-		zonePanel.addc(lifeTotalLabel);
-		zonePanel.c.insets(0,10);
+		zonePanel.c.insets(0, 10, 0, 20);
+		zonePanel.addc(commanderDamageLabel);
 		zonePanel.c.gridx++;
+		zonePanel.addc(lifeTotalLabel);
+		zonePanel.c.gridx++;
+		zonePanel.c.insets(0,10);
 		zonePanel.addc(deckLabel);
 		zonePanel.c.gridx++;
 		zonePanel.addc(deckButton);
@@ -235,6 +243,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 			graveyardButton.setVisible(false);
 			exileButton.setVisible(false);
 			lifeTotalLabel.setVisible(false);
+			commanderDamageLabel.setVisible(false);
 			return;
 		}
 
@@ -247,6 +256,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		graveyardButton.setVisible(message.isGraveyardViewable());
 		exileButton.setVisible(message.isExileViewable());
 		lifeTotalLabel.setVisible(true);
+		commanderDamageLabel.setVisible(layer.isCommander());
 		
 		boolean shouldRevalidate = false;
 		if((handViewable != message.isHandViewable()) || 
@@ -286,6 +296,65 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 						break;
 				}
 			}
+		}
+		
+		boolean shouldUpdateComm = false;
+		if(commanderDamageByGUID == null) {
+			commanderDamageByGUID = new HashMap<String, Integer>();
+		}
+		
+		if(message.getCommanderDamageByGUID() != null) {
+			if(commanderDamageByGUID.size() != message.getCommanderDamageByGUID().size()) {
+				shouldUpdateComm = true;
+			} else {
+				for(String guid : message.getCommanderDamageByGUID().keySet()) {
+					if(!commanderDamageByGUID.containsKey(guid)) {
+						shouldUpdateComm = true;
+					} else if(commanderDamageByGUID.get(guid) != message.getCommanderDamageByGUID().get(guid)) {
+						shouldUpdateComm = true;
+					}
+				}
+			}
+		}
+		
+		if(shouldUpdateComm) {
+			commanderDamageByGUID = message.getCommanderDamageByGUID();
+			List<String> guids = new ArrayList<String>(commanderDamageByGUID.keySet());
+			Collections.sort(guids, new Comparator<String>() {
+
+				@Override
+				public int compare(String guidA, String guidB) {
+					User userA = UserUtil.getUserByGUID(guidA);
+					User userB = UserUtil.getUserByGUID(guidB);
+					if(userA == null && userB == null) {
+						return 0;
+					} else if(userA == null) {
+						return -1;
+					} else if(userB == null) {
+						return 1;
+					}
+					return userA.getFirstName().compareTo(userB.getFirstName());
+				}
+				
+			});
+			
+			StringBuilder sb = new StringBuilder();
+			boolean first = true;
+			for(String guid : guids) {
+				User user = UserUtil.getUserByGUID(guid);
+				if(user == null) {
+					continue;
+				}
+				if(first) {
+					first = false;
+					sb.append("Commander Damage from ");
+				} else {
+					sb.append(", ");
+				}
+				sb.append(user.getInitials() + ": " + commanderDamageByGUID.get(guid));
+			}
+			commanderDamageLabel.setText(sb.toString());
+			shouldRevalidate = true;
 		}
 		
 		if(deckCount != newDeckCount) {
