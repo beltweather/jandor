@@ -192,6 +192,7 @@ public class FriendUtil {
 			String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
 			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
 				layer.opponentLayer = boardView.getCardLayer();
+				layer.getOpponentButtonPanel().updateLabels();
 				layer.repaint();
 			}
 		}

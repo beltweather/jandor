@@ -114,7 +114,7 @@ public class BoardView extends JandorView {
 		c.gridy++;
 		c.weaken();
 		c.fill = G.HORIZONTAL;
-		addc(cardLayer.getButtonPanel());
+		addc(cardLayer.getPlayerButtonPanel());
 		
 		revalidate();
 	}

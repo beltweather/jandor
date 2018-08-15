@@ -252,7 +252,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		setShowCardCounts(Session.getInstance().getPreferences().isShowCardCounts());
 
 		if(playerButtonPanel == null) {
-			initButtonPanel();
+			initPlayerButtonPanel();
 			initOpponentButtonPanel();
 		}
 		
@@ -1931,11 +1931,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		this.opponentLayer = opponentLayer;
 	}
 	
-	private void initButtonPanel() {
+	private void initPlayerButtonPanel() {
 		playerButtonPanel = new PlayerCardLayerButtonPanel(this);
 	}
 	
-	public PlayerCardLayerButtonPanel getButtonPanel() {
+	public PlayerCardLayerButtonPanel getPlayerButtonPanel() {
 		return playerButtonPanel;
 	}
 	

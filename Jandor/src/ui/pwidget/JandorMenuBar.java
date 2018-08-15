@@ -47,6 +47,7 @@ import ui.view.DeckEditorView;
 import ui.view.InspectView;
 import ui.view.JandorView;
 import ui.view.SearchView;
+import ui.view.SimpleInspectView;
 import user.EditUserDialog;
 import user.LoginUserDialog;
 import user.UsersDialog;
@@ -882,6 +883,16 @@ public class JandorMenuBar extends JMenuBar {
 		});
 		
 		d.setVisible(true);
+	}
+	
+	public void actionSearch(String title, List<Card> cards) {
+		if(!hasJandorView() || !(getJandorView() instanceof BoardView)) {
+			return;
+		}
+		BoardView boardView = (BoardView) getJandorView();
+		String fullTitle = JUtil.getFrame(boardView).getTitle() + " - " + title;
+		SimpleInspectView inspectView = new SimpleInspectView(fullTitle, cards);
+		JUtil.showDialog(boardView, fullTitle, inspectView);
 	}
     
 	public void actionSearchGraveyard() {
