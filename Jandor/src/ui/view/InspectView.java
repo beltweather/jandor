@@ -54,7 +54,7 @@ public class InspectView extends JandorView {
 		}
 		
 		if(shuffle.isSelected()) {
-			layer.shuffleCards(layer.getCardZoneManager().getZone(zoneType), true, false);
+			layer.shuffleCards(layer.getCardZoneManager().getZone(zoneType), true, true);
 			for(Card card : topDeckCards) {
 				layer.move(card, 0);
 			}

@@ -1536,9 +1536,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 		switch(type) {
 			case DECK:
-				if(card.getName().contains("Deep")) {
-					System.out.println(card.getName());
-				}
 				if(zoneChanged) {
 					mutateCard(card, false, false, 0, 0.5, isDragging);
 				}
