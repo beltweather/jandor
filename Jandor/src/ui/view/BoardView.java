@@ -132,7 +132,7 @@ public class BoardView extends JandorView {
 	public void handleClosed() {
 		cardLayer.handleClosed();
 		SessionEventManager.removeListeners(this);
-		FriendUtil.disconnectFromFriend(this);
+		//FriendUtil.disconnectFromFriend(this);
 	}
 	
 }

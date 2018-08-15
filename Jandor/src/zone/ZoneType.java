@@ -5,7 +5,7 @@ import java.util.List;
 
 public enum ZoneType {
 
-	DECK, GRAVEYARD, HAND, EXILE, COMMANDER(false), BATTLEFIELD(false, true), NONE(false);
+	DECK("Deck"), GRAVEYARD("Graveyard"), HAND("Hand"), EXILE("Exile"), COMMANDER("Commander", false), BATTLEFIELD("Battlefield", false, true), NONE("None", false);
 	
 	public static List<ZoneType> getSortedValues() {
 		List<ZoneType> zones = new ArrayList<ZoneType>();
@@ -19,18 +19,20 @@ public enum ZoneType {
 		return zones;
 	}
 	
+	private String prettyString;
 	private boolean countable;
 	private boolean transformed;
 	
-	private ZoneType() {
-		this(true);
+	private ZoneType(String prettyString) {
+		this(prettyString, true);
 	}
 	
-	private ZoneType(boolean countable) {
-		this(countable, false);
+	private ZoneType(String prettyString, boolean countable) {
+		this(prettyString, countable, false);
 	}
 	
-	private ZoneType(boolean countable, boolean transformed) {
+	private ZoneType(String prettyString, boolean countable, boolean transformed) {
+		this.prettyString = prettyString;
 		this.countable = countable;
 		this.transformed = transformed;
 	}
@@ -41,6 +43,14 @@ public enum ZoneType {
 	
 	public boolean isTransformedProjection() {
 		return transformed;
+	}
+	
+	public String getPrettyString() {
+		return prettyString;
+	}
+	
+	public String toString() {
+		return getPrettyString();
 	}
 	
 }

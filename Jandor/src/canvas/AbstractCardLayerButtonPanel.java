@@ -16,6 +16,7 @@ public abstract class AbstractCardLayerButtonPanel extends PPanel {
 		removeAll();
 		init();
 		revalidate();
+		repaint();
 	}
 	
 	protected abstract void init();

@@ -34,12 +34,13 @@ import dice.D10;
 import dice.Die;
 import dice.DieList;
 import dice.Token;
+import multiplayer.MultiplayerMessage;
 import session.Session;
 import ui.pwidget.CloseListener;
 import ui.pwidget.ColorUtil;
 import ui.pwidget.JUtil;
-import ui.pwidget.JandorTabFrame;
 import ui.pwidget.JandorMenuBar;
+import ui.pwidget.JandorTabFrame;
 import ui.pwidget.PPanel;
 import util.ImageUtil;
 import util.SerializationUtil;
@@ -180,7 +181,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	private transient List<CardLayer> syncedLayers = new ArrayList<CardLayer>();
 	
-	public transient CardLayer opponentLayer = null;
+	private transient MultiplayerMessage opponentMessage = null;
 	
 	private transient boolean initialized;
 	
@@ -190,9 +191,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	private transient boolean newGame;
 	
-	private transient PlayerCardLayerButtonPanel playerButtonPanel;
+	private transient PlayerButtonPanel playerButtonPanel;
 
-	private transient OpponentCardLayerButtonPanel opponentButtonPanel;
+	private transient OpponentButtonPanel opponentButtonPanel;
 	
 	public CardLayer(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
 		init(canvas, cards, enableListeners);
@@ -256,14 +257,14 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			initOpponentButtonPanel();
 		}
 		
-		adjustCameraForOpponent();
+		//adjustCameraForOpponent();
 	}
 	
-	public void adjustCameraForOpponent() {
+	/*public void adjustCameraForOpponent() {
 		if(this.opponentLayer != null) {
 			//getCanvas().getZoom().setZoomLevel(ZoomAndPanListener.DEFAULT_MIN_ZOOM_LEVEL + 1);
 		}
-	}
+	}*/
 	
 	private void initDice(boolean hasCommander) {
 		if(opponentView) {
@@ -679,14 +680,15 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	private void paintOpponentCardsAndDice(Graphics2D g, int width, int height) {
-		if(opponentView || opponentLayer == null) {
+		MultiplayerMessage opponentMessage = this.opponentMessage;
+		if(opponentView || opponentMessage == null) {
 			return;
 		}
 		
 		g.rotate(Math.PI, width/2, height/2);
 		g.translate(0, height/2);
 		boolean hasRenderables = false;
-		for(IRenderable r : opponentLayer.getAllObjects()) {
+		for(IRenderable r : opponentMessage.getAllObjects()) {
 			if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD || !r.getRenderer().isTransformedProjection()) {
 				continue;
 			}
@@ -1507,6 +1509,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.setScale(0.5);//0.7);
 					card.restoreAngle();
+					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1520,8 +1523,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.setScale(0.5);//0.7);
 					card.setAngle(180 + ShuffleUtil.randInt(-10, 10));
+					card.recomputeBounds();
 				}
 				if(!isDragging) {
+					card.recomputeBounds();
 					zone.getRenderer().center(this, card, animate);
 				}
 				break;
@@ -1533,6 +1538,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.restoreScale();
 					card.restoreAngle();
+					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().setShouldFan(true);
@@ -1546,6 +1552,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					//card.setScale(0.7);
 					card.restoreScale();
 					card.restoreAngle();
+					card.recomputeBounds();
 				}
 				break;
 			case EXILE:
@@ -1557,6 +1564,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setScale(0.2);
 					card.setAngle(ShuffleUtil.randInt(-10, 10));
 					//card.restoreAngle();
+					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1570,6 +1578,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					card.setTapped(false);
 					card.setScale(0.2);
 					card.setAngle(0);
+					card.recomputeBounds();
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1577,10 +1586,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				break;
 			default:
 				break;
-		}
-		
-		if(zoneChanged) {
-			card.recomputeBounds();
 		}
 		
 		if(!isDragging) {
@@ -1912,14 +1917,25 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	public String getSerializedRenderablesString() {
-		return SerializationUtil.toString(allObjects.getShallowCopySortedByZIndex());
+		RenderableList<IRenderable> renderableList = allObjects.getShallowCopySortedByZIndex();
+		renderableList.screenW = screenW;
+		renderableList.screenH = screenH;
+		return SerializationUtil.toString(new MultiplayerMessage(renderableList, 
+															   getPlayerButtonPanel().isHandViewable(), 
+															   getPlayerButtonPanel().isDeckViewable(),
+															   getPlayerButtonPanel().isGraveyardViewable(),
+															   getPlayerButtonPanel().isExileViewable()));
 	}
 	
 	public byte[] getSerializedRenderablesBytes() {
 		RenderableList<IRenderable> renderableList = allObjects.getShallowCopySortedByZIndex();
 		renderableList.screenW = screenW;
 		renderableList.screenH = screenH;
-		return SerializationUtil.toBytes(renderableList);
+		return SerializationUtil.toBytes(new MultiplayerMessage(renderableList, 
+															  getPlayerButtonPanel().isHandViewable(), 
+															  getPlayerButtonPanel().isDeckViewable(),
+															  getPlayerButtonPanel().isGraveyardViewable(),
+															  getPlayerButtonPanel().isExileViewable()));
 	}
 	
 	private static final RenderableList<IRenderable> empty = new RenderableList<IRenderable>();
@@ -1927,23 +1943,27 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		return empty;
 	}
 	
-	public void setOpponentLayer(CardLayer opponentLayer) {
-		this.opponentLayer = opponentLayer;
+	public MultiplayerMessage getOpponentMessage() {
+		return opponentMessage;
+	}
+	
+	public void setOpponentMessage(MultiplayerMessage opponentMessage) {
+		this.opponentMessage = opponentMessage;
 	}
 	
 	private void initPlayerButtonPanel() {
-		playerButtonPanel = new PlayerCardLayerButtonPanel(this);
+		playerButtonPanel = new PlayerButtonPanel(this);
 	}
 	
-	public PlayerCardLayerButtonPanel getPlayerButtonPanel() {
+	public PlayerButtonPanel getPlayerButtonPanel() {
 		return playerButtonPanel;
 	}
 	
 	private void initOpponentButtonPanel() {
-		opponentButtonPanel = new OpponentCardLayerButtonPanel(this);
+		opponentButtonPanel = new OpponentButtonPanel(this);
 	}
 	
-	public OpponentCardLayerButtonPanel getOpponentButtonPanel() {
+	public OpponentButtonPanel getOpponentButtonPanel() {
 		return opponentButtonPanel;
 	}
 	

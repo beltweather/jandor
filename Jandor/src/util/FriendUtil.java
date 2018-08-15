@@ -4,30 +4,28 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import canvas.CardLayer;
+import multiplayer.MultiplayerConnection;
+import multiplayer.MultiplayerMessage;
 import redis.BinarySubscriber;
 import session.User;
 import ui.ProgressBar.ProgressTask;
 import ui.ProgressDialog;
 import ui.pwidget.JUtil;
-import ui.pwidget.JandorTabFrame;
-import ui.pwidget.PTabPane;
-import ui.view.BoardView;
-import canvas.CardLayer;
-import canvas.LightCardLayer;
 
 public class FriendUtil {
-
-	private static Map<String, BoardView> connectedViewsByUserGUID = new HashMap<String, BoardView>();
+	
+	private static Map<String, MultiplayerConnection> connectedByUserGUID = new HashMap<String, MultiplayerConnection>();
 	private static Map<String, Boolean> inviteResponsesByGUID = new HashMap<String, Boolean>();
 	private static long INVITE_TIMEOUT = 20000;
-	private static BoardView latestInviteBoardView;
+	private static MultiplayerConnection latestInviteConnection;
 	
 	public static Collection<String> getConnectedUserGUIDS() {
-		return connectedViewsByUserGUID.keySet();
+		return connectedByUserGUID.keySet();
 	}
 	
 	public static boolean isConnected() {
-		return connectedViewsByUserGUID.size() > 0;
+		return connectedByUserGUID.size() > 0;
 	}
 	
 	public synchronized static void clearInviteResponses() {
@@ -47,12 +45,12 @@ public class FriendUtil {
 	
 	private FriendUtil() {}
 	
-	public static BoardView inviteFriend(final User user) {
+	public static MultiplayerConnection inviteFriend(final User user) {
 		if(!JUtil.showConfirmDialog(null, "Connect to Friend", "Share your active board view with user \"" + user.getUsername() + "\" and view their board?")) {
 			return null;
 		}
 
-		latestInviteBoardView = null;
+		latestInviteConnection = null;
 		clearInviteResponses();
 		ProgressDialog dialog = new ProgressDialog("Waiting for Friend \"" + user.getUsername() + "\"") {
 			
@@ -63,29 +61,6 @@ public class FriendUtil {
 				getProgressBar().setStringPainted(false);
 				
 				MessageUtil.sendInvite(user.getGUID());
-				
-				//String prefix = IDUtil.getUniquePrefix(IDUtil.PREFIX_INVITE);
-				//String guid = IDUtil.extractPrefixGUID(prefix);
-				/*MailUtil.sendToDriveInbox(user, prefix, LoginUtil.getUser().getGUID());
-				long inviteStartTime = System.currentTimeMillis();
-				try {
-					while(getInviteResponse(guid) == null && (System.currentTimeMillis() - inviteStartTime) < INVITE_TIMEOUT) {
-						Thread.sleep(100);
-					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
-				Boolean inviteResponse = getInviteResponse(guid);
-				if(inviteResponse != null && inviteResponse.booleanValue()) {
-					latestInviteBoardView = connectToFriend(user);
-				} else {
-					if(inviteResponse == null) {
-						JUtil.showMessageDialog(null, "Could Not Connect", "User \"" + user.getUsername() + "\" did not respond. Please try again.");
-					} else {
-						JUtil.showMessageDialog(null, "Could Not Connect", "User \"" + user.getUsername() + "\" declined the invite.");
-					}
-				}*/
 			}
 
 			@Override
@@ -95,25 +70,19 @@ public class FriendUtil {
 			
 		};
 		dialog.showDialog();
-		return latestInviteBoardView;
+		return latestInviteConnection;
 	}
 	
-	public static BoardView connectToFriend(final User user) {
+	public static MultiplayerConnection connectToFriend(final User user) {
 		if(user == null) {
 			return null;
 		}
 		
-		String title = "Board - " + user.getUsername();
-		
-		BoardView boardView = new BoardView(title, false);
-		boardView.getCardLayer().setHideHand(true);
-		connectedViewsByUserGUID.put(user.getGUID(), boardView);
-		
-		PTabPane tabPane = JandorTabFrame.getSingleFrame().getTabPane();
-		tabPane.addTab(title, boardView);
-		tabPane.setSelectedIndex(tabPane.getTabCount() - 1);
+		MultiplayerConnection connection = new MultiplayerConnection(user);
+		connectedByUserGUID.put(user.getGUID(), connection);
 		
 		for(CardLayer layer : CardLayer.getAllCardLayers()) {
+			layer.getPlayerButtonPanel().rebuild();
 			layer.getOpponentButtonPanel().rebuild();
 			layer.repaint();
 		}
@@ -128,84 +97,121 @@ public class FriendUtil {
 		});
 		MessageUtil.startStreaming();
 		
-		return boardView;
+		return connection;
 	}
-	
-	public static void disconnectFromFriend(BoardView view) {
+
+	public static void disconnectFromFriend(MultiplayerConnection connection) {
 		String userGUID = null;
-		for(String guid : connectedViewsByUserGUID.keySet()) {
-			if(connectedViewsByUserGUID.get(guid).equals(view)) {
+		for(String guid : connectedByUserGUID.keySet()) {
+			if(connectedByUserGUID.get(guid).equals(connection)) {
 				userGUID = guid;
 				break;
 			}
 		}
-		if(userGUID != null) {
-			connectedViewsByUserGUID.remove(userGUID);
-			
-			for(CardLayer layer : CardLayer.getAllCardLayers()) {
-				layer.getOpponentButtonPanel().rebuild();
-				layer.opponentLayer = null;
-				layer.repaint();
-			}
-			
-			JedisUtil.unsubscribe(JedisUtil.toStreamChannel(userGUID));
+		if(userGUID == null) {
+			return;
+		}
+		disconnectFromFriend(userGUID);
+	}
+	
+	public static void disconnectFromFriend(String userGUID) {
+		disconnectFromFriend(userGUID, false);
+	}
+	
+	public static void disconnectFromFriend(String userGUID, boolean opponentDisconnectedFirst) {
+		if(userGUID == null) {
+			return;
+		}
+		
+		if(LoginUtil.isLoggedIn() && !opponentDisconnectedFirst) {
+			String loginUserGUID = LoginUtil.getUser().getGUID();
+			byte[] channel = JedisUtil.toBytes(JedisUtil.toStreamChannel(loginUserGUID));
+			JedisUtil.publish(channel, SerializationUtil.toBytes(MultiplayerMessage.getDisconnectMessage(userGUID)));
+		}
+		
+		connectedByUserGUID.remove(userGUID);
+		
+		for(CardLayer layer : CardLayer.getAllCardLayers()) {
+			layer.setOpponentMessage(null);
+			layer.getPlayerButtonPanel().rebuild();
+			layer.getOpponentButtonPanel().rebuild();
+			layer.repaint();
+		}
+		
+		JedisUtil.unsubscribe(JedisUtil.toStreamChannel(userGUID));
+		
+		if(opponentDisconnectedFirst) {
+			JUtil.showMessageDialog(null, "Disconnected from Friend", "Friend \"" + UserUtil.getUserByGUID(userGUID).getUsername() + "\" disconnected from you.");
+		} else {
 			JUtil.showMessageDialog(null, "Disconnected from Friend", "Disconnected from friend \"" + UserUtil.getUserByGUID(userGUID).getUsername() + "\"");
 		}
 	}
 	
 	public static void disconnectFromFriend(User user) {
-		if(user == null || !connectedViewsByUserGUID.containsKey(user.getGUID())) {
+		if(user == null || !connectedByUserGUID.containsKey(user.getGUID())) {
 			return;
 		}
-		connectedViewsByUserGUID.remove(user.getGUID());
+		connectedByUserGUID.remove(user.getGUID());
 		JUtil.showMessageDialog(null, "Disconnected from Friend", "Disconnected from friend \"" + UserUtil.getUserByGUID(user.getGUID()).getUsername() + "\"");
 	}
 	
-	public static void updateConnectedView(String userGUID, CardLayer layer) {
-		if(!connectedViewsByUserGUID.containsKey(userGUID)) {
+	public static void updateConnectedView(String userGUID, MultiplayerMessage message) {
+		if(!connectedByUserGUID.containsKey(userGUID)) {
 			return;
 		}
-		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
-		boardView.getCardLayer().setFromCardLayerShallowCopy(layer);
+		MultiplayerConnection connection = connectedByUserGUID.get(userGUID);
+		connection.setMessage(message);
 	}
 	
 	public static void updateConnectedView(String userGUID, String currentUsername, String serializedRenderables) {
-		if(!connectedViewsByUserGUID.containsKey(userGUID)) {
+		if(!connectedByUserGUID.containsKey(userGUID)) {
 			return;
 		}
-		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
-		boardView.getCardLayer().setCurrentUsername(currentUsername);
-		((LightCardLayer) boardView.getCardLayer()).setSerializedCardList(serializedRenderables);
-		boardView.repaint();
-	}
-	
-	public static void updateConnectedView(String userGUID, String currentUsername, byte[] serializedRenderables) {
-		if(!connectedViewsByUserGUID.containsKey(userGUID)) {
-			return;
-		}
-		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
-		boardView.getCardLayer().setCurrentUsername(currentUsername);
-		((LightCardLayer) boardView.getCardLayer()).setSerializedCardList(serializedRenderables);
 		
-		// XXX Gross code that needs to be changed and removed!
+		MultiplayerConnection connection = connectedByUserGUID.get(userGUID);
+		MultiplayerMessage message = (MultiplayerMessage) SerializationUtil.fromString(serializedRenderables);
+		connection.setMessage(message);
+		
 		for(CardLayer layer : CardLayer.getAllCardLayers()) {
 			String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
 			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
-				layer.opponentLayer = boardView.getCardLayer();
+				layer.setOpponentMessage(message);
 				layer.getOpponentButtonPanel().updateLabels();
 				layer.repaint();
 			}
 		}
-		
-		boardView.repaint();
 	}
 	
-	public static CardLayer getFriendLayer(String userGUID) {
-		if(!connectedViewsByUserGUID.containsKey(userGUID)) {
+	public static void updateConnectedView(String userGUID, String currentUsername, byte[] serializedRenderables) {
+		if(!connectedByUserGUID.containsKey(userGUID)) {
+			return;
+		}
+		MultiplayerConnection connection = connectedByUserGUID.get(userGUID);
+		MultiplayerMessage message = (MultiplayerMessage) SerializationUtil.fromBytes(serializedRenderables);
+		connection.setMessage(message);
+		
+		if(message.isDisconnect()) {
+			if(LoginUtil.isLoggedIn() && message.getDisconnectGUID().equals(LoginUtil.getUser().getGUID())) {
+				disconnectFromFriend(userGUID, true);
+			}
+			return;
+		}
+		
+		for(CardLayer layer : CardLayer.getAllCardLayers()) {
+			String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
+			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
+				layer.setOpponentMessage(message);
+				layer.getOpponentButtonPanel().updateLabels();
+				layer.repaint();
+			}
+		}
+	}
+	
+	public static MultiplayerMessage getOpponentMessage(String userGUID) {
+		if(!connectedByUserGUID.containsKey(userGUID)) {
 			return null;
 		}
-		BoardView boardView = connectedViewsByUserGUID.get(userGUID);
-		return boardView.getCardLayer();
+		return connectedByUserGUID.get(userGUID).getMessage();
 	}
 	
 }
