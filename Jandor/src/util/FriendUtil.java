@@ -1,10 +1,12 @@
 package util;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import canvas.CardLayer;
+import multiplayer.DisconnectMessage;
 import multiplayer.MultiplayerConnection;
 import multiplayer.MultiplayerMessage;
 import redis.BinarySubscriber;
@@ -44,6 +46,15 @@ public class FriendUtil {
 	}
 	
 	private FriendUtil() {}
+	
+	public static void quickSend(Serializable message) {
+		if(!LoginUtil.isLoggedIn()) {
+			return;
+		}
+		String loginUserGUID = LoginUtil.getUser().getGUID();
+		byte[] channel = JedisUtil.toBytes(JedisUtil.toStreamChannel(loginUserGUID));
+		JedisUtil.publish(channel, SerializationUtil.toBytes(message));
+	}
 	
 	public static MultiplayerConnection inviteFriend(final User user) {
 		if(!JUtil.showConfirmDialog(null, "Connect to Friend", "Share your active board view with user \"" + user.getUsername() + "\" and view their board?")) {
@@ -123,10 +134,8 @@ public class FriendUtil {
 			return;
 		}
 		
-		if(LoginUtil.isLoggedIn() && !opponentDisconnectedFirst) {
-			String loginUserGUID = LoginUtil.getUser().getGUID();
-			byte[] channel = JedisUtil.toBytes(JedisUtil.toStreamChannel(loginUserGUID));
-			JedisUtil.publish(channel, SerializationUtil.toBytes(MultiplayerMessage.getDisconnectMessage(userGUID)));
+		if(!opponentDisconnectedFirst) {
+			quickSend(new DisconnectMessage(userGUID));
 		}
 		
 		connectedByUserGUID.remove(userGUID);
@@ -163,47 +172,34 @@ public class FriendUtil {
 		connection.setMessage(message);
 	}
 	
-	public static void updateConnectedView(String userGUID, String currentUsername, String serializedRenderables) {
-		if(!connectedByUserGUID.containsKey(userGUID)) {
-			return;
-		}
-		
-		MultiplayerConnection connection = connectedByUserGUID.get(userGUID);
-		MultiplayerMessage message = (MultiplayerMessage) SerializationUtil.fromString(serializedRenderables);
-		connection.setMessage(message);
-		
-		for(CardLayer layer : CardLayer.getAllCardLayers()) {
-			String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
-			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
-				layer.setOpponentMessage(message);
-				layer.getOpponentButtonPanel().updateLabels();
-				layer.repaint();
-			}
-		}
-	}
-	
-	public static void updateConnectedView(String userGUID, String currentUsername, byte[] serializedRenderables) {
+	public static void updateConnectedView(String userGUID, String currentUsername, byte[] serializedMessage) {
 		if(!connectedByUserGUID.containsKey(userGUID)) {
 			return;
 		}
 		MultiplayerConnection connection = connectedByUserGUID.get(userGUID);
-		MultiplayerMessage message = (MultiplayerMessage) SerializationUtil.fromBytes(serializedRenderables);
-		connection.setMessage(message);
+		Object obj = SerializationUtil.fromBytes(serializedMessage);
 		
-		if(message.isDisconnect()) {
+		if(obj instanceof DisconnectMessage) {
+			
+			DisconnectMessage message = (DisconnectMessage) obj;
 			if(LoginUtil.isLoggedIn() && message.getDisconnectGUID().equals(LoginUtil.getUser().getGUID())) {
 				disconnectFromFriend(userGUID, true);
 			}
-			return;
-		}
-		
-		for(CardLayer layer : CardLayer.getAllCardLayers()) {
-			String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
-			if(opponentGUID != null && opponentGUID.equals(userGUID)) {
-				layer.setOpponentMessage(message);
-				layer.getOpponentButtonPanel().updateLabels();
-				layer.repaint();
+			
+		} else if(obj instanceof MultiplayerMessage) {
+			
+			MultiplayerMessage message = (MultiplayerMessage) obj;
+			connection.setMessage(message);
+			
+			for(CardLayer layer : CardLayer.getAllCardLayers()) {
+				String opponentGUID = layer.getOpponentButtonPanel().getOpponentGUID();
+				if(opponentGUID != null && opponentGUID.equals(userGUID)) {
+					layer.setOpponentMessage(message);
+					layer.getOpponentButtonPanel().updateLabels();
+					layer.repaint();
+				}
 			}
+			
 		}
 	}
 	

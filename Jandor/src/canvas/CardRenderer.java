@@ -72,7 +72,7 @@ public class CardRenderer extends AbstractRenderer<Card> {
 		Rectangle bounds = getBounds().getBounds();
 		int yOffset = 0;
 		if(isHovered() && card.getZoneType() == ZoneType.HAND) {
-			yOffset = 125 - card.getHeight();;
+			yOffset = 75 - card.getHeight();;
 		}
 		g.drawImage(img, (int) bounds.getX(), (int) bounds.getY() + yOffset, null);
 		

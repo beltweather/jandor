@@ -71,7 +71,7 @@ public class ZoneManager implements Serializable {
 		}
 		
 		for(IRenderable obj : objects) {
-			Zone zone = findClosestZone(canvas, isDragging && layer != null && layer.getHandler().isDragged(obj), obj);
+			Zone zone = findClosestZone(canvas, layer, isDragging && layer != null && layer.getHandler().isDragged(obj), obj);
 			if(zone != null) {
 				zone.add(obj);
 				obj.getRenderer().setZoneType(zone.getType());
@@ -79,14 +79,21 @@ public class ZoneManager implements Serializable {
 		}
 	}
 	
-	public Zone findClosestZone(Canvas canvas, boolean isDragging, IRenderable obj) {
-		Location center = new Location((int) Math.round(obj.getRenderer().getScreenX() + obj.getRenderer().getWidth() / 2.0), 
-									   (int) Math.round(obj.getRenderer().getScreenY() + obj.getRenderer().getHeight() / 2.0));
-		
-		Location centerNoTransform = center;
-		if(obj.getRenderer().isTransformedProjection()) {
-			centerNoTransform = canvas.getZoom().transform(center);
+	public Zone findClosestZone(Canvas canvas, CardLayer layer, boolean isDragging, IRenderable obj) {
+		Location center;
+		Location centerNoTransform;
+		if(isDragging && layer.getHandler().getDragEnd() != null) {
+			center = layer.getHandler().getDragEnd();
+			centerNoTransform = center;
+		} else {
+			center = new Location((int) Math.round(obj.getRenderer().getScreenX() + obj.getRenderer().getWidth() / 2.0), 
+								  (int) Math.round(obj.getRenderer().getScreenY() + obj.getRenderer().getHeight() / 2.0));
+			centerNoTransform = center;
+			if(obj.getRenderer().isTransformedProjection()) {
+				centerNoTransform = canvas.getZoom().transform(center);
+			}
 		}
+		
 		
 		if(!isDragging || (isDragging && !obj.getRenderer().hasMovedEnoughToFindNewZone(centerNoTransform))) {
 			if(obj.getRenderer().getZoneType() == null || obj.getRenderer().getZoneType() == ZoneType.NONE) {

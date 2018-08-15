@@ -48,6 +48,9 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 	private boolean graveyardViewable = true;
 	private boolean exileViewable = true;
 	
+	private int lifeTotal;
+	private PLabel lifeTotalLabel;
+	
 	public OpponentButtonPanel(CardLayer layer) {
 		super(layer);
 	}
@@ -162,7 +165,12 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 			
 		});
 		
+		lifeTotalLabel = new PLabel("");
+		
+		zonePanel.c.insets(0,10, 0, 20);
+		zonePanel.addc(lifeTotalLabel);
 		zonePanel.c.insets(0,10);
+		zonePanel.c.gridx++;
 		zonePanel.addc(deckLabel);
 		zonePanel.c.gridx++;
 		zonePanel.addc(deckButton);
@@ -184,11 +192,11 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		graveyardLabel.setVisible(false);
 		exileLabel.setVisible(false);
 		
-		addc(zonePanel);
+		addc(otherPanel);
 		c.gridx++;
 		fill();
 		c.gridx++;
-		addc(otherPanel);
+		addc(zonePanel);
 		c.gridx++;
 		fill();
 		c.gridx++;
@@ -226,6 +234,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 			handButton.setVisible(false);
 			graveyardButton.setVisible(false);
 			exileButton.setVisible(false);
+			lifeTotalLabel.setVisible(false);
 			return;
 		}
 
@@ -237,6 +246,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		handButton.setVisible(message.isHandViewable());
 		graveyardButton.setVisible(message.isGraveyardViewable());
 		exileButton.setVisible(message.isExileViewable());
+		lifeTotalLabel.setVisible(true);
 		
 		boolean shouldRevalidate = false;
 		if((handViewable != message.isHandViewable()) || 
@@ -303,6 +313,12 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 			exileCount = newExileCount;
 			exileLabel.setText("Exile: " + newExileCount);
 			exileButton.setText("Exile: " + newExileCount);
+			shouldRevalidate = true;
+		}
+		
+		if(message.getLifeTotal() != lifeTotal) {
+			lifeTotal = message.getLifeTotal();
+			lifeTotalLabel.setText("Life: " + lifeTotal);
 			shouldRevalidate = true;
 		}
 		

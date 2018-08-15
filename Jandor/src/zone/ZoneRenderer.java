@@ -65,7 +65,7 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 		g.drawImage(img, x, y, null);
 		//g.draw(getBounds());
 		
-		if(CardLayer.isShowCardCounts() && zone.getType().isCountable()) {
+		if(CardLayer.isShowCardCounts() && zone.getType().isCountable() && zone.size() > 0) {
 			String cardCount = "" + zone.size();
 			g.setColor(CardLayer.isLightView() ? Color.BLACK : Color.WHITE);
 			FontMetrics fm = g.getFontMetrics();
@@ -220,12 +220,15 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 	public String getImageUrl() {
 		switch(getZone().getType()) {
 			case DECK:
+				setScale(0.5);
 				return ImageUtil.getResourceUrl("deck.png");
 			case HAND:
 				return ImageUtil.getResourceUrl("hand.png");
 			case GRAVEYARD:
+				setScale(0.5);
 				return ImageUtil.getResourceUrl("graveyard.png");
 			case EXILE:
+				setScale(0.5);
 				return ImageUtil.getResourceUrl("exile.png");
 			case COMMANDER:
 				return ImageUtil.getResourceUrl("commander.png");
@@ -233,7 +236,7 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 				return null;
 		}
 	}
-
+	
 	@Override
 	public String getBackImageUrl() {
 		return null;

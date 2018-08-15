@@ -16,8 +16,10 @@ import session.User;
 import ui.pwidget.JUtil;
 import ui.pwidget.PButton;
 import ui.pwidget.PCheckBox;
+import ui.pwidget.PLabel;
 import ui.pwidget.PPanel;
 import ui.pwidget.PRadio;
+import ui.pwidget.PSpinner;
 import util.FriendUtil;
 import util.ImageUtil;
 import util.UserUtil;
@@ -31,6 +33,8 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 	private PCheckBox deckViewableCheck;
 	private PCheckBox graveyardViewableCheck;
 	private PCheckBox exileViewableCheck;
+	
+	private PSpinner lifeSpinner;
 	
 	public PlayerButtonPanel(CardLayer layer) {
 		super(layer);
@@ -200,6 +204,17 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 			
 		});
 		
+		lifeSpinner = new PSpinner(20, 0, Integer.MAX_VALUE) {
+
+			@Override
+			protected void handleChange(int value) {
+				layer.flagChange();
+			} 
+			
+		};
+		
+		lifeSpinner.setPreferredWidth(70);
+		
 		PPanel metaPanel = new PPanel();
 		metaPanel.c.insets(topMargin);
 		metaPanel.addc(newGame);
@@ -219,8 +234,13 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		
 		PPanel mainPanel = new PPanel();
 		mainPanel.c.insets(topMargin);
-		mainPanel.addc(untap);
+		mainPanel.addc(new PLabel("Life: "));
+		mainPanel.c.gridx++;
+		mainPanel.c.insets(topMargin, 0, 0, 20);
+		mainPanel.addc(lifeSpinner);
 		mainPanel.c.insets(topMargin, buttonMargin);
+		mainPanel.c.gridx++;
+		mainPanel.addc(untap);
 		mainPanel.c.gridx++;
 		mainPanel.addc(draw);
 		mainPanel.c.gridx++;
@@ -270,6 +290,14 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 	
 	public boolean isExileViewable() {
 		return exileViewableCheck == null ? false : exileViewableCheck.isSelected();
+	}
+	
+	public int getLifeTotal() {
+		return lifeSpinner.getIntValue();
+	}
+	
+	public void setLifeTotal(int lifeTotal) {
+		this.lifeSpinner.setValue(lifeTotal);
 	}
 	
 }

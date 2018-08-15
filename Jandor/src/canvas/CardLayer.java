@@ -271,11 +271,13 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			return;
 		}
 		
-		Die die0 = new D10(Die.DEFAULT_LIFE_COLOR, hasCommander ? 4 : 2);
+		getPlayerButtonPanel().setLifeTotal(hasCommander ? 40 : 20);
+		
+		/*Die die0 = new D10(Die.DEFAULT_LIFE_COLOR, hasCommander ? 4 : 2);
 		d10s.add(die0);
 		
 		Die die1 = new D10(Die.DEFAULT_LIFE_COLOR, 0);
-		d10s.add(die1);
+		d10s.add(die1);*/
 		
 		Die die2 = new D10(Color.WHITE, 0);
 		d10s.add(die2);
@@ -289,21 +291,21 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		updateZoneBounds();
 		
-		moveToDeck(die0);
-		moveToDeck(die1);
+		//moveToDeck(die0);
+		//moveToDeck(die1);
 		
 		moveToGraveyard(die2);
 		moveToGraveyard(counter);
 		moveToGraveyard(token);
 		
 		if(hasCommander) {
-			Die cDie0 = new D10(Die.DEFAULT_COMMANDER_COLOR, 2);
+			/*Die cDie0 = new D10(Die.DEFAULT_COMMANDER_COLOR, 2);
 			d10s.add(cDie0);
 			moveToDeck(cDie0);	
 			
 			Die cDie1 = new D10(Die.DEFAULT_COMMANDER_COLOR, 1);
 			d10s.add(cDie1);
-			moveToDeck(cDie1);
+			moveToDeck(cDie1);*/
 			
 			Die commanderCounter = new Counter(Die.DEFAULT_COMMANDER_COLOR, 0);
 			counters.add(commanderCounter);
@@ -560,10 +562,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		g.setColor(new Color(255,0,0,100));
 		g.fillRect(0, 0, width, 50);
 		g.setColor(Color.BLACK);
+		Font f = g.getFont();
 		g.setFont(new Font("Helvetica", Font.BOLD, 20));
 		String s = currentUsername == null ? "Watching: Opponent" : "Watching: " + currentUsername;
 		Rectangle2D bounds = g.getFontMetrics().getStringBounds(s, g);
 		g.drawString(s, screenW - ((int) bounds.getWidth()) - 20, 30);
+		g.setFont(f); 
 	}
 	
 	protected void paintBackground(Graphics g, int width, int height) {
@@ -705,10 +709,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		if(!hasRenderables) {
 			getCanvas().getZoom().revert(g);
-			g.setColor(Color.RED);
+			g.setColor(Color.WHITE);
 			Font f = g.getFont();
-			g.setFont(f.deriveFont(30f));
-			String s = "Opponent has no cards on the battlefield";
+			g.setFont(f.deriveFont(20f));
+			String s = "(Opponent has no cards on the battlefield)";
 			g.drawString(s, (width - g.getFontMetrics(g.getFont()).stringWidth(s))/2, 50);
 			g.setFont(f);
 			getCanvas().getZoom().transform(g);
@@ -777,8 +781,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 		paintCard(g, width, height, loadingCard);
 		g.setColor(Color.DARK_GRAY);
+		Font f = g.getFont();
 		g.setFont(new Font("Helvetica", Font.BOLD, 40));
 		g.drawString("Loading Deck...", screenW/2 - 150, screenH/2 - 250);
+		g.setFont(f);
 	}
 	
 	/*private void paintDice(Graphics2D g, int width, int height) {
@@ -857,6 +863,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				newGame = false;
 				shuffleDeckAndDrawStartingHand();
 			}
+			
 		} else {
 			updateZoneBounds();
 		}
@@ -1142,11 +1149,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		shuffleCards(cardsToShuffle, false, true);
 		
 		cardZoneManager.getZone(ZoneType.HAND).clear();
-		moveToZone(cardsToDraw, ZoneType.HAND, false, true);
+		moveToZone(cardsToDraw, ZoneType.HAND, false, false);
 		cardZoneManager.getZone(ZoneType.HAND).getRenderer().fan(this, cardsToDraw, true);
 		
 		cardZoneManager.getZone(ZoneType.DECK).clear();
-		moveToZone(cardsToShuffle, ZoneType.DECK, false, true);
+		moveToZone(cardsToShuffle, ZoneType.DECK, false, false);
 		
 		flagChange();
 	}
@@ -1445,8 +1452,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	// Zone Methods
 	
 	public void updateZoneBounds() {
-		int zw = (int) Math.round(300 * ImageUtil.getScale());
-		int zh = (int) Math.round(350 * ImageUtil.getScale());
+		int zw = (int) Math.round(/*300*/ 200 * ImageUtil.getScale());
+		int zh = (int) Math.round(/*350*/ 250 * ImageUtil.getScale());
 		for(ZoneType type : cardZoneManager.getZoneTypes()) {
 			updateZoneBounds(cardZoneManager.getZone(type), zw, zh);
 		}
@@ -1477,13 +1484,13 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				zone.setWidth(screenW);
 				zone.setHeight(screenH - zh);
 				break;
-			case EXILE:
-				zone.setLocation(new Location(0, 0));
+			case COMMANDER:
+				zone.setLocation(new Location(0, screenH - zh - zh/2));
 				zone.setWidth(zw/2);
 				zone.setHeight(zh/2);
 				break;
-			case COMMANDER:
-				zone.setLocation(new Location(screenW - zw/2, 0));
+			case EXILE:
+				zone.setLocation(new Location(screenW - zw/2, screenH - zh - zh/2));
 				zone.setWidth(zw/2);
 				zone.setHeight(zh/2);
 				break;
@@ -1497,6 +1504,31 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		handleMoved(card, isDragging, true);
 	}
 	
+	private void mutateCard(Card card, boolean faceUp, boolean tapped, int angle, double scale, boolean center) {
+		
+		if(center) {
+			card.recomputeBounds();
+			card.setLocation(card.getScreenX() + card.getWidth()/2, card.getScreenY() + card.getHeight()/2); 
+		}
+		
+		card.setFaceUp(faceUp);
+		card.setTapped(tapped);
+		if(angle == 0) {
+			card.restoreAngle();
+		} else {
+			card.setAngle(angle);
+		}
+		
+		card.setScale(scale);
+		
+		if(center) {
+			card.recomputeBounds();
+			card.setLocation(card.getScreenX() - card.getWidth()/2, card.getScreenY() - card.getHeight()/2); 
+		}
+		
+		card.recomputeBounds();
+	}
+	
 	public void handleMoved(Card card, boolean isDragging, boolean animate) {
 		ZoneType type = card.getZoneType();
 		Zone zone = cardZoneManager.getZone(type);
@@ -1504,12 +1536,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 		switch(type) {
 			case DECK:
+				if(card.getName().contains("Deep")) {
+					System.out.println(card.getName());
+				}
 				if(zoneChanged) {
-					card.setFaceUp(false);
-					card.setTapped(false);
-					card.setScale(0.5);//0.7);
-					card.restoreAngle();
-					card.recomputeBounds();
+					mutateCard(card, false, false, 0, 0.5, isDragging);
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1520,10 +1551,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					if(!isDragging || !isHideHand()) {
 						card.setFaceUp(true);
 					}
-					card.setTapped(false);
-					card.setScale(0.5);//0.7);
-					card.setAngle(180 + ShuffleUtil.randInt(-10, 10));
-					card.recomputeBounds();
+					mutateCard(card, card.isFaceUp(), false, 180 + ShuffleUtil.randInt(-10, 10), 0.5, isDragging);
 				}
 				if(!isDragging) {
 					card.recomputeBounds();
@@ -1535,10 +1563,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					if(!isDragging || !isHideHand()) {
 						card.setFaceUp(true);
 					}
-					card.setTapped(false);
-					card.restoreScale();
-					card.restoreAngle();
-					card.recomputeBounds();
+					mutateCard(card, card.isFaceUp(), false, 0, 1.0, isDragging);
 				}
 				if(!isDragging) {
 					zone.getRenderer().setShouldFan(true);
@@ -1546,13 +1571,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				break;
 			case BATTLEFIELD:
 				if(zoneChanged) {
+					mutateCard(card, card.isFaceUp(), card.isTapped(), 0, 1.0, isDragging);
+
 					/*if((!isDragging || !isHideHand()) && card.getLastZoneType() != ZoneType.DECK && card.getLastZoneType() != ZoneType.EXILE) {
 						card.setFaceUp(true);
 					}*/
 					//card.setScale(0.7);
-					card.restoreScale();
-					card.restoreAngle();
-					card.recomputeBounds();
 				}
 				break;
 			case EXILE:
@@ -1560,11 +1584,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					if(!isDragging || !isHideHand()) {
 						card.setFaceUp(false);
 					}
-					card.setTapped(false);
-					card.setScale(0.2);
-					card.setAngle(ShuffleUtil.randInt(-10, 10));
-					//card.restoreAngle();
-					card.recomputeBounds();
+					mutateCard(card, card.isFaceUp(), false, ShuffleUtil.randInt(-10, 10), 0.2, isDragging);
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1575,10 +1595,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					if(!isDragging || !isHideHand()) {
 						card.setFaceUp(true);
 					}
-					card.setTapped(false);
-					card.setScale(0.2);
-					card.setAngle(0);
-					card.recomputeBounds();
+					mutateCard(card, card.isFaceUp(), false, 0, 0.2, isDragging);
 				}
 				if(!isDragging) {
 					zone.getRenderer().center(this, card, animate);
@@ -1621,99 +1638,96 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		switch(type) {
 			case DECK:
 				if(zoneChanged) {
-					die.recomputeBounds();
 					if(dieObject instanceof Token) {
 						die.setScale(0.1);
 					} else {
 						die.restoreScale();
 					}
 					die.restoreAngle();
+					die.recomputeBounds();
 				}
 				if(!isDragging) {
-					if(dieObject instanceof Token) {
-						die.setZoneType(ZoneType.GRAVEYARD);
-						dieZoneManager.getZone(ZoneType.DECK).remove(die);
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).getRenderer().bottomLeft(this, dieObject, animate, 60, 10);
-					} else {
-						zone.getRenderer().setShouldFan(true);
-					}
+					die.setZoneType(ZoneType.GRAVEYARD);
+					dieZoneManager.getZone(ZoneType.DECK).remove(die);
+					dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
+					moveDieToDefaultLocation(dieObject, animate);
 				}
 				break;
 			case GRAVEYARD:
 				if(zoneChanged) {
-					die.recomputeBounds();
 					if(dieObject instanceof Token) {
 						die.setScale(0.1);
 					} else {
+						//die.setScale(0.8);
 						die.restoreScale();
 					}
 					die.restoreAngle();
+					die.recomputeBounds();
 				}
 				if(!isDragging) {
-					if(dieObject instanceof D10) {
-						zone.getRenderer().bottomLeft(this, dieObject, animate, 25, 40);
-					} else if(dieObject instanceof Counter) {
-						zone.getRenderer().bottomLeft(this, dieObject, animate, 5, 10);
-					} else if(dieObject instanceof Token) {
-						die.setTapped(false);
-						zone.getRenderer().bottomLeft(this, dieObject, animate, 60, 10);
-					}
+					moveDieToDefaultLocation(dieObject, animate);
 				}
 				break;
 			case HAND:
 				if(zoneChanged) {
-					die.recomputeBounds();
 					if(dieObject instanceof Token) {
 						die.setScale(0.1);
 					} else {
 						die.restoreScale();
 					}
 					die.restoreAngle();
+					die.recomputeBounds();
 				}
 				if(!isDragging) {
 					die.setZoneType(ZoneType.GRAVEYARD);
 					dieZoneManager.getZone(ZoneType.HAND).remove(die);
 					dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
-					if(dieObject instanceof D10) {
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).getRenderer().bottomLeft(this, dieObject, animate, 25, 40);
-					} else if(dieObject instanceof Counter) {
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).getRenderer().bottomLeft(this, dieObject, animate, 5, 10);
-					} else if(dieObject instanceof Token) {
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).getRenderer().bottomLeft(this, dieObject, animate, 60, 10);
-					}
+					moveDieToDefaultLocation(dieObject, animate);
 				}
 				break;
 			case BATTLEFIELD:
 				if(zoneChanged) {
-					die.recomputeBounds();
 					if(dieObject instanceof Token) {
 						die.setScale(0.7);
 					} else {	
 						die.restoreScale();
 					}
 					die.restoreAngle();
+					die.recomputeBounds();
 				}
 				break;
 			case COMMANDER:
 				if(zoneChanged) {
-					die.recomputeBounds();
 					if(dieObject instanceof Token) {
 						die.setScale(0.1);
 					} else {
 						die.restoreScale();
 					}
 					die.restoreAngle();
+					die.recomputeBounds();
 				}
 				if(!isDragging) {
+					die.setZoneType(ZoneType.GRAVEYARD);
+					dieZoneManager.getZone(ZoneType.COMMANDER).remove(die);
+					dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
+					moveDieToDefaultLocation(dieObject, animate);
+				}
+				break;
+			case EXILE:
+				if(zoneChanged) {
 					if(dieObject instanceof Token) {
-						die.setZoneType(ZoneType.GRAVEYARD);
-						dieZoneManager.getZone(ZoneType.DECK).remove(die);
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
-						dieZoneManager.getZone(ZoneType.GRAVEYARD).getRenderer().bottomLeft(this, dieObject, animate, 60, 10);
+						die.setScale(0.1);
 					} else {
-						zone.getRenderer().bottom(this, dieObject, animate, 125);
+						die.restoreScale();
 					}
+					die.restoreAngle();
+					die.recomputeBounds();
+				}
+				if(!isDragging) {
+					die.setZoneType(ZoneType.GRAVEYARD);
+					dieZoneManager.getZone(ZoneType.EXILE).remove(die);
+					dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
+					moveDieToDefaultLocation(dieObject, animate);
 				}
 				break;
 			default:
@@ -1738,6 +1752,18 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			die.clearPendingFlagZoneChange();
 		}
 		
+	}
+	
+	private void moveDieToDefaultLocation(Die die, boolean animate) {
+		Zone zone = dieZoneManager.getZone(ZoneType.GRAVEYARD);
+		if(die instanceof Token) {
+			zone.getRenderer().bottomLeft(this, die, animate, 10, 70);//25, 40);
+		} else if(die instanceof Counter) {
+			zone.getRenderer().bottomLeft(this, die, animate, 65, 8);//5, 10);
+		} else if(die instanceof D10) {
+			die.getRenderer().setTapped(false);
+			zone.getRenderer().bottomLeft(this, die, animate, 10, 10);//60, 10);
+		}
 	}
 	
 	public ZoneManager getCardZoneManager() {
@@ -1916,26 +1942,17 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		zIndex = 0;
 	}
 	
-	public String getSerializedRenderablesString() {
-		RenderableList<IRenderable> renderableList = allObjects.getShallowCopySortedByZIndex();
-		renderableList.screenW = screenW;
-		renderableList.screenH = screenH;
-		return SerializationUtil.toString(new MultiplayerMessage(renderableList, 
-															   getPlayerButtonPanel().isHandViewable(), 
-															   getPlayerButtonPanel().isDeckViewable(),
-															   getPlayerButtonPanel().isGraveyardViewable(),
-															   getPlayerButtonPanel().isExileViewable()));
-	}
-	
 	public byte[] getSerializedRenderablesBytes() {
 		RenderableList<IRenderable> renderableList = allObjects.getShallowCopySortedByZIndex();
 		renderableList.screenW = screenW;
 		renderableList.screenH = screenH;
-		return SerializationUtil.toBytes(new MultiplayerMessage(renderableList, 
-															  getPlayerButtonPanel().isHandViewable(), 
-															  getPlayerButtonPanel().isDeckViewable(),
-															  getPlayerButtonPanel().isGraveyardViewable(),
-															  getPlayerButtonPanel().isExileViewable()));
+		return SerializationUtil.toBytes(new MultiplayerMessage()
+											.setAllObjects(renderableList)
+											.setHandViewable(getPlayerButtonPanel().isHandViewable())
+											.setDeckViewable(getPlayerButtonPanel().isDeckViewable())
+											.setGraveyardViewable(getPlayerButtonPanel().isGraveyardViewable())
+											.setExileViewable(getPlayerButtonPanel().isExileViewable())
+											.setLifeTotal(getPlayerButtonPanel().getLifeTotal()));
 	}
 	
 	private static final RenderableList<IRenderable> empty = new RenderableList<IRenderable>();
