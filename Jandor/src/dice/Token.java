@@ -8,6 +8,8 @@ import canvas.Location;
 
 public class Token extends Die {
 
+	private static final long serialVersionUID = 1L;
+
 	protected int secondValue;
 	
 	public Token(Color color, int value) {

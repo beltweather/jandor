@@ -1,21 +1,21 @@
 package dice;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.image.BufferedImage;
 
-import util.ImageUtil;
-import util.ShapeUtil;
 import canvas.AbstractRenderer;
 import canvas.CardLayer;
 import canvas.Location;
+import util.ImageUtil;
+import util.ShapeUtil;
 
 public class DieRenderer extends AbstractRenderer<Die> {
+	
+	private static final long serialVersionUID = 1L;
 	
 	protected Location textLocation;
 	protected Font font;

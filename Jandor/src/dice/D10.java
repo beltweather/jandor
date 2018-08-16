@@ -6,6 +6,8 @@ import canvas.IRenderable;
 
 public class D10 extends Die {
 
+	private static final long serialVersionUID = 1L;
+
 	public D10(Color color, int value) {
 		super(0, 9, color, value);
 	}

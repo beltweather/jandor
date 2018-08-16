@@ -15,6 +15,8 @@ import deck.Card;
 
 public class CardRenderer extends AbstractRenderer<Card> {
 	
+	private static final long serialVersionUID = 1L;
+	
 	public static boolean RENDER_BOUNDS = false;
 	public static boolean RENDER_ZONE_TYPE = false;
 	

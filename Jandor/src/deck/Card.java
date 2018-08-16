@@ -19,6 +19,8 @@ import canvas.IRenderer;
 
 public class Card extends CardRenderer implements IRenderable<Card> {
 	
+	private static final long serialVersionUID = 1L;
+
 	private static Map<String, String> setsByCardName = new HashMap<String, String>();
 
 	private String name;
