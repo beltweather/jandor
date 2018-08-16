@@ -6,16 +6,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import util.ShuffleUtil;
-import zone.ZoneType;
 import canvas.CardLayer;
 import canvas.IRenderable;
 import canvas.IRenderer;
+import canvas.Location;
 import deck.Card;
 import dice.Counter;
 import dice.D10;
 import dice.Die;
 import dice.Token;
+import util.ShuffleUtil;
+import zone.ZoneType;
 
 public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 
@@ -94,7 +95,7 @@ public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 					}
 				} else {
 					if(c instanceof Token) {
-						((Token) c).handleLeftClick(e.getPoint());
+						((Token) c).handleLeftClick(getCanvas().getZoom().inverseTransform((int) e.getPoint().getX(), (int) e.getPoint().getY()));
 					} else if(c instanceof Die) {
 						((Die) c).increment();
 					}

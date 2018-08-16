@@ -1,10 +1,10 @@
 package dice;
 
 import java.awt.Color;
-import java.awt.Point;
 import java.awt.Rectangle;
 
 import canvas.IRenderable;
+import canvas.Location;
 
 public class Token extends Die {
 
@@ -47,10 +47,10 @@ public class Token extends Die {
 		return new Token(color, value);
 	}
 	
-	public void handleLeftClick(Point pointInCanvas) {
+	public void handleLeftClick(Location pointInCanvas) {
 		Rectangle rect = getRenderer().getBounds().getBounds();
-		int clickX = (int) pointInCanvas.getX() - (int) rect.getX();
-		int clickY = (int) pointInCanvas.getY() - (int) rect.getY();
+		int clickX = (int) pointInCanvas.getScreenX() - (int) rect.getX();
+		int clickY = (int) pointInCanvas.getScreenY() - (int) rect.getY();
 		handleLeftClick(clickX, clickY);
 	}
 	

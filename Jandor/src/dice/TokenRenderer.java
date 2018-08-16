@@ -105,6 +105,7 @@ public class TokenRenderer extends AbstractRenderer<Die> {
 			g.draw(getBounds());*/
 		}
 		
+		Font f = g.getFont();
 		g.setFont(font);
 		String text;
 		String secondText;
@@ -141,6 +142,7 @@ public class TokenRenderer extends AbstractRenderer<Die> {
 		g.drawString(text, textLocation.getScreenX() - textW/2, textLocation.getScreenY() + fontMetrics.getDescent());
 		g.drawString(secondText, secondTextLocation.getScreenX() - textW/2, secondTextLocation.getScreenY() + fontMetrics.getDescent());
 		
+		g.setFont(f);
 	}
 	
 }
