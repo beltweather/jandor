@@ -132,7 +132,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		deckButton = new PButton("Deck: 0");
 		handButton = new PButton("Hand: 0");
 		graveyardButton = new PButton("Graveyard: 0");
-		exileButton = new PButton("Exhile: 0");
+		exileButton = new PButton("Exile: 0");
 		
 		graveyardButton.addActionListener(new ActionListener() {
 
