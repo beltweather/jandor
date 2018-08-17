@@ -15,6 +15,14 @@ public class Location implements Serializable {
 		this(e.getX(), e.getY());
 	}
 	
+	public Location(Point p) {
+		this(p.getX(), p.getY());
+	}
+		
+	public Location(double screenX, double screenY) {
+		this((int) screenX, (int) screenY);
+	} 
+	
 	public Location(int screenX, int screenY) {
 		this.screenX = screenX;
 		this.screenY = screenY;

@@ -282,6 +282,49 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			//getCanvas().getZoom().setZoomLevel(ZoomAndPanListener.DEFAULT_MIN_ZOOM_LEVEL + 1);
 		}
 	}*/
+
+	public void addCounter(Location location) {
+		for(Die counter : counters) {
+			if(counter.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+				addDie((Die) counter.copyRenderable(), location);
+				return;
+			}
+		}
+	}
+	
+	public void addToken(Location location) {
+		for(Die counter : tokens) {
+			if(counter.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+				addDie((Die) counter.copyRenderable(), location);
+				return;
+			}
+		}
+	}
+	
+	public void addD10(Location location) {
+		for(Die counter : d10s) {
+			if(counter.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+				addDie((Die) counter.copyRenderable(), location);
+				return;
+			}
+		}
+	}
+	
+	public void addDie(Die die, Location location) {
+		location = getCanvas().getZoom().inverseTransform(location);
+		Location centeredLocation = new Location(location.getScreenX() - die.getRenderer().getWidth()/2, 
+												 location.getScreenY() - die.getRenderer().getHeight()/2);
+		die.getRenderer().setLocation(centeredLocation);
+		counters.add(die);
+		allObjects.add(die);
+		
+		die.getRenderer().setZoneType(ZoneType.GRAVEYARD);
+		die.getRenderer().rememberLastZoneType();
+		die.getRenderer().setZoneType(ZoneType.BATTLEFIELD);
+		die.getRenderer().setTransformedProjection(true);
+		
+		handleMoved(die, false, false);
+	}
 	
 	private void initDice(boolean hasCommander) {
 		if(opponentView) {
@@ -788,7 +831,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		if(!isLoading()) {
 			return;
 		}
-		paintCard(g, width, height, loadingCard);
+		loadingCard.paintComponent(this, g, width, height);
 		g.setColor(Color.DARK_GRAY);
 		Font f = g.getFont();
 		g.setFont(new Font("Helvetica", Font.BOLD, 40));

@@ -38,6 +38,7 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	protected Location lastDragEnd = null;
 	protected Location dragEnd = null;
 	protected Location dragStart = null;
+	protected Location lastMousePos = null;
 	
 	protected List<T> selectedObjects;
 	protected int dragMode;
@@ -285,6 +286,8 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	
 	@Override
 	public void mouseMoved(MouseEvent e) {
+		lastMousePos = new Location(e.getPoint());
+		
 		T obj = find(e);
 		
 		if(obj == null) {

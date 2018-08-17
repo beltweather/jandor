@@ -1,5 +1,7 @@
 package canvas.handler;
 
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -363,39 +365,57 @@ public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 		}
 		
 		switch(code) {
-		case KeyEvent.VK_DELETE:
-		case KeyEvent.VK_BACK_SPACE:
-			if(hasSelected() && !isDragging()) {
-				for(IRenderable c : getSelected()) {
-					if(c instanceof Die && c.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
-						continue;
+			case KeyEvent.VK_DELETE:
+			case KeyEvent.VK_BACK_SPACE:
+				if(hasSelected() && !isDragging()) {
+					for(IRenderable c : getSelected()) {
+						if(c instanceof Die && c.getRenderer().getZoneType() == ZoneType.GRAVEYARD) {
+							continue;
+						}
+						getLayer().remove(c);
 					}
-					getLayer().remove(c);
+					clearSelected();
+					repaint();
 				}
-				clearSelected();
-				repaint();
-			}
-			break;
-		case KeyEvent.VK_A:
-			if(e.isControlDown()) {
-				clearSelected();
-				for(IRenderable card : new ArrayList<IRenderable>(getLayer().getAllObjects())) {
-					select(card);
+				break;
+			case KeyEvent.VK_A:
+				if(e.isControlDown()) {
+					clearSelected();
+					for(IRenderable card : new ArrayList<IRenderable>(getLayer().getAllObjects())) {
+						select(card);
+					}
+					repaint();
 				}
-				repaint();
-			}
-			break;
-		case KeyEvent.VK_S:
-			layer.shuffleCards(getSelectedCards(), false, false);
-			List<Die> dice = getDraggedDice();
-			for(Die die : dice) {
-				if(die instanceof D10) {
-					die.roll();
-				} else if(die instanceof Counter) {
-					die.roll(1,2);
+				break;
+			case KeyEvent.VK_S:
+				layer.shuffleCards(getSelectedCards(), false, false);
+				List<Die> dice = getDraggedDice();
+				for(Die die : dice) {
+					if(die instanceof D10) {
+						die.roll();
+					} else if(die instanceof Counter) {
+						die.roll(1,2);
+					}
 				}
-			}
-			break;
+				break;
+			case KeyEvent.VK_C:
+				if(lastMousePos != null) {
+					layer.addCounter(lastMousePos);
+					layer.repaint();
+				}
+				break;
+			case KeyEvent.VK_T:
+				if(lastMousePos != null) {
+					layer.addToken(lastMousePos);
+					layer.repaint();
+				}
+				break;
+			case KeyEvent.VK_D:
+				if(lastMousePos != null) {
+					layer.addD10(lastMousePos);
+					layer.repaint();
+				}
+				break;
 		}
 		
 	}
