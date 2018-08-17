@@ -526,6 +526,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	@Override
 	public void paintComponent(Graphics2D g, int width, int height) {
+		
 		update(width, height);
 		/*if(opponentView) {
 			if(screenW <= 0 && screenH <= 0) {
@@ -546,12 +547,15 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 		paintBattlefield(g, screenW, screenH);
 		getCanvas().getZoom().transform(g);
-		paintBattlefieldCardsAndDice(g, screenW, screenH);
+		
+		int fixedWidth = 1915;
+		int fixedHeight = 900;
+		paintBattlefieldCardsAndDice(g, fixedWidth, fixedHeight);
 		getCanvas().getZoom().revert(g);
 		paintZones(g, screenW, screenH);
 		getCanvas().getZoom().transform(g);
-		paintNormalCardsAndDice(g, screenW, screenH);
-		paintDraggedCardsAndDice(g, screenW, screenH);
+		paintNormalCardsAndDice(g, fixedWidth, fixedWidth);
+		paintDraggedCardsAndDice(g, fixedWidth, fixedWidth);
 		getCanvas().getZoom().revert(g);
 		paintDrag(g, screenW, screenH);
 		paintLoading(g, screenW, screenH);
@@ -993,7 +997,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		boolean hasCounter = false;
 		boolean hasToken = false;
 		
-		for(Object obj : new ArrayList<Object>(objects)) {
+		for(Object obj : objects) {
 			if(obj instanceof Card) {
 				handleMoved((Card) obj, isDragging, animate);
 			} else {
