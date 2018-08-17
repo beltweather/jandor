@@ -538,8 +538,8 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 							x = child.getScreenX() + (transformed ? tDragOffsetX : dragOffsetX);
 							y = child.getScreenY() + (transformed ? tDragOffsetY : dragOffsetY);
 							
-							child.setScreenX(child.getScreenX() + dragOffsetX);
-							child.setScreenY(child.getScreenY() + dragOffsetY);
+							child.setScreenX(x);
+							child.setScreenY(y);
 							
 							if(child.isTransformedProjection() && !child.getZoneType().isTransformedProjection()) {
 								child.setLocation(getCanvas().getZoom().transform(child.getLocation()));
