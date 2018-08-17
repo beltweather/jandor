@@ -13,7 +13,7 @@ import dice.Die;
 public abstract class DieHandler extends MouseHandler<CardLayer, Die> {
 
 	public DieHandler(MouseHandlerManager manager, CardLayer layer) {
-		super(manager, layer);
+		super(Die.class, manager, layer);
 	}
 
 	@Override

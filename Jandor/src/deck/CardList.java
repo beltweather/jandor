@@ -13,6 +13,8 @@ import util.ShuffleUtil;
 
 public class CardList extends RenderableList<Card> {
 
+	private static final long serialVersionUID = 1L;
+
 	public CardList() {
 		this(null);
 	}

@@ -6,13 +6,13 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import util.MouseUtil;
-import zone.ZoneManager;
-import zone.ZoneType;
 import canvas.Canvas;
 import canvas.CardLayer;
 import canvas.CardRenderer;
@@ -21,6 +21,10 @@ import canvas.IRenderable;
 import canvas.IRenderer;
 import canvas.Location;
 import deck.Card;
+import multiplayer.MultiplayerMessage;
+import util.MouseUtil;
+import zone.ZoneManager;
+import zone.ZoneType;
 
 public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable> implements MouseListener, MouseMotionListener, KeyListener, Serializable {
 
@@ -45,8 +49,11 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	protected MouseHandlerManager manager;
 	protected L layer;
 	
-	public MouseHandler(MouseHandlerManager manager, L layer) {
+	protected Class<T> klass;
+	
+	public MouseHandler(Class<T> klass, MouseHandlerManager manager, L layer) {
 		super();
+		this.klass = klass;
 		this.manager = manager;
 		this.layer = layer;
 		selectedObjects = new ArrayList<T>();
@@ -279,6 +286,11 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		T obj = find(e);
+		
+		if(obj == null) {
+			obj = findOpponentObject(e);
+		}
+		
 		if(obj != null && !hideTooltip(obj)) {
 			getCanvas().setToolTipText(obj.getToolTipText());
 		} else {
@@ -328,16 +340,61 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 	public T find(MouseEvent e, boolean transformed) {
 		Location location = new Location(e);
 		Location inverseLocation = inverse(location);
+		
+		Class klass = null;
 		for(T obj : getViewOrderedObjects()) {
+			if(klass == null) {
+				klass = obj.getClass();
+			}
 			if(obj.getRenderer().getZoneType().isTransformedProjection() && obj.getRenderer().overlaps(inverseLocation)) {
 				return obj;
 			} else if(!obj.getRenderer().getZoneType().isTransformedProjection() && obj.getRenderer().overlaps(location)) {
 				return obj;
 			}
 		}
+		
 		return null;
 	}
 	
+	public T findOpponentObject(MouseEvent e) {
+		
+		if(!(layer instanceof CardLayer)) {
+			return null;
+		}
+		
+		CardLayer cardLayer = (CardLayer) layer;
+		MultiplayerMessage message = cardLayer.getOpponentMessage();
+		if(message == null) {
+			return null;
+		}
+	
+		Location opponentLocation = toOpponentLocation(e);
+		for(IRenderable<?> r : message.getAllObjects()) {
+			if(!klass.isInstance(r) || r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD) {
+				continue;
+			}
+			if(r.getRenderer().overlaps(opponentLocation)) {
+				return (T) r;
+			}
+		}
+		
+		return null;
+	}
+	
+	public Location toOpponentLocation(MouseEvent e) {
+		Location inverseLocation = inverse(new Location(e));
+
+		AffineTransform t = new AffineTransform();
+		t.rotate(Math.PI, getCanvas().getWidth()/2, getCanvas().getHeight()/2);
+		t.translate(0, getCanvas().getHeight()/2);
+			
+		Point2D pSource = new Point2D.Float(inverseLocation.getScreenX(), inverseLocation.getScreenY());
+		Point2D pDest = new Point2D.Float();
+		t.transform(pSource, pDest);
+
+		return new Location((int) pDest.getX(), (int) pDest.getY());
+	}
+	 
 	public Location inverse(Location location) {
 		return getCanvas().getZoom().inverseTransform(location);
 	}

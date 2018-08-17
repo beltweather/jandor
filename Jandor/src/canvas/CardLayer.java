@@ -712,32 +712,20 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		g.rotate(Math.PI, width/2, height/2);
 		g.translate(0, height/2);
-		boolean hasRenderables = false;
+		
 		for(IRenderable r : opponentMessage.getAllObjects()) {
 			if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD || !r.getRenderer().isTransformedProjection()) {
 				continue;
 			}
 			if(r instanceof Card) {
-				hasRenderables = true;
 				paintCard(g, width, height, (Card) r);
 			} else if(r instanceof Die) {
-				hasRenderables = true;
 				paintDie(g, width, height, (Die) r);
 			}
 		}
+		
 		g.translate(0, -height/2);
 		g.rotate(-Math.PI, width/2, height/2);
-		
-		if(!hasRenderables) {
-			getCanvas().getZoom().revert(g);
-			g.setColor(Color.WHITE);
-			Font f = g.getFont();
-			g.setFont(f.deriveFont(20f));
-			String s = "(Opponent has no cards on the battlefield)";
-			g.drawString(s, (width - g.getFontMetrics(g.getFont()).stringWidth(s))/2, 50);
-			g.setFont(f);
-			getCanvas().getZoom().transform(g);
-		}
 		
 	}
 	

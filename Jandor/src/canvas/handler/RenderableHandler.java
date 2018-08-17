@@ -21,7 +21,7 @@ import zone.ZoneType;
 public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 
 	public RenderableHandler(MouseHandlerManager manager, CardLayer layer) {
-		super(manager, layer);
+		super(IRenderable.class, manager, layer);
 	}
 	
 	public boolean canEdit() {

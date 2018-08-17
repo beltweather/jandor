@@ -16,7 +16,7 @@ import deck.Card;
 public class CardHandler extends MouseHandler<CardLayer, Card> {
 
 	public CardHandler(MouseHandlerManager manager, CardLayer layer) {
-		super(manager, layer);
+		super(Card.class, manager, layer);
 	}
 	
 	@Override
