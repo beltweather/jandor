@@ -5,7 +5,7 @@ import java.util.List;
 
 public enum ZoneType {
 
-	DECK("Deck"), GRAVEYARD("Graveyard"), HAND("Hand", false), EXILE("Exile"), COMMANDER("Commander", false), BATTLEFIELD("Battlefield", false, true), NONE("None", false);
+	DECK("Deck"), GRAVEYARD("Graveyard"), HAND("Hand", false), EXILE("Exile"), COMMANDER("Command", false), BATTLEFIELD("Battlefield", false, true), NONE("None", false);
 	
 	public static List<ZoneType> getSortedValues() {
 		List<ZoneType> zones = new ArrayList<ZoneType>();

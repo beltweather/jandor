@@ -284,6 +284,11 @@ public class CardUtil {
 				for(int i = 0; i < cards.length(); i++) {
 					JSONObject card = cards.getJSONObject(i);
 					String name = CardUtil.clean(card.getString("name"));
+					
+					if(isWeirdName(name)) {
+						System.err.println("Found Weird Card Name: " + name);
+					}
+					
 					card.put("name", name);
 					cardsByName.put(name, card);
 				}
@@ -495,11 +500,19 @@ public class CardUtil {
 		if(name == null) {
 			return null;
 		}
-		return name
+		
+		String cleanName = name
+					.replace("Ã»", "u")
 					.replace("âˆ’", "-")
 					.replace("Ã†", "Æ")
 					.replace("Æ", "Ae")
 					.replace("â\u20ac\u201d", "-");
+		
+		return cleanName;
+	}
+	
+	public static boolean isWeirdName(String name) {
+		return !name.matches(".*[a-zA-Z_].*");
 	}
 	
 	public static List<String> getCardAttributes() {

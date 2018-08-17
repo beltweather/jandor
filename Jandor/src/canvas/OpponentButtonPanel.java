@@ -29,25 +29,10 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 	private ButtonGroup opponentRadioGroup;
 	private Map<String, PRadio> opponentRadiosByGUID;
 	
-	private PLabel deckLabel;
-	private PLabel handLabel;
-	private PLabel graveyardLabel;
-	private PLabel exileLabel;
-	
-	private PButton deckButton;
-	private PButton handButton;
-	private PButton graveyardButton;
-	private PButton exileButton;
-	
-	private int deckCount = 0;
-	private int handCount = 0;
-	private int graveyardCount = 0;
-	private int exileCount = 0;
-	
-	private boolean handViewable = false;
-	private boolean deckViewable = false;
-	private boolean graveyardViewable = true;
-	private boolean exileViewable = true;
+	private Map<ZoneType, PLabel> labelsByZone;
+	private Map<ZoneType, PButton> buttonsByZone;
+	private Map<ZoneType, Integer> countsByZone;
+	private Map<ZoneType, Boolean> viewableByZone;
 	
 	private Map<String, Integer> commanderDamageByGUID = new HashMap<String, Integer>();
 	
@@ -63,7 +48,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 	@Override
 	protected void init() {
 		String previousGUID = getOpponentGUID();
-		
+
 		PPanel buttonPanel = new PPanel();
 
 		List<String> guids = new ArrayList<String>(FriendUtil.getConnectedUserGUIDS());
@@ -125,51 +110,6 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		PPanel otherPanel = new PPanel();
 		PPanel zonePanel = new PPanel();
 		
-		deckLabel = new PLabel("Deck: 0");
-		handLabel = new PLabel("Hand: 0");
-		graveyardLabel = new PLabel("Graveyard: 0");
-		exileLabel = new PLabel("Exile: 0");
-		deckButton = new PButton("Deck: 0");
-		handButton = new PButton("Hand: 0");
-		graveyardButton = new PButton("Graveyard: 0");
-		exileButton = new PButton("Exile: 0");
-		
-		graveyardButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				viewZone(ZoneType.GRAVEYARD);
-			}
-			
-		});
-		
-		exileButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				viewZone(ZoneType.EXILE);
-			}
-			
-		});
-		
-		deckButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				viewZone(ZoneType.DECK);
-			}
-			
-		});
-		
-		handButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				viewZone(ZoneType.HAND);
-			}
-			
-		});
-		
 		lifeTotalLabel = new PLabel("");
 		commanderDamageLabel = new PLabel("");
 		
@@ -177,28 +117,19 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		zonePanel.addc(commanderDamageLabel);
 		zonePanel.c.gridx++;
 		zonePanel.addc(lifeTotalLabel);
-		zonePanel.c.gridx++;
 		zonePanel.c.insets(0,10);
-		zonePanel.addc(deckLabel);
-		zonePanel.c.gridx++;
-		zonePanel.addc(deckButton);
-		zonePanel.c.gridx++;
-		zonePanel.addc(handLabel);
-		zonePanel.c.gridx++;
-		zonePanel.addc(handButton);
-		zonePanel.c.gridx++;
-		zonePanel.addc(graveyardLabel);
-		zonePanel.c.gridx++;
-		zonePanel.addc(graveyardButton);
-		zonePanel.c.gridx++;
-		zonePanel.addc(exileLabel);
-		zonePanel.c.gridx++;
-		zonePanel.addc(exileButton);
 		
-		deckButton.setVisible(false);
-		handButton.setVisible(false);
-		graveyardLabel.setVisible(false);
-		exileLabel.setVisible(false);
+		labelsByZone = new HashMap<ZoneType, PLabel>();
+		buttonsByZone = new HashMap<ZoneType, PButton>();
+		countsByZone = new HashMap<ZoneType, Integer>();
+		viewableByZone = new HashMap<ZoneType, Boolean>();
+		
+		addZone(zonePanel, ZoneType.DECK, true);
+		addZone(zonePanel, ZoneType.HAND, true);
+		addZone(zonePanel, ZoneType.GRAVEYARD, true);
+		addZone(zonePanel, ZoneType.EXILE, true);
+		addZone(zonePanel, ZoneType.BATTLEFIELD, true);
+		addZone(zonePanel, ZoneType.COMMANDER, true);
 		
 		addc(otherPanel);
 		c.gridx++;
@@ -218,6 +149,34 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 
 		updateLabels();
 	}
+	
+	private void addZone(PPanel zonePanel, final ZoneType zone, boolean isButton) {
+		PLabel label = new PLabel(zone + ": " + 0);
+		PButton button = new PButton(zone + ": " + 0);
+		
+		labelsByZone.put(zone, label);
+		buttonsByZone.put(zone, button);
+		
+		if(isButton) {
+			label.setVisible(false);
+		} else {
+			button.setVisible(false);
+		}
+		
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				viewZone(zone);
+			}
+			
+		});
+		
+		zonePanel.c.gridx++;
+		zonePanel.addc(label);
+		zonePanel.c.gridx++;
+		zonePanel.addc(button);
+	}
 
 	private void viewZone(ZoneType zone) {
 		MultiplayerMessage message = layer.getOpponentMessage();
@@ -227,6 +186,9 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		CardList cards = new CardList();
 		for(IRenderable r : message.getAllObjects()) {
 			if(r instanceof Card && r.getRenderer().getZoneType() == zone) {
+				if(zone == ZoneType.BATTLEFIELD && !r.getRenderer().isFaceUp()) {
+					continue;
+				}
 				cards.add((Card) r);
 			}
 		}
@@ -236,65 +198,51 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 	public void updateLabels() {
 		MultiplayerMessage message = layer.getOpponentMessage();
 		if(message == null) {
-			deckLabel.setVisible(false);
-			handLabel.setVisible(false);
-			deckButton.setVisible(false);
-			handButton.setVisible(false);
-			graveyardButton.setVisible(false);
-			exileButton.setVisible(false);
+			
+			for(ZoneType zone : labelsByZone.keySet()) {
+				labelsByZone.get(zone).setVisible(false);
+				buttonsByZone.get(zone).setVisible(false);
+			}
+			
 			lifeTotalLabel.setVisible(false);
 			commanderDamageLabel.setVisible(false);
 			return;
 		}
-
-		deckLabel.setVisible(!message.isDeckViewable());
-		handLabel.setVisible(!message.isHandViewable());
-		graveyardLabel.setVisible(!message.isGraveyardViewable());
-		exileLabel.setVisible(!message.isExileViewable());
-		deckButton.setVisible(message.isDeckViewable());
-		handButton.setVisible(message.isHandViewable());
-		graveyardButton.setVisible(message.isGraveyardViewable());
-		exileButton.setVisible(message.isExileViewable());
+		
 		lifeTotalLabel.setVisible(true);
 		commanderDamageLabel.setVisible(layer.isCommander());
 		
 		boolean shouldRevalidate = false;
-		if((handViewable != message.isHandViewable()) || 
-		   (deckViewable != message.isDeckViewable()) ||
-		   (graveyardViewable != message.isGraveyardViewable()) ||
-		   (exileViewable != message.isExileViewable())) {
-			shouldRevalidate = true;
+		for(ZoneType zone : message.getViewableByZone().keySet()) {
+			boolean viewable = message.isViewable(zone);
+			if(!viewableByZone.containsKey(zone) || viewableByZone.get(zone) != viewable) {
+				viewableByZone.put(zone, message.isViewable(zone));
+				shouldRevalidate = true;
+			}
+			labelsByZone.get(zone).setVisible(!viewable);
+			buttonsByZone.get(zone).setVisible(viewable);
 		}
 		
-		handViewable = message.isHandViewable();
-		deckViewable = message.isDeckViewable();
-		graveyardViewable = message.isGraveyardViewable();
-		exileViewable = message.isExileViewable();
-		
-		int newDeckCount = 0;
-		int newHandCount = 0;
-		int newGraveyardCount = 0;
-		int newExileCount = 0;
-		
+		Map<ZoneType, Integer> newCountsByZone = new HashMap<ZoneType, Integer>();
 		for(IRenderable r : message.getAllObjects()) {
 			if(r instanceof Card) {
 				ZoneType z = r.getRenderer().getZoneType();
-				switch(z) {
-					case DECK:
-						newDeckCount++;
-						break;
-					case HAND:
-						newHandCount++;
-						break;
-					case GRAVEYARD:
-						newGraveyardCount++;
-						break;
-					case EXILE:
-						newExileCount++;
-						break;
-					default:
-						break;
+				if(!newCountsByZone.containsKey(z)) {
+					newCountsByZone.put(z, 1);
+				} else {
+					newCountsByZone.put(z, newCountsByZone.get(z) + 1);
 				}
+			}
+		}
+		
+		for(ZoneType zone : labelsByZone.keySet()) {
+			int oldCount = (countsByZone.containsKey(zone) ? countsByZone.get(zone) : 0);
+			int newCount = (newCountsByZone.containsKey(zone) ? newCountsByZone.get(zone) : 0);
+			if(oldCount != newCount) {
+				countsByZone.put(zone, newCount);
+				labelsByZone.get(zone).setText(zone + ": " + newCount);
+				buttonsByZone.get(zone).setText(zone + ": " + newCount);
+				shouldRevalidate = true;
 			}
 		}
 		
@@ -354,34 +302,6 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 				sb.append(user.getInitials() + ": " + commanderDamageByGUID.get(guid));
 			}
 			commanderDamageLabel.setText(sb.toString());
-			shouldRevalidate = true;
-		}
-		
-		if(deckCount != newDeckCount) {
-			deckCount = newDeckCount;
-			deckLabel.setText("Deck: " + newDeckCount);
-			deckButton.setText("Deck: " + newDeckCount);
-			shouldRevalidate = true;
-		}
-		
-		if(handCount != newHandCount) {
-			handCount = newHandCount;
-			handLabel.setText("Hand: " + newHandCount);
-			handButton.setText("Hand: " + newHandCount);
-			shouldRevalidate = true;
-		}
-		
-		if(graveyardCount != newGraveyardCount) {
-			graveyardCount = newGraveyardCount;
-			graveyardLabel.setText("Graveyard: " + newGraveyardCount);
-			graveyardButton.setText("Graveyard: " + newGraveyardCount);
-			shouldRevalidate = true;
-		}
-		
-		if(exileCount != newExileCount) {
-			exileCount = newExileCount;
-			exileLabel.setText("Exile: " + newExileCount);
-			exileButton.setText("Exile: " + newExileCount);
 			shouldRevalidate = true;
 		}
 		

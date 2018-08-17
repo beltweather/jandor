@@ -993,7 +993,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		boolean hasCounter = false;
 		boolean hasToken = false;
 		
-		for(Object obj : objects) {
+		for(Object obj : new ArrayList<Object>(objects)) {
 			if(obj instanceof Card) {
 				handleMoved((Card) obj, isDragging, animate);
 			} else {
@@ -1954,10 +1954,12 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		renderableList.screenH = screenH;
 		return SerializationUtil.toBytes(new MultiplayerMessage()
 											.setAllObjects(renderableList)
-											.setHandViewable(getPlayerButtonPanel().isHandViewable())
-											.setDeckViewable(getPlayerButtonPanel().isDeckViewable())
-											.setGraveyardViewable(getPlayerButtonPanel().isGraveyardViewable())
-											.setExileViewable(getPlayerButtonPanel().isExileViewable())
+											.setViewable(ZoneType.HAND, getPlayerButtonPanel().isHandViewable())
+											.setViewable(ZoneType.DECK, getPlayerButtonPanel().isDeckViewable())
+											.setViewable(ZoneType.GRAVEYARD, getPlayerButtonPanel().isGraveyardViewable())
+											.setViewable(ZoneType.EXILE, getPlayerButtonPanel().isExileViewable())
+											.setViewable(ZoneType.BATTLEFIELD, true)
+											.setViewable(ZoneType.COMMANDER, isCommander())
 											.setLifeTotal(getPlayerButtonPanel().getLifeTotal())
 											.setCommanderDamageByGUID(getPlayerButtonPanel().getCommanderDamageByGUID()));
 	}

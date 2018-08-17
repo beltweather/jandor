@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import deck.RenderableList;
+import zone.ZoneType;
 
 public class MultiplayerMessage implements Serializable {
 
@@ -13,10 +14,9 @@ public class MultiplayerMessage implements Serializable {
 	private static final RenderableList<?> empty = new RenderableList();
 	
 	private RenderableList<?> renderables = empty;
-	private boolean handViewable = false;
-	private boolean deckViewable = false;
-	private boolean graveyardViewable = true;
-	private boolean exileViewable = true;
+	
+	private Map<ZoneType, Boolean> viewableByZone = new HashMap<ZoneType, Boolean>();
+	
 	private int lifeTotal = 20;
 	private Map<String, Integer> commanderDamageByGUID = new HashMap<String, Integer>();
 	
@@ -26,22 +26,6 @@ public class MultiplayerMessage implements Serializable {
 	
 	public RenderableList<?> getAllObjects() {
 		return renderables;
-	}
-	
-	public boolean isHandViewable() {
-		return handViewable;
-	}
-	
-	public boolean isDeckViewable() {
-		return deckViewable;
-	}
-	
-	public boolean isGraveyardViewable() {
-		return graveyardViewable;
-	}
-	
-	public boolean isExileViewable() {
-		return exileViewable;
 	}
 	
 	public Integer getLifeTotal() {
@@ -56,27 +40,7 @@ public class MultiplayerMessage implements Serializable {
 		this.renderables = renderables;
 		return this;
 	}
-	
-	public MultiplayerMessage setHandViewable(boolean handViewable) {
-		this.handViewable = handViewable;
-		return this;
-	}
-	
-	public MultiplayerMessage setDeckViewable(boolean deckViewable) {
-		this.deckViewable = deckViewable;
-		return this;
-	}
-	
-	public MultiplayerMessage setGraveyardViewable(boolean graveyardViewable) {
-		this.graveyardViewable = graveyardViewable;
-		return this;
-	}
-	
-	public MultiplayerMessage setExileViewable(boolean exileViewable) {
-		this.exileViewable = exileViewable;
-		return this;
-	}
-	
+
 	public MultiplayerMessage setLifeTotal(int lifeTotal) {
 		this.lifeTotal = lifeTotal;
 		return this;
@@ -89,6 +53,24 @@ public class MultiplayerMessage implements Serializable {
 	
 	public MultiplayerMessage setCommanderDamageByGUID(Map<String, Integer> commanderDamageByGUID) {
 		this.commanderDamageByGUID = commanderDamageByGUID;
+		return this;
+	}
+	
+	public boolean isViewable(ZoneType zone) {
+		return viewableByZone.containsKey(zone) ? viewableByZone.get(zone) : false;
+	}
+	
+	public Map<ZoneType, Boolean> getViewableByZone() {
+		return viewableByZone;
+	}
+	
+	public MultiplayerMessage setViewable(ZoneType zone, boolean viewable) {
+		viewableByZone.put(zone, viewable);
+		return this;
+	}
+	
+	public MultiplayerMessage setViewableByZone(Map<ZoneType, Boolean> viewableByZone) {
+		this.viewableByZone = viewableByZone;
 		return this;
 	}
 }
