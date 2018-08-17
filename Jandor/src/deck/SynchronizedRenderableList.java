@@ -1,25 +1,25 @@
 package deck;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import canvas.IRenderable;
 
-public class RenderableList<T extends IRenderable<?>> extends ArrayList<T> implements IRenderableList<T> {
+public class SynchronizedRenderableList<T extends IRenderable<?>> extends CopyOnWriteArrayList<T> implements IRenderableList<T> {
 
 	private static final long serialVersionUID = 1L;
 	
 	public int screenW = 0;
 	public int screenH = 0;
 	
-	public RenderableList() {
+	public SynchronizedRenderableList() {
 		this(null);
 	}
 	
-	public RenderableList(List<T> objects) {
+	public SynchronizedRenderableList(List<T> objects) {
 		if(objects != null) {
 			addAll(objects);
 		}
@@ -63,20 +63,22 @@ public class RenderableList<T extends IRenderable<?>> extends ArrayList<T> imple
 			while(it.hasNext()) {
 				T c = it.next();
 				if(c.equals(obj)) {
-					it.remove();
+					super.remove(obj);
+					//it.remove();
 				}
 			}
 		} else {
 			while(it.hasNext()) {
 				T c = it.next();
 				if(c == obj) {
-					it.remove();
+					//it.remove();
+					super.remove(c);
 					break;
 				}
 			}
 		}
 	}
-
+	
 	public void set(List<T> objects) {
 		this.clear();
 		if(objects != null) {

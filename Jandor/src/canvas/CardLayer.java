@@ -28,7 +28,9 @@ import canvas.handler.MouseHandlerManager;
 import canvas.handler.RenderableHandler;
 import deck.Card;
 import deck.CardList;
+import deck.IRenderableList;
 import deck.RenderableList;
+import deck.SynchronizedRenderableList;
 import dice.Counter;
 import dice.D10;
 import dice.Die;
@@ -148,7 +150,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	private RenderableHandler handler;
 	
 	private CardList allCards = new CardList();
-	private RenderableList<IRenderable> allObjects;
+	private IRenderableList<IRenderable> allObjects;
 	
 	private String currentUsername = null;
 
@@ -206,7 +208,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		originalCards = new CardList(cards.getCopy());
 		
-		allObjects = new RenderableList<IRenderable>();
+		allObjects = new SynchronizedRenderableList<IRenderable>();
 		allCards = new CardList();
 
 		d10s = new DieList();
@@ -1870,7 +1872,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		return allCards;
 	}
 	
-	public RenderableList<IRenderable> getAllObjects() {
+	public IRenderableList<IRenderable> getAllObjects() {
 		return allObjects;
 	}
 	
