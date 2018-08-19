@@ -88,5 +88,10 @@ public class ImageLayer implements ICanvasLayer {
 	public List getListeners() {
 		return new ArrayList();
 	}
+
+	@Override
+	public void flagChange() {
+		
+	}
 	
 }

@@ -51,6 +51,20 @@ public class Canvas extends JPanel implements Serializable {
 				zoomAndPanListener.translate(0, -125);
 			}
 			
+			@Override
+			public void handleMoveCamera() {
+				for(ICanvasLayer layer : Canvas.this.layers) {
+					layer.flagChange();
+				}
+			}
+			
+			@Override
+			public void handleZoomCamera() {
+				for(ICanvasLayer layer : Canvas.this.layers) {
+					layer.flagChange();
+				}
+			}
+			
 		};
 		
 		//zoomAndPanListener.setMoveCameraEnabled(false);

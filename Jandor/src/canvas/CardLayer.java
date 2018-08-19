@@ -3,8 +3,11 @@ package canvas;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -38,6 +41,7 @@ import dice.DieList;
 import dice.Token;
 import multiplayer.MultiplayerMessage;
 import session.Session;
+import session.User;
 import ui.pwidget.CloseListener;
 import ui.pwidget.ColorUtil;
 import ui.pwidget.JUtil;
@@ -49,6 +53,7 @@ import util.SerializationUtil;
 import util.ShapeUtil;
 import util.ShuffleType;
 import util.ShuffleUtil;
+import util.UserUtil;
 import zone.Zone;
 import zone.ZoneManager;
 import zone.ZoneRenderer;
@@ -604,6 +609,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		getCanvas().getZoom().revert(g);
 		paintZones(g, screenW, screenH);
 		getCanvas().getZoom().transform(g);
+		paintOpponentBounds(g, width, height);
 		paintNormalCardsAndDice(g, fixedWidth, fixedWidth);
 		paintDraggedCardsAndDice(g, fixedWidth, fixedWidth);
 		getCanvas().getZoom().revert(g);
@@ -826,11 +832,39 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	protected void paintBattlefieldBounds(Graphics2D g, int width, int height) {
-		int dim = 10;
+		int dimX = 2;
+		int dimY = 10;
 		int lineDim = 2000;
 		g.setColor(Color.WHITE);
 		g.drawLine(-lineDim, 0, lineDim, 0);
-		g.fillOval(-dim/2, -dim/2, dim, dim);
+		g.fillRect(-dimX/2, -dimY/2, dimX, dimY);
+	}
+	
+	protected void paintOpponentBounds(Graphics2D g, int width, int height) {
+		MultiplayerMessage message = opponentMessage;
+		if(message != null) {
+			Rectangle bounds = message.getBounds();
+			if(bounds != null) {
+				g.setColor(Color.WHITE);
+				g.rotate(Math.PI);
+				Font f = g.getFont();
+				Font newFont = g.getFont().deriveFont(30f);
+				g.setFont(newFont);
+				FontMetrics fm = g.getFontMetrics();
+				User user = UserUtil.getUserByGUID(getOpponentButtonPanel().getOpponentGUID());
+				String text = user.getFirstName();
+				Rectangle2D sb = fm.getStringBounds(text, null);
+				int w = (int) sb.getWidth();
+				int h = (int) sb.getHeight();
+				g.drawString(text, bounds.x + (bounds.width - w)/2, bounds.y + h);
+				g.setFont(f);
+				Stroke s = g.getStroke();
+				g.setStroke(new BasicStroke(3));
+				g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
+				g.setStroke(s);
+				g.rotate(-Math.PI);
+			}
+		}
 	}
 	
 	protected void paintZones(Graphics2D g, int width, int height) {
@@ -2047,7 +2081,8 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 											.setViewable(ZoneType.COMMANDER, isCommander())
 											.setViewable(ZoneType.REVEAL, true)
 											.setLifeTotal(getPlayerButtonPanel().getLifeTotal())
-											.setCommanderDamageByGUID(getPlayerButtonPanel().getCommanderDamageByGUID()));
+											.setCommanderDamageByGUID(getPlayerButtonPanel().getCommanderDamageByGUID())
+											.setBounds(getCanvas().getZoom().inverseTransform(new Rectangle(0, 0, screenW, screenH)).getBounds()));
 	}
 	
 	private static final RenderableList<IRenderable> empty = new RenderableList<IRenderable>();

@@ -22,4 +22,6 @@ public interface ICanvasLayer<T> extends Serializable {
 	
 	public List<Object> getListeners();
 	
+	public void flagChange();
+	
 }

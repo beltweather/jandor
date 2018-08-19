@@ -1,5 +1,6 @@
 package multiplayer;
 
+import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,8 @@ public class MultiplayerMessage implements Serializable {
 	
 	private int lifeTotal = 20;
 	private Map<String, Integer> commanderDamageByGUID = new HashMap<String, Integer>();
+	
+	private Rectangle bounds = null;
 	
 	public MultiplayerMessage() {
 		
@@ -71,6 +74,15 @@ public class MultiplayerMessage implements Serializable {
 	
 	public MultiplayerMessage setViewableByZone(Map<ZoneType, Boolean> viewableByZone) {
 		this.viewableByZone = viewableByZone;
+		return this;
+	}
+	
+	public Rectangle getBounds() {
+		return bounds;
+	}
+	
+	public MultiplayerMessage setBounds(Rectangle bounds) {
+		this.bounds = bounds;
 		return this;
 	}
 }
