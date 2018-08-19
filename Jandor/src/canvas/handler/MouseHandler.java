@@ -388,8 +388,8 @@ public abstract class MouseHandler<L extends ICanvasLayer, T extends IRenderable
 		Location inverseLocation = inverse(new Location(e));
 
 		AffineTransform t = new AffineTransform();
-		t.rotate(Math.PI, getCanvas().getWidth()/2, getCanvas().getHeight()/2);
-		t.translate(0, getCanvas().getHeight()/2);
+		t.rotate(Math.PI, 0, 0); //getCanvas().getWidth()/2, getCanvas().getHeight()/2);
+		//t.translate(0, getCanvas().getHeight()/2);
 			
 		Point2D pSource = new Point2D.Float(inverseLocation.getScreenX(), inverseLocation.getScreenY());
 		Point2D pDest = new Point2D.Float();

@@ -560,6 +560,9 @@ public class DriveUtil {
     
     private static File findFile(String fileName) {
     	try {
+    		if(fileName == null) {
+    			return null;
+    		}
 			FileList result = getDriveService().files().list().setQ("name='" + fileName + "'").execute();
 			if(result == null || result.getFiles() == null || result.getFiles().size() == 0) {
 				return null;

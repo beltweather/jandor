@@ -596,6 +596,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		}
 		paintBattlefield(g, screenW, screenH);
 		getCanvas().getZoom().transform(g);
+		paintBattlefieldBounds(g, screenW, screenH);
 		
 		int fixedWidth = 1915;
 		int fixedHeight = 900;
@@ -757,8 +758,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			return;
 		}
 		
-		g.rotate(Math.PI, width/2, height/2);
-		g.translate(0, height/2);
+		g.rotate(Math.PI, 0, 0);
+		//g.rotate(Math.PI, width/2, height/2);
+		//g.translate(0, height/2);
 		
 		for(IRenderable r : opponentMessage.getAllObjects()) {
 			if(r.getRenderer().getZoneType() != ZoneType.BATTLEFIELD || !r.getRenderer().isTransformedProjection()) {
@@ -771,8 +773,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		}
 		
-		g.translate(0, -height/2);
-		g.rotate(-Math.PI, width/2, height/2);
+		//g.translate(0, -height/2);
+		//g.rotate(-Math.PI, width/2, height/2);
+		g.rotate(-Math.PI, 0, 0);
 		
 	}
 	
@@ -820,6 +823,14 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		for(Zone zone : cardZoneManager.getZones()) {
 			cardZoneManager.getZone(ZoneType.BATTLEFIELD).getRenderer().paintComponent(this, g, width, height);
 		}
+	}
+	
+	protected void paintBattlefieldBounds(Graphics2D g, int width, int height) {
+		int dim = 10;
+		int lineDim = 2000;
+		g.setColor(Color.WHITE);
+		g.drawLine(-lineDim, 0, lineDim, 0);
+		g.fillOval(-dim/2, -dim/2, dim, dim);
 	}
 	
 	protected void paintZones(Graphics2D g, int width, int height) {

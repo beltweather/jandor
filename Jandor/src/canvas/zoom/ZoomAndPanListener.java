@@ -126,7 +126,12 @@ public class ZoomAndPanListener implements MouseListener, MouseMotionListener, M
 		//        System.out.println("============= Zoom camera ============");
 		zoomCamera(e);
 	}
-
+	
+	public void translate(double dx, double dy) {
+		coordTransform.translate(dx, dy);
+		targetComponent.repaint();
+	}
+	
 	private void moveCamera(MouseEvent e) {
 		if(!isMoveCameraEnabled()) {
 			return;

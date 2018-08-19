@@ -39,9 +39,16 @@ public class Canvas extends JPanel implements Serializable {
 			public void handleInit() {
 				int centerX = getWidth()/2;
 				int centerY = getHeight()/2;
+				zoomAndPanListener.translate(centerX, centerY);
 				zoomAndPanListener.virtualZoomOut(centerX, centerY);
 				zoomAndPanListener.virtualZoomOut(centerX, centerY);
 				zoomAndPanListener.virtualZoomOut(centerX, centerY);
+
+				zoomAndPanListener.virtualZoomOut(centerX, centerY);
+				zoomAndPanListener.virtualZoomOut(centerX, centerY);
+				zoomAndPanListener.virtualZoomOut(centerX, centerY);
+				
+				zoomAndPanListener.translate(0, -125);
 			}
 			
 		};
