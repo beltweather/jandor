@@ -112,6 +112,10 @@ public class ZoneManager implements Serializable {
 				continue;
 			}
 			
+			if(zone.getType() == ZoneType.COMMANDER && layer.isCommander() && !layer.getCommander().equals(obj)) {
+				continue;
+			}
+			
 			if(zoneKlass.isAssignableFrom(klass) && zone.overlaps(centerNoTransform)) {
 				obj.getRenderer().setZoneChangeLocation(centerNoTransform);
 				return zone;

@@ -218,23 +218,10 @@ public class ZoneRenderer extends AbstractRenderer<Zone> {
 
 	@Override
 	public String getImageUrl() {
-		switch(getZone().getType()) {
-			case DECK:
-				setScale(0.5);
-				return ImageUtil.getResourceUrl("deck.png");
-			case HAND:
-				return ImageUtil.getResourceUrl("hand.png");
-			case GRAVEYARD:
-				setScale(0.5);
-				return ImageUtil.getResourceUrl("graveyard.png");
-			case EXILE:
-				setScale(0.5);
-				return ImageUtil.getResourceUrl("exile.png");
-			case COMMANDER:
-				return ImageUtil.getResourceUrl("commander.png");
-			default:
-				return null;
+		if(!getZone().getType().hasResourceName()) {
+			return null;
 		}
+		return ImageUtil.getResourceUrl(getZone().getType().getResourceName());
 	}
 	
 	@Override

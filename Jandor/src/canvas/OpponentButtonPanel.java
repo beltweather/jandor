@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 
 import deck.Card;
 import deck.CardList;
@@ -21,6 +22,7 @@ import ui.pwidget.PLabel;
 import ui.pwidget.PPanel;
 import ui.pwidget.PRadio;
 import util.FriendUtil;
+import util.ImageUtil;
 import util.UserUtil;
 import zone.ZoneType;
 
@@ -130,6 +132,7 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		addZone(zonePanel, ZoneType.EXILE, true);
 		addZone(zonePanel, ZoneType.BATTLEFIELD, true);
 		addZone(zonePanel, ZoneType.COMMANDER, true);
+		addZone(zonePanel, ZoneType.REVEAL, true);
 		
 		addc(otherPanel);
 		c.gridx++;
@@ -150,9 +153,32 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 		updateLabels();
 	}
 	
+	private void setValue(PButton button, ZoneType zone, int value) {
+		//if(zone.hasResourceName()) {
+		//	button.setText(" " + value);
+		//} else {
+			button.setText(zone.getPrettyString() + ": " + value);
+		//}
+	}
+	
+	private void setValue(PLabel button, ZoneType zone, int value) {
+		if(zone.hasResourceName()) {
+			button.setText(" " + value);
+		} else {
+			button.setText(zone.getPrettyString() + ": " + value);
+		}
+	}
+	
 	private void addZone(PPanel zonePanel, final ZoneType zone, boolean isButton) {
-		PLabel label = new PLabel(zone + ": " + 0);
-		PButton button = new PButton(zone + ": " + 0);
+		PLabel label = new PLabel();
+		PButton button = new PButton();
+		/*if(zone.hasResourceName()) {
+			ImageIcon icon = ImageUtil.getImageIcon(zone.getResourceName(), 12);
+			label.setIcon(icon);
+			button.setIcon(icon);
+		}*/
+		setValue(label, zone, 0);
+		setValue(button, zone, 0);
 		
 		labelsByZone.put(zone, label);
 		buttonsByZone.put(zone, button);
@@ -240,8 +266,8 @@ public class OpponentButtonPanel extends AbstractCardLayerButtonPanel {
 			int newCount = (newCountsByZone.containsKey(zone) ? newCountsByZone.get(zone) : 0);
 			if(oldCount != newCount) {
 				countsByZone.put(zone, newCount);
-				labelsByZone.get(zone).setText(zone + ": " + newCount);
-				buttonsByZone.get(zone).setText(zone + ": " + newCount);
+				setValue(labelsByZone.get(zone), zone, newCount);
+				setValue(buttonsByZone.get(zone), zone, newCount);
 				shouldRevalidate = true;
 			}
 		}

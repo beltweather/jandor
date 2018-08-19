@@ -227,6 +227,16 @@ public class ImageUtil {
 		return img.getScaledInstance(width, (int) (width*ratio), BufferedImage.TYPE_INT_ARGB);
 	}
 	
+	public static Image scaleHeight(Image img, int height) {
+		int w = img.getWidth(null);
+		int h = img.getHeight(null);
+		float ratio = w / (float) h;
+		if(h < height) {
+			return img;
+		}
+		return img.getScaledInstance((int) (height*ratio), height, BufferedImage.TYPE_INT_ARGB);
+	}
+	
 	public static BufferedImage scale(BufferedImage img, double scale) {
 		if(scale == 1.0) {
 			return img;
@@ -376,6 +386,14 @@ public class ImageUtil {
 	    g2.dispose();
 
 	    return output;
+	}
+	
+	public static ImageIcon getImageIcon(String resourceName, int height) {
+		return new ImageIcon(ImageUtil.scaleHeight(ImageUtil.readResourceImage(resourceName), height));
+	}
+	
+	public static ImageIcon getImageIcon(String resourceName, int width, int height) {
+		return new ImageIcon(ImageUtil.scale(ImageUtil.readResourceImage(resourceName), width, height));
 	}
 	
 	public static ImageIcon getImageIcon(String resourceName) {

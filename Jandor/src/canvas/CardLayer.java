@@ -197,7 +197,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 
 	private transient OpponentButtonPanel opponentButtonPanel;
 	
-	private transient boolean commander;
+	private transient Card commander = null;
 	
 	public CardLayer(Canvas canvas, RenderableList<Card> cards, boolean enableListeners) {
 		init(canvas, cards, enableListeners);
@@ -217,10 +217,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		cardsToInitialize = cards;
 		
-		commander = false;
+		commander = null;
 		for(Card c : cardsToInitialize) {
 			if(c.isCommander()) {
-				commander = true;
+				commander = c;
 				break;
 			}
 		}
@@ -274,6 +274,10 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	public boolean isCommander() {
+		return commander != null;
+	}
+	
+	public Card getCommander() {
 		return commander;
 	}
 	
@@ -928,7 +932,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			
 			for(Card card : getAllCards()) {
 				if(dx != 0) {
-					if(card.getRenderer().getZoneType() == ZoneType.GRAVEYARD || card.getRenderer().getZoneType() == ZoneType.COMMANDER) {
+					if(card.getRenderer().getZoneType() == ZoneType.GRAVEYARD || card.getRenderer().getZoneType() == ZoneType.COMMANDER || card.getRenderer().getZoneType() == ZoneType.REVEAL) {
 						card.getRenderer().setScreenX(Math.max(0, card.getRenderer().getScreenX() + dx));
 					} else if(card.getRenderer().getZoneType() == ZoneType.HAND) {
 						card.getRenderer().setScreenX(Math.max(0, card.getRenderer().getScreenX() + dx/2));
@@ -940,7 +944,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		
 			for(Die die : d10s) {
-				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER)) {
+				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER || die.getRenderer().getZoneType() == ZoneType.REVEAL)) {
 					die.getRenderer().setScreenX(Math.max(0, die.getRenderer().getScreenX() + dx));
 				}
 				if(dy != 0) {
@@ -949,7 +953,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 		
 			for(Die die : counters) {
-				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER)) {
+				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER || die.getRenderer().getZoneType() == ZoneType.REVEAL)) {
 					die.getRenderer().setScreenX(Math.max(0, die.getRenderer().getScreenX() + dx));
 				}
 				if(dy != 0) {
@@ -958,7 +962,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			}
 			
 			for(Die die : tokens) {
-				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER)) {
+				if(dx != 0 && (die.getRenderer().getZoneType() == ZoneType.GRAVEYARD || die.getRenderer().getZoneType() == ZoneType.COMMANDER || die.getRenderer().getZoneType() == ZoneType.REVEAL)) {
 					die.getRenderer().setScreenX(Math.max(0, die.getRenderer().getScreenX() + dx));
 				}
 				if(dy != 0) {
@@ -1530,8 +1534,13 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				zone.setWidth(screenW);
 				zone.setHeight(screenH - zh);
 				break;
-			case COMMANDER:
+			case REVEAL:
 				zone.setLocation(new Location(0, screenH - zh - zh/2));
+				zone.setWidth(zw/2);
+				zone.setHeight(zh/2);
+				break;
+			case COMMANDER:
+				zone.setLocation(new Location(0, screenH - zh - zh));
 				zone.setWidth(zw/2);
 				zone.setHeight(zh/2);
 				break;
@@ -1644,6 +1653,17 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 					zone.getRenderer().center(this, card, animate);
 				}
 				break;
+			case REVEAL:
+				if(zoneChanged) {
+					if(!isDragging || !isHideHand()) {
+						card.setFaceUp(true);
+					}
+					mutateCard(card, card.isFaceUp(), false, 0, 0.2, isDragging);
+				}
+				if(!isDragging) {
+					zone.getRenderer().center(this, card, animate);
+				}
+				break;
 			default:
 				break;
 		}
@@ -1740,6 +1760,23 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 				}
 				break;
 			case COMMANDER:
+				if(zoneChanged) {
+					if(dieObject instanceof Token) {
+						die.setScale(0.1);
+					} else {
+						die.restoreScale();
+					}
+					die.restoreAngle();
+					die.recomputeBounds();
+				}
+				if(!isDragging) {
+					die.setZoneType(ZoneType.GRAVEYARD);
+					dieZoneManager.getZone(ZoneType.COMMANDER).remove(die);
+					dieZoneManager.getZone(ZoneType.GRAVEYARD).add(die);
+					moveDieToDefaultLocation(dieObject, animate);
+				}
+				break;
+			case REVEAL:
 				if(zoneChanged) {
 					if(dieObject instanceof Token) {
 						die.setScale(0.1);
@@ -1997,6 +2034,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 											.setViewable(ZoneType.EXILE, getPlayerButtonPanel().isExileViewable())
 											.setViewable(ZoneType.BATTLEFIELD, true)
 											.setViewable(ZoneType.COMMANDER, isCommander())
+											.setViewable(ZoneType.REVEAL, true)
 											.setLifeTotal(getPlayerButtonPanel().getLifeTotal())
 											.setCommanderDamageByGUID(getPlayerButtonPanel().getCommanderDamageByGUID()));
 	}
