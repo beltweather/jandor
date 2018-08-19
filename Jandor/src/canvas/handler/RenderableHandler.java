@@ -107,6 +107,8 @@ public class RenderableHandler extends MouseHandler<CardLayer, IRenderable> {
 			if(e.getClickCount() > 1) {
 				getLayer().handleDoubleLeftClick(c);
 			}
+			getLayer().flagChange();
+			repaint();
 		}
 		repaint();
 	}

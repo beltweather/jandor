@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 
 import session.User;
@@ -18,7 +17,6 @@ import ui.pwidget.PButton;
 import ui.pwidget.PCheckBox;
 import ui.pwidget.PLabel;
 import ui.pwidget.PPanel;
-import ui.pwidget.PRadio;
 import ui.pwidget.PSpinner;
 import util.FriendUtil;
 import util.ImageUtil;
@@ -30,6 +28,7 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 	private PCheckBox deckViewableCheck;
 	private PCheckBox graveyardViewableCheck;
 	private PCheckBox exileViewableCheck;
+	private PCheckBox opponentBoxCheck;
 	
 	private PSpinner lifeSpinner;
 	
@@ -49,6 +48,7 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		boolean deckViewable = false;
 		boolean graveyardViewable = true;
 		boolean exileViewable = true;
+		boolean opponentBoxViewable = true;
 		if(handViewableCheck != null) {
 			handViewable = handViewableCheck.isSelected();
 		}
@@ -60,7 +60,10 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		}
 		if(exileViewableCheck != null) {
 			exileViewable = exileViewableCheck.isSelected();
-		} 
+		}
+		if(opponentBoxCheck != null) {
+			opponentBoxViewable = opponentBoxCheck.isSelected();
+		}
 		
 		PButton untap = new PButton("Untap");
 		untap.addActionListener(new ActionListener() {
@@ -200,11 +203,13 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		deckViewableCheck = new PCheckBox("Reveal Deck");
 		graveyardViewableCheck = new PCheckBox("Reveal Graveyard");
 		exileViewableCheck = new PCheckBox("Reveal Exiled");
+		opponentBoxCheck = new PCheckBox("Outline Opponent's View");
 		
 		handViewableCheck.setSelected(handViewable);
 		deckViewableCheck.setSelected(deckViewable);
 		graveyardViewableCheck.setSelected(graveyardViewable);
 		exileViewableCheck.setSelected(exileViewable);
+		opponentBoxCheck.setSelected(opponentBoxViewable);
 		
 		handViewableCheck.addActionListener(new ActionListener() {
 
@@ -242,6 +247,15 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 			
 		});
 		
+		opponentBoxCheck.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				layer.repaint();
+			}
+			
+		});
+
 		lifeSpinner = new PSpinner(20, 0, Integer.MAX_VALUE) {
 
 			@Override
@@ -250,6 +264,7 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 			} 
 			
 		};
+		
 		
 		lifeSpinner.setPreferredWidth(70);
 		
@@ -269,6 +284,9 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 		metaPanel.addc(handViewableCheck);
 		metaPanel.c.gridx++;
 		metaPanel.addc(exileViewableCheck);
+		metaPanel.c.gridx++;
+		metaPanel.c.insets(0,2*buttonMargin);
+		metaPanel.addc(opponentBoxCheck);
 		
 		PPanel mainPanel = new PPanel();
 		
@@ -328,6 +346,10 @@ public class PlayerButtonPanel extends AbstractCardLayerButtonPanel {
 	
 	public boolean isExileViewable() {
 		return exileViewableCheck == null ? false : exileViewableCheck.isSelected();
+	}
+	
+	public boolean isOpponentBoxViewable() {
+		return opponentBoxCheck == null ? false : opponentBoxCheck.isSelected();
 	}
 	
 	public int getLifeTotal() {

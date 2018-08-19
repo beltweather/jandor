@@ -49,6 +49,7 @@ import ui.pwidget.JandorMenuBar;
 import ui.pwidget.JandorTabFrame;
 import ui.pwidget.PPanel;
 import util.ImageUtil;
+import util.LoginUtil;
 import util.SerializationUtil;
 import util.ShapeUtil;
 import util.ShuffleType;
@@ -605,6 +606,13 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 		int fixedWidth = 1915;
 		int fixedHeight = 900;
+		
+		boolean drawOppFirst = isDrawOpponentFirst();
+		
+		if(drawOppFirst) {
+			paintOpponentCardsAndDice(g, width, height);
+		}
+		
 		paintBattlefieldCardsAndDice(g, fixedWidth, fixedHeight);
 		getCanvas().getZoom().revert(g);
 		paintZones(g, screenW, screenH);
@@ -612,6 +620,11 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		paintOpponentBounds(g, width, height);
 		paintNormalCardsAndDice(g, fixedWidth, fixedWidth);
 		paintDraggedCardsAndDice(g, fixedWidth, fixedWidth);
+		
+		if(!drawOppFirst) {
+			paintOpponentCardsAndDice(g, width, height);
+		}
+		
 		getCanvas().getZoom().revert(g);
 		paintDrag(g, screenW, screenH);
 		paintLoading(g, screenW, screenH);
@@ -745,9 +758,21 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		
 	}
 	
-	private void paintBattlefieldCardsAndDice(Graphics2D g, int width, int height) {
-		paintOpponentCardsAndDice(g, width, height);
+	private boolean isDrawOpponentFirst() {
+		if(!LoginUtil.isLoggedIn()) {
+			return true;
+		}
 		
+		String oppGUID = getOpponentButtonPanel().getOpponentGUID();
+		if(oppGUID == null) {
+			return true;
+		}
+		
+		String guid = LoginUtil.getUser().getGUID();
+		return guid.compareTo(oppGUID) > 0;
+	}
+	
+	private void paintBattlefieldCardsAndDice(Graphics2D g, int width, int height) {
 		for(Card c : battlefieldCards) {
 			paintCard(g, width, height, c);
 		}
@@ -755,7 +780,6 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 		for(Die d : battlefieldDice) {
 			paintDie(g, width, height, d);
 		}
-		
 	}
 	
 	private void paintOpponentCardsAndDice(Graphics2D g, int width, int height) {
@@ -841,6 +865,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	protected void paintOpponentBounds(Graphics2D g, int width, int height) {
+		if(!getPlayerButtonPanel().isOpponentBoxViewable()) {
+			return;
+		}
 		MultiplayerMessage message = opponentMessage;
 		if(message != null) {
 			Rectangle bounds = message.getBounds();
@@ -2060,7 +2087,9 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	}
 	
 	public int nextZIndex() {
-		return zIndex;
+		int z = zIndex;
+		zIndex++;
+		return z;
 	}
 	
 	public void clearZIndex() {
@@ -2069,6 +2098,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 	
 	public byte[] getSerializedRenderablesBytes() {
 		RenderableList<IRenderable> renderableList = allObjects.getShallowCopySortedByZIndex();
+		
 		renderableList.screenW = screenW;
 		renderableList.screenH = screenH;
 		return SerializationUtil.toBytes(new MultiplayerMessage()
