@@ -924,7 +924,7 @@ public class CardLayer implements ICanvasLayer, CloseListener, Serializable {
 			updateZoneBounds();
 		}
 		
-		boolean screenSizeChanged = screenW != lastScreenW || screenH != lastScreenH;
+		boolean screenSizeChanged = false; //screenW != lastScreenW || screenH != lastScreenH;
 		
 		if(screenSizeChanged) {
 			int dx = screenW - lastScreenW;
