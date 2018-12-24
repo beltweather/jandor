@@ -26,33 +26,33 @@ import run.Jandor;
 public class FileUtil {
 
 	private FileUtil() {}
-	
+
 	public static final String ENV_JANDOR_HOME = "JANDOR_HOME";
 	public static String jandorHomePath = null;
 	public static final String FOLDER_JANDOR_DATA = "Jandor-Data";
-	public static final String RESOURCE_CARDS_JSONS = "AllCards-x.json";
+	public static final String RESOURCE_CARDS_JSONS = "AllCards.json";
 	public static final String RESOURCE_SETS_JSONS = "AllSets.json";
 	public static final String RESOURCE_MTG_JSON_VERSION = "mtg-json-version.txt";
-	
+
 	public static final String DEFAULT_EXT = "dec";
 	private static final String DEFAULT_EXT_DESCRIPTION = "Apprentice Deck File (*.dec)";
 	private static final JFileChooser chooser = new JFileChooser();
 	static {
 		chooser.setFileFilter(new FileNameExtensionFilter(DEFAULT_EXT_DESCRIPTION, DEFAULT_EXT));
 	}
-	
+
 	public static void init(String jandorHomePath) {
 		FileUtil.jandorHomePath = jandorHomePath;
 		initCredentialsFile();
 	}
-	
+
 	private static void initCredentialsFile() {
 		java.io.File credentialsFile = FileUtil.toFile(FileUtil.getCredentialsFolder(), "StoredCredential");
 		if(!credentialsFile.exists()) {
 			copy(FileUtil.class.getResourceAsStream("/StoredCredential"), credentialsFile.getPath());
 		}
 	}
-	
+
 	/**
      * Copy a file from source to destination.
      *
@@ -77,7 +77,7 @@ public class FileUtil {
         return succeess;
 
     }
-	
+
 	public static List<File> getFiles(File folder) {
 		return Arrays.asList(folder.listFiles());
 	}
@@ -85,120 +85,120 @@ public class FileUtil {
 	public static File getCredentialsFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Credentials");
 	}
-	
+
 	public static File getDraftHeaderFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Drafts", "Headers");
 	}
-	
+
 	public static File getDraftContentFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Drafts", "Content");
 	}
-	
+
 	public static File getBoosterHeaderFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Boosters", "Headers");
 	}
-	
+
 	public static File getBoosterContentFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Boosters", "Content");
 	}
-	
+
 	public static File getHeaderFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Collection", "Headers");
 	}
-	
+
 	public static File getTagFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Collection", "Tags");
 	}
-	
+
 	public static File getContentFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Collection", "Content");
 	}
-	
+
 	public static File getContactFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Contacts");
 	}
-	
+
 	public static File getUserFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Users");
 	}
-	
+
 	public static File getPreferencesFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Preferences");
 	}
-	
+
 	public static File getCachedImagesFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "CachedImages");
 	}
-	
+
 	public static File getExternalResourcesFolder() {
 		return createFolder(FOLDER_JANDOR_DATA, "Resources");
 	}
-	
+
 	public static List<File> getHeaderFiles() {
 		return getFiles(getHeaderFolder());
 	}
-	
+
 	public static List<File> getDraftHeaderFiles() {
 		return getFiles(getDraftHeaderFolder());
 	}
-	
+
 	public static List<File> getBoosterHeaderFiles() {
 		return getFiles(getBoosterHeaderFolder());
 	}
-	
+
 	public static List<File> getTagFiles() {
 		return getFiles(getTagFolder());
 	}
-	
+
 	public static List<File> getContentFiles() {
 		return getFiles(getContentFolder());
 	}
-	
+
 	public static List<File> getDraftContentFiles() {
 		return getFiles(getDraftContentFolder());
 	}
-	
+
 	public static List<File> getBoosterContentFiles() {
 		return getFiles(getBoosterContentFolder());
 	}
-	
+
 	public static List<File> getContactFiles() {
 		return getFiles(getContactFolder());
 	}
-	
+
 	public static List<File> getUserFiles() {
 		return getFiles(getUserFolder());
 	}
-	
+
 	public static List<File> getPreferenceFiles() {
 		return getFiles(getPreferencesFolder());
 	}
-	
+
 	public static File getPreferenceFile() {
 		return toFile(getPreferencesFolder(), "Preferences-0");
 	}
-	
+
 	public static List<File> getCachedImageFiles() {
 		return getFiles(getCachedImagesFolder());
 	}
-	
+
 	public static File getExternalResourcesFile(String filename) {
 		return new File(getExternalResourcesFolder(), filename);
 	}
-	
+
 	public static File getCachedImageFile(int multiverseId) {
 		if(multiverseId == -1) {
 			return null;
 		}
 		return new File(getCachedImagesFolder(), multiverseId + ".png");
 	}
-	
+
 	public static JFileChooser getFileChooser() {
 		return chooser;
 	}
-	
+
 	public static File chooseFile(Component parent, boolean open) {
-		final JFileChooser fc = FileUtil.getFileChooser(); 
+		final JFileChooser fc = FileUtil.getFileChooser();
 		int returnVal = open ? fc.showOpenDialog(parent) : fc.showSaveDialog(parent);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fc.getSelectedFile();
@@ -210,7 +210,7 @@ public class FileUtil {
 		}
 		return null;
 	}
-	
+
 	public static File[] chooseFiles(Component parent) {
 		final JFileChooser fc = FileUtil.getFileChooser();
 		fc.setMultiSelectionEnabled(true);
@@ -223,7 +223,7 @@ public class FileUtil {
 		fc.setMultiSelectionEnabled(false);
 		return files;
 	}
-	
+
 	public static BufferedReader getReader(String filename) {
 		BufferedReader reader = null;
 		try {
@@ -231,14 +231,14 @@ public class FileUtil {
         	reader = new BufferedReader(new FileReader(file));
         } catch (Exception e) {
             e.printStackTrace();
-        } 
-		
+        }
+
 		return reader;
 	}
-	
+
 	public static BufferedReader getResourceReader(String filename) {
 		InputStream input = null;
-		
+
 		// If we have a copy of this resource in our external resources file,
 		// use this one. Otherwise, use the one from our internal resources folder.
 		// This allows the user to override resources by placing them in "Jandor-Data\Resources"
@@ -252,30 +252,30 @@ public class FileUtil {
 		} else {
 			input = Jandor.class.getResourceAsStream("/" + filename);
 		}
-		
+
 		BufferedReader reader = null;
 		try {
         	reader = new BufferedReader(new InputStreamReader(input));
         } catch (Exception e) {
             e.printStackTrace();
         }
-		
+
 		return reader;
 	}
-	
+
 	public static List<String> getLines(BufferedReader reader) {
 		if(reader == null) {
 			return null;
 		}
 		List<String> lines = new ArrayList<String>();
 		String line;
-			
+
 		try {
-			
+
 			while((line = reader.readLine()) != null) {
 				lines.add(line);
 			}
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -285,10 +285,10 @@ public class FileUtil {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return lines;
 	}
-	
+
 	public static String getFirstLine(BufferedReader reader) {
 		List<String> lines = getLines(reader);
 		if(lines != null && lines.size() > 0) {
@@ -296,7 +296,7 @@ public class FileUtil {
 		}
 		return null;
 	}
-	
+
 	public static String getRoot() {
 		if(jandorHomePath != null) {
 			return jandorHomePath;
@@ -307,7 +307,7 @@ public class FileUtil {
 		}
 		return Jandor.class.getResource("/").getPath();
 	}
-	
+
 	public static File toFile(String... fileName) {
 		String fullFileName = "";
 		for(String f : fileName) {
@@ -318,19 +318,19 @@ public class FileUtil {
 			}
 		}
 		String path = getRoot() + File.separator + fullFileName;
-		
+
 		// This keeps the data folder out of the bin folder so it can't be blown away
 		if(path.contains("Jandor/bin")) {
 			path = path.replace("/Jandor/bin/", "");
 		}
-		
+
 		return new File(path);
 	}
-	
+
 	public static File toFile(File folder, String fileName) {
 		return new File(folder.getAbsolutePath() + File.separator + fileName);
 	}
-	
+
 	public static File createFolder(String... folderName) {
 		File folder = null;
 		for(int i = 0; i < folderName.length; i++) {
@@ -341,12 +341,12 @@ public class FileUtil {
 		}
 		return folder;
 	}
-	
+
 	public static Object readXML(File file) {
 		if(file == null) {
 			return null;
 		}
-		
+
 		Object obj = null;
 		try {
 			return JAXBUtil.unmarshal(file);
@@ -355,14 +355,14 @@ public class FileUtil {
 		}
 		return obj;
 	}
-	
+
 	public static void writeXML(File file, Object obj) {
 		if(obj == null || file == null) {
-			return; 
+			return;
 		}
 		JAXBUtil.marshal(obj, file);
 	}
-	
+
 	public static void write(BufferedReader fromReader, File toFile) {
 		BufferedWriter writer = null;
 		try {
@@ -384,16 +384,16 @@ public class FileUtil {
 			}
 		}
 	}
-	
+
 	public static void writeString(String text, String toFilename, boolean append) {
 		writeString(text, toFilename == null ? null : new File(toFilename), append);
 	}
-	
+
 	public static void writeString(String text, File toFile, boolean append) {
 		if(text == null) {
 			return;
 		}
-		
+
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new FileWriter(toFile, append));
@@ -410,5 +410,5 @@ public class FileUtil {
 			}
 		}
 	}
-	
+
 }

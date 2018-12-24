@@ -20,6 +20,8 @@ import javax.swing.JLabel;
 
 import org.apache.commons.lang.StringUtils;
 
+import deck.Card;
+import deck.Deck;
 import json.JSONArray;
 import json.JSONException;
 import json.JSONObject;
@@ -29,19 +31,18 @@ import ui.ProgressBar.ProgressTask;
 import ui.pwidget.PSimpleCombo;
 import ui.pwidget.PTextField;
 import util.CardUtil;
-import deck.Card;
-import deck.Deck;
+import util.MtgJsonUtil;
 
 public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private static final List<String> DEFAULT_FIELDS = new ArrayList<String>();
 	static {
-		
+
 		DEFAULT_FIELDS.add("");
 		DEFAULT_FIELDS.add("general");
-		DEFAULT_FIELDS.add("name"); 
+		DEFAULT_FIELDS.add("name");
 		DEFAULT_FIELDS.add("text");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("supertypes");
@@ -51,7 +52,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELDS.add("colors");
 		DEFAULT_FIELDS.add("colorIdentity");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
-		DEFAULT_FIELDS.add("cmc");
+		DEFAULT_FIELDS.add(MtgJsonUtil.cmc);
 		DEFAULT_FIELDS.add("X or *");
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("power");
@@ -59,17 +60,17 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("set");
 		DEFAULT_FIELDS.add("rarity");
-		DEFAULT_FIELDS.add("flavor");
+		DEFAULT_FIELDS.add(MtgJsonUtil.flavorText);
 		DEFAULT_FIELDS.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELDS.add("layout");
 	}
-	
+
 	private static final List<String> DEFAULT_FIELD_NAMES = new ArrayList<String>();
 	static {
-		
+
 		DEFAULT_FIELD_NAMES.add("");
 		DEFAULT_FIELD_NAMES.add("All Text");
-		DEFAULT_FIELD_NAMES.add("Name Text"); 
+		DEFAULT_FIELD_NAMES.add("Name Text");
 		DEFAULT_FIELD_NAMES.add("Ability Text");
 		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELD_NAMES.add("Supertype");
@@ -91,33 +92,33 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELD_NAMES.add(JandorCombo.SEPARATOR);
 		DEFAULT_FIELD_NAMES.add("Layout");
 	}
-	
+
 	protected List<Card> cardsToSearch;
-	
+
 	public CardSearchPanel() {
 		this(null);
 	}
-	
+
 	public CardSearchPanel(List<Card> cardsToSearch) {
 		this.cardsToSearch = cardsToSearch;
 	}
-	
+
 	public void setCardsToSearch(List<Card> cardsToSearch) {
 		this.cardsToSearch = cardsToSearch;
 	}
-	
+
 	@Override
 	protected boolean match(JSONObject info, String att, JComponent editor) throws Exception {
 		att = DEFAULT_FIELDS.get(DEFAULT_FIELD_NAMES.indexOf(att));
-		
+
 		if(att.equals("")) {
 			return true;
 		}
-		
+
 		if(att.equals("set")) {
 			att = "printings";
 		}
-		
+
 		if(info.has("types")) {
 			JSONArray types = info.getJSONArray("types");
 			if(types.length() == 0) {
@@ -132,7 +133,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		} else {
 			return false;
 		}
-		
+
 		if(!att.equals("printings")) {
 			JSONArray sets = info.getJSONArray("printings");
 			boolean isSilly = false;
@@ -145,15 +146,15 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 					isAlsoNotSilly = true;
 				}
 			}
-			
+
 			if(isSilly && !isAlsoNotSilly) {
 				return false;
 			}
 		}
-		
-		if(att.equals("power") || att.equals("toughness") || att.equals("cmc")) {
+
+		if(att.equals("power") || att.equals("toughness") || att.equals(MtgJsonUtil.cmc)) {
 			return matchInt(info, att, editor);
-		} else if(att.equals("name") || att.equals("subtype") || att.equals("text") || att.equals("flavor")) {
+		} else if(att.equals("name") || att.equals("subtype") || att.equals("text") || att.equals(MtgJsonUtil.flavorText)) {
 			return matchString(info, att, editor);
 		} else if(att.equals("types") || att.equals("supertypes") || att.equals("subtypes") || att.equals("rarity") || att.equals("set") || att.equals("printings") || att.equals("layout")) {
 			return matchSet(info, att, editor);
@@ -164,15 +165,15 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		} else if(att.equals("general")) {
 			return matchStringGeneral(info, att, editor);
 		}
-		
+
 		return true;
 	}
-	
+
 	private boolean matchStringGeneral(JSONObject info, String att, JComponent editor) throws JSONException {
 		//String jsonValue = info.toString().toLowerCase();
 		//String formattedValue = new Card(info.getString("name")).getToolTipText(0, false).toLowerCase();
 		String formattedValue = new Card(info.getString("name")).getSearchableString();
-		List<String> editorText = getMatchableTokens((PTextField) editor); 
+		List<String> editorText = getMatchableTokens((PTextField) editor);
 		for(String s : editorText) {
 			if(!matchToken(s, formattedValue)) {
 				return false;
@@ -180,7 +181,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		}
 		return true;
 	}
-	
+
 	private boolean matchToken(String tok, String... fullText) {
 		if(tok.startsWith("'") && tok.endsWith("'")) {
 			tok = tok.substring(1, tok.length() - 1);
@@ -190,7 +191,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			return matchToken(tok, null, fullText);
 		}
 	}
-	
+
 	private boolean matchToken(String tok, Pattern pattern, String... fullText) {
 		if(pattern != null) {
 			if(fullText.length == 0) {
@@ -208,7 +209,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			if(fullText.length == 0) {
 				return true;
 			}
-			
+
 			for(String v : fullText) {
 				if(v.contains(tok)) {
 					return false;
@@ -219,7 +220,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			if(fullText.length == 0) {
 				return false;
 			}
-			
+
 			for(String v : fullText) {
 				if(v.contains(tok)) {
 					return true;
@@ -228,11 +229,11 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			return false;
 		}
 	}
-	
+
 	private List<String> getMatchableTokens(PTextField textField) {
 		return getMatchableTokens(textField.getText().toLowerCase());
 	}
-	
+
 	private List<String> getMatchableTokens(String rawText) {
 		List<String> list = new ArrayList<String>();
 		Matcher m = Pattern.compile("('.+?'|\".+?\"|[^\"]\\S*)\\s*").matcher(rawText);
@@ -247,26 +248,26 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		}
 		return list;
 	}
-	
+
 	private boolean matchXOrStar(JSONObject info, String att, JComponent editor) throws JSONException {
 		if(!info.has(att)) {
 			return ((XOrStarPanel) editor).match("");
 		}
 		return ((XOrStarPanel) editor).match(info.getJSONArray("manaCost").toString());
 	}
-	
+
 	private boolean matchColor(JSONObject info, String att, JComponent editor) throws JSONException {
 		String colors = info.has(att) ? info.getJSONArray(att).toString() : "";
 		String manaCost = info.has("manaCost") ? info.getString("manaCost") : "";
 		return ((ManaPanel) editor).match(colors, manaCost);
 	}
-	
+
 	private boolean matchSet(JSONObject info, String att, JComponent editor) throws JSONException {
 		Object selectedItem = ((JComboBox) editor).getSelectedItem();
 		if(selectedItem == null || selectedItem.equals("")) {
 			return true;
 		}
-		
+
 		Object obj = info.get(att);
 		JSONArray set;
 		if(obj == null) {
@@ -279,12 +280,12 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		} else {
 			return false;
 		}
-		
+
 		String value = unfilter(att, ((JComboBox) editor).getSelectedItem().toString()).toLowerCase();
 		if(value.equals("")) {
 			return true;
 		}
-		
+
 		for(int i = 0; i < set.length(); i++) {
 			if(set.getString(i).toLowerCase().equals(value)) {
 				return true;
@@ -292,10 +293,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		}
 		return false;
 	}
-	
+
 	private boolean matchString(JSONObject info, String att, JComponent editor) throws JSONException {
 		String value = info.has(att) ? info.getString(att).toLowerCase() : "";
-		List<String> editorText = getMatchableTokens((PTextField) editor); 
+		List<String> editorText = getMatchableTokens((PTextField) editor);
 		for(String s : editorText) {
 			if(!matchToken(s, value)) {
 				return false;
@@ -303,57 +304,57 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		}
 		return true;
 	}
-	
+
 	private boolean matchInt(JSONObject info, String att, JComponent editor) throws JSONException {
 		if(!info.has(att)) {
 			return ((NumberPanel) editor).match(0);
 		}
-		
+
 		// Special case for split cards and converted manacost
-		if(att.equals("cmc") && CardUtil.isSplit(info)) {
+		if(att.equals(MtgJsonUtil.cmc) && CardUtil.isSplit(info)) {
 			return matchSplitCmc(info, editor);
 		}
-		
+
 		return ((NumberPanel) editor).match(toInt(info.get(att)));
 	}
-	
+
 	private boolean matchSplitCmc(JSONObject info, JComponent editor) throws JSONException {
 		JSONArray names = info.getJSONArray("names");
 		int allCmc = 0;
 		for(int i = 0; i < names.length(); i++) {
 			String name = names.getString(i);
 			JSONObject cardInfo = CardUtil.getCardInfo(name);
-			int cmc = toInt(cardInfo.get("cmc"));
-			
+			int cmc = toInt(cardInfo.get(MtgJsonUtil.cmc));
+
 			// Allow ourselves to match on either individual cards in
 			// the split card, in addition to the some of the two cards
 			if(((NumberPanel) editor).match(cmc)) {
 				return true;
 			}
-			
+
 			allCmc += cmc;
 		}
 		return ((NumberPanel) editor).match(allCmc);
 	}
-	
+
 	private int toInt(Object val) {
 		if(val instanceof String) {
 			if(val.equals("*")) {
 				val = 0;
-			} else { 
-				
+			} else {
+
 				if(((String) val).contains("-")) {
 					val = ((String) val).replace("-", "");
-				} 
-			
+				}
+
 				if(((String) val).contains("+")) {
 					val = ((String) val).replace("+", "");
-				} 
-				
+				}
+
 				if(((String) val).contains("*")) {
 					val = ((String) val).replace("*", "");
 				}
-			
+
 			}
 		}
 		int intVal = Integer.valueOf(val.toString());
@@ -371,7 +372,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 					cardNames.add(card.getName());
 				}
 			} else {
-				cardNames = CardUtil.getAllCardNames(); 
+				cardNames = CardUtil.getAllCardNames();
 			}
 			int total = cardNames.size();
 			int i = 0;
@@ -391,10 +392,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	@Override
 	public JComponent buildEditor(String att) {
 		att = DEFAULT_FIELDS.get(DEFAULT_FIELD_NAMES.indexOf(att));
-		
+
 		JComponent editor;
-		
-		if(att.equals("power") || att.equals("toughness") || att.equals("cmc")) {
+
+		if(att.equals("power") || att.equals("toughness") || att.equals(MtgJsonUtil.cmc)) {
 			editor = new NumberPanel();
 			((NumberPanel) editor).getSpinner().getTextField().addActionListener(new ActionListener() {
 
@@ -402,9 +403,9 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 				public void actionPerformed(ActionEvent e) {
 					search();
 				}
-				
+
 			});
-		} else if(att.equals("name") || att.equals("subtype") || att.equals("text") || att.equals("flavor") || att.equals(" ") || att.equals("general")){
+		} else if(att.equals("name") || att.equals("subtype") || att.equals("text") || att.equals(MtgJsonUtil.flavorText) || att.equals(" ") || att.equals("general")){
 			editor = new PTextField();
 			((PTextField) editor).addActionListener(new ActionListener() {
 
@@ -412,7 +413,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 				public void actionPerformed(ActionEvent e) {
 					search();
 				}
-				
+
 			});
 		} else if(att.equals("types") || att.equals("supertypes") || att.equals("subtypes") || att.equals("rarity") || att.equals("set") || att.equals("layout")) {
 			final List<String> items = new ArrayList<String>();
@@ -421,9 +422,9 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			}
 			Collections.sort(items);
 			items.add(0, "");
-			
+
 			if(att.equals("subtypes")) {
-				
+
 
 		        final AutoComboBox<String> searchCombo = new AutoComboBox<String>() {
 
@@ -439,41 +440,41 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 
 					@Override
 					public void handleFound(String cardName) {
-						
+
 					}
 
 					@Override
 					public String buildTooltip(String selectedItem) {
 						return null;
 					}
-		        	
+
 		        };
 		        searchCombo.setBorder(BorderFactory.createLineBorder(Color.WHITE));
 		        searchCombo.setMaximumRowCount(20);
 		        searchCombo.getSearchHandler().setMinSearchCharacters(0);
-		        
+
 		        searchCombo.getTextField().addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
 						search();
 					}
-					
+
 				});
-		        
+
 		        editor = searchCombo;
-				
+
 			} else {
-				
+
 				editor = new PSimpleCombo(items) {
-	
+
 					@Override
 					protected void handleItemSelected(ItemEvent event, Object item) {
-						
+
 					}
-					
+
 				};
-				
+
 			}
 		} else if(att.equals("colors") || att.equals("colorIdentity")) {
 			editor = new ManaPanel();
@@ -487,18 +488,18 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		} else {
 			return new JLabel("");
 		}
-		
+
 		editor.setPreferredSize(new Dimension(200, 20));
 		return editor;
 	}
-	
+
 	private String filter(String att, String value) {
 		if(att.equals("set") || att.equals("printings")) {
 			return CardUtil.getSetName(value);
 		}
 		return value;
 	}
-	
+
 	private String unfilter(String att, String value) {
 		if(att.equals("set") || att.equals("printings")) {
 			return CardUtil.getSetId(value);
@@ -510,20 +511,20 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	public List<String> getAttributes() {
 		return DEFAULT_FIELD_NAMES;
 	}
-	
+
 	@Override
 	public String getDefaultAttribute() {
 		return "";
 	}
-	
+
 
 	@Override
 	public void setToDefaultSingle() {
 		rootNode.setChildren(null);
-		rootNode.addChild();	
+		rootNode.addChild();
 		rootNode.getChildren().get(0).getAttributeCombo().setSelectedItem("All Text");
 	}
-	
+
 	@Override
 	public void setToDefaultMulti() {
 		rootNode.setChildren(null);
@@ -537,7 +538,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		rootNode.addChild();
 		rootNode.addChild();
 		rootNode.addChild();
-		
+
 		int i = 0;
 		rootNode.getChildren().get(i++).getAttributeCombo().setSelectedItem("Name");
 		rootNode.getChildren().get(i++).getAttributeCombo().setSelectedItem("All Text");

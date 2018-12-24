@@ -18,11 +18,11 @@ public class CardList extends RenderableList<Card> {
 	public CardList() {
 		this(null);
 	}
-	
+
 	public CardList(List<Card> cards) {
 		super(cards);
 	}
-	
+
 	public Map<Card, Integer> getCountsByCard() {
 		Map<String, Integer> counts = new LinkedHashMap<String, Integer>();
 		CardList d = new CardList(getCopy());
@@ -38,7 +38,7 @@ public class CardList extends RenderableList<Card> {
 				commanderName = c;
 			}
 		}
-		
+
 		Map<Card, Integer> countsByCard = new LinkedHashMap<Card, Integer>();
 		for(String name : counts.keySet()) {
 			Card card = new Card(name);
@@ -49,7 +49,7 @@ public class CardList extends RenderableList<Card> {
 		}
 		return countsByCard;
 	}
-	
+
 	public int getMaxConvertedManaCost() {
 		int cmc = 0;
 		for(Card card : this) {
@@ -59,15 +59,15 @@ public class CardList extends RenderableList<Card> {
 		}
 		return cmc;
 	}
-	
+
 	public void shuffle() {
 		ShuffleUtil.shuffle(ShuffleType.PLAYER, this);
 	}
-	
+
 	public void shuffle(ShuffleType shuffleType) {
 		ShuffleUtil.shuffle(shuffleType, this);
 	}
-	
+
 	public static void main1(String[] args) {
 		String filename = "AllCards.json";
 		JSONObject json = JSONUtil.toJSON(filename);
@@ -77,7 +77,7 @@ public class CardList extends RenderableList<Card> {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		String filename = "X:/Users/Jon/Downloads/R Walls 20.dec";
 		Deck deck = ApprenticeUtil.toDeck(filename);
