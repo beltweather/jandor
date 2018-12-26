@@ -185,7 +185,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 
 	public String getSetString(String cardSet, String field) {
 		try {
-			if(!getSetCardInfo(cardSet).has(field)) {
+			if(getSetCardInfo(cardSet) == null || !getSetCardInfo(cardSet).has(field)) {
 				return null;
 			}
 			return getSetCardInfo(cardSet).getString(field);

@@ -93,6 +93,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		DEFAULT_FIELD_NAMES.add("Layout");
 	}
 
+	private static Pattern caseInsensitivePattern(String regex) {
+		return Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+	}
+
 	protected List<Card> cardsToSearch;
 
 	public CardSearchPanel() {
@@ -185,7 +189,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	private boolean matchToken(String tok, String... fullText) {
 		if(tok.startsWith("'") && tok.endsWith("'")) {
 			tok = tok.substring(1, tok.length() - 1);
-			Pattern p = Pattern.compile(tok);
+			Pattern p = caseInsensitivePattern(tok);
 			return matchToken(tok, p, fullText);
 		} else {
 			return matchToken(tok, null, fullText);
@@ -236,7 +240,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 
 	private List<String> getMatchableTokens(String rawText) {
 		List<String> list = new ArrayList<String>();
-		Matcher m = Pattern.compile("('.+?'|\".+?\"|[^\"]\\S*)\\s*").matcher(rawText);
+		Matcher m = caseInsensitivePattern("('.+?'|\".+?\"|[^\"]\\S*)\\s*").matcher(rawText);
 		while (m.find()) {
 			String s = m.group(1);
 			if(s.startsWith("\"") && s.endsWith("\"")) {
@@ -357,7 +361,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 
 			}
 		}
-		int intVal = Integer.valueOf(val.toString());
+		int intVal = (int) Double.valueOf(val.toString()).doubleValue();
 		return intVal;
 	}
 
