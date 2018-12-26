@@ -29,4 +29,5 @@ dependencies {
     compile group: 'javax.mail', name: 'mail', version: '1.5.0-b01'
 	compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
 	compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.8'
 }
