@@ -32,6 +32,8 @@ public class FileUtil {
 	public static final String FOLDER_JANDOR_DATA = "Jandor-Data";
 	public static final String RESOURCE_CARDS_JSONS = "AllCards.json";
 	public static final String RESOURCE_SETS_JSONS = "AllSets.json";
+	public static final String RESOURCE_CARDS_LESS_JSONS = "AllCards-less.json";
+	public static final String RESOURCE_SETS_LESS_JSONS = "AllSets-less.json";
 	public static final String RESOURCE_MTG_JSON_VERSION = "mtg-json-version.txt";
 
 	public static final String DEFAULT_EXT = "dec";

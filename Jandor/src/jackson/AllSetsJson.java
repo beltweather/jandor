@@ -65,7 +65,8 @@ public class AllSetsJson extends HashMap<String, SetJson> {
 			if(set.type.equals("promo")) {
 				continue;
 			}
-			put(set.code.toLowerCase(), set);
+			set.code = set.code.toUpperCase();
+			put(set.code.toUpperCase(), set);
 		}
 	}
 

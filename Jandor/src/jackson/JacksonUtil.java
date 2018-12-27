@@ -8,15 +8,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import util.FileUtil;
+
 public class JacksonUtil {
 
-	private static final String allCardsFilePath = "X:/Users/Jon/Jandor/Jandor-Data/Resources/AllCards.json";
-	private static final String allCardsLessFilePath = "X:/Users/Jon/Jandor/Jandor-Data/Resources/AllCards-less.json";
-	private static final String allSetsFilePath = "X:/Users/Jon/Jandor/Jandor-Data/Resources/AllSets.json";
-	private static final String allSetsLessFilePath = "X:/Users/Jon/Jandor/Jandor-Data/Resources/AllSets-less.json";
+	public static <T> T readExternal(Class<T> klass, String filename) {
+		return read(klass, FileUtil.getExternalResourcesFile(filename));
+	}
 
-	public static <T> T read(Class<T> klass, String fromFilePath) {
-		File file = new File(fromFilePath);
+	public static <T> T read(Class<T> klass, File file) {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		T data = null;
@@ -29,7 +29,11 @@ public class JacksonUtil {
 		return data;
 	}
 
-	public static <T> boolean write(T data, String toFilePath) {
+	public static <T> boolean writeExternal(T data, String filename) {
+		return write(data, FileUtil.getExternalResourcesFile(filename));
+	}
+
+	public static <T> boolean write(T data, File file) {
 		if(data == null) {
 			return false;
 		}
@@ -38,7 +42,7 @@ public class JacksonUtil {
 		ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
 
 		try {
-			writer.writeValue(new File(toFilePath), data);
+			writer.writeValue(file, data);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -47,20 +51,26 @@ public class JacksonUtil {
 		return true;
 	}
 
-	public static <T> T readAndWrite(Class<T> klass, String fromFilePath, String toFilePath) {
-		T data = read(klass, fromFilePath);
-		write(data, toFilePath);
+	public static <T> T readAndWriteExternal(Class<T> klass, String fromFilename, String toFilename) {
+		return readAndWrite(klass,
+							FileUtil.getExternalResourcesFile(fromFilename),
+							FileUtil.getExternalResourcesFile(toFilename));
+	}
+
+	public static <T> T readAndWrite(Class<T> klass, File fromFile, File toFile) {
+		T data = read(klass, fromFile);
+		write(data, toFile);
 		return data;
 	}
 
 	public static void main(String[] args) {
-		AllCardsJson cards = read(AllCardsJson.class, allCardsFilePath);
-		AllSetsJson sets = read(AllSetsJson.class, allSetsFilePath);
+		AllCardsJson cards = readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_JSONS);
+		AllSetsJson sets = readExternal(AllSetsJson.class, FileUtil.RESOURCE_SETS_JSONS);
 
 		cards.init(sets);
 
-		write(cards, allCardsLessFilePath);
-		write(sets, allSetsLessFilePath);
+		writeExternal(cards, FileUtil.RESOURCE_CARDS_LESS_JSONS);
+		writeExternal(sets, FileUtil.RESOURCE_SETS_LESS_JSONS);
 	}
 
 }

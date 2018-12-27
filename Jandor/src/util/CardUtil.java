@@ -1,5 +1,6 @@
 package util;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,13 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import json.JSONArray;
-import json.JSONException;
-import json.JSONObject;
-
 import org.apache.commons.lang.StringUtils;
 
 import deck.Card;
+import jackson.AllCardsJson;
+import jackson.AllCardsJson.CardJson;
+import jackson.AllSetsJson;
+import jackson.JacksonUtil;
+import json.JSONArray;
+import json.JSONException;
+import json.JSONObject;
 
 public class CardUtil {
 
@@ -51,8 +55,8 @@ public class CardUtil {
 		keysWithValues.add("subtypes");
 		keysWithValues.add("supertypes");
 		keysWithValues.add("types");
-		keysWithValues.add("rarity");
-		keysWithValues.add("set");
+		keysWithValues.add("rarity"); // XXX ??? Get these from caching set data probably
+		keysWithValues.add("set"); // XXX ??? Get these from caching set data probably
 		keysWithValues.add("manaCost");
 		keysWithValues.add("layout");
 	}
@@ -78,6 +82,8 @@ public class CardUtil {
 
 	private static JSONObject allSets = null;
 	private static JSONObject allCards = null;
+	private static AllSetsJson allSetsJson = null;
+	private static AllCardsJson allCardsJson = null;
 	private static List<String> allCardNames = new ArrayList<String>();
 	private static Map<String, String> cardNamesByLowerCase = new HashMap<String, String>();
 	private static List<String> cardAttributes = null;
@@ -96,10 +102,10 @@ public class CardUtil {
 		fixCards();
 	}*/
 
-	private static void recordValues(JSONObject obj) throws JSONException {
+	/*private static void recordValuesOld(JSONObject obj) throws JSONException {
 		JSONObject setObj = getSetCardInfo(obj.getString("name"));
 		boolean trashy = false;
-		/*if(obj.has("printings")) {
+		/if(obj.has("printings")) {
 			JSONArray sets = obj.getJSONArray("printings");
 			for(int i = 0; i < sets.length(); i++) {
 				String set = sets.getString(i);
@@ -108,7 +114,7 @@ public class CardUtil {
 					break;
 				}
 			}
-		}*/
+		}/
 		for(String key : keysWithValues) {
 			if(trashy && !key.equals("set")) {
 				continue;
@@ -135,6 +141,52 @@ public class CardUtil {
 				}
 			}
 		}
+	}*/
+
+	private static Map<String, Field> fieldsByKey = new HashMap<>();
+
+	private static void recordValues(CardJson card) throws JSONException {
+
+		for(String key : keysWithValues) {
+			if(!fieldsByKey.containsKey(key)) {
+				Field field = null;
+				try {
+					field = CardJson.class.getDeclaredField(key);
+				} catch (NoSuchFieldException | SecurityException e) {
+					e.printStackTrace();
+				}
+				fieldsByKey.put(key, field);
+			}
+
+			Field field = fieldsByKey.get(key);
+			if(field == null) {
+				continue;
+			}
+
+			Object value = null;
+			try {
+				value = field.get(card);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+
+			if(value == null) {
+				continue;
+			}
+
+			if(key.equals("manaCost")) {
+				List<String> mana = ManaUtil.jsonToGatherer((String) value);
+				for(String m : mana) {
+					recordValue(key, m);
+				}
+			} else if(value instanceof String) {
+				recordValue(key, (String) value);
+			} else if(value instanceof List) {
+				for(Object item : (List) value) {
+					recordValue(key, String.valueOf(item));
+				}
+			}
+		}
 	}
 
 	private static void recordValue(String key, String value) {
@@ -158,7 +210,8 @@ public class CardUtil {
 	}
 
 	private static void loadAllCards() {
-		allCards = JSONUtil.toJSON(FileUtil.RESOURCE_CARDS_JSONS);
+		//allCards = JSONUtil.toJSON(FileUtil.RESOURCE_CARDS_JSONS);
+		allCardsJson = JacksonUtil.readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_LESS_JSONS);
 	}
 
 	public static String toCardName(String cardName) {
@@ -206,7 +259,7 @@ public class CardUtil {
 		return false;
 	}
 
-	private static void recordValues() {
+	/*private static void recordValuesOld() {
 		Iterator it = allCards.keys();
 		try {
 			top: while(it.hasNext()) {
@@ -218,7 +271,7 @@ public class CardUtil {
 					JSONArray types = info.getJSONArray("types");
 					for(int i = 0; i < types.length(); i++) {
 						String type = types.getString(i);
-						if(type.equals("Vanguard") || type.equals("Scheme") || /*type.equals("Conspiracy") ||*/ type.equals("Plane")) {
+						if(type.equals("Vanguard") || type.equals("Scheme") || /type.equals("Conspiracy") ||/ type.equals("Plane")) {
 							//it.remove();
 							continue top;
 						}
@@ -230,6 +283,42 @@ public class CardUtil {
 					if(sets.length() == 1) {
 						for(int i = 0; i < sets.length(); i++) {
 							String set = sets.getString(i);
+							if(set.equals("UNH") || set.equals("UGL") || set.equals("UST")/ || set.equals("pCEL")/) {
+								//it.remove();
+								continue top;
+							}
+						}
+					}
+				}
+
+				allCardNames.add(name);
+				recordValues(info);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}*/
+
+	private static void recordValues() {
+		Iterator it = allCardsJson.keySet().iterator();
+		try {
+			top: while(it.hasNext()) {
+				String name = it.next().toString();
+				CardJson info = allCardsJson.get(name);
+				cardNamesByLowerCase.put(name.toLowerCase(), name);
+
+				if(info.types != null) {
+					for(String type : info.types) {
+						if(type.equals("Vanguard") || type.equals("Scheme") || /*type.equals("Conspiracy") ||*/ type.equals("Plane")) {
+							//it.remove();
+							continue top;
+						}
+					}
+				}
+
+				if(info.printings != null) {
+					if(info.printings.size() == 1) {
+						for(String set : info.printings) {
 							if(set.equals("UNH") || set.equals("UGL") || set.equals("UST")/* || set.equals("pCEL")*/) {
 								//it.remove();
 								continue top;

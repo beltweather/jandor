@@ -23,6 +23,7 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 		public String name;
 		public String power;
 		public List<String> printings;
+		public String rarity;
 		public List<String> subtypes;
 		public List<String> supertypes;
 		public String text;
@@ -52,7 +53,7 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 		for(CardJson card : values()) {
 			card.multiverseIdsBySetCode = new HashMap<>();
 			for(String code : card.printings) {
-				SetJson set = sets.get(code.toLowerCase());
+				SetJson set = sets.get(code.toUpperCase());
 				if(set == null || set.multiverseIdsByName.get(card.name) == null) {
 					continue;
 				}
