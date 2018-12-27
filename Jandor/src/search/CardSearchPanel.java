@@ -22,9 +22,8 @@ import org.apache.commons.lang.StringUtils;
 
 import deck.Card;
 import deck.Deck;
-import json.JSONArray;
+import jackson.AllCardsJson.CardJson;
 import json.JSONException;
-import json.JSONObject;
 import ui.AutoComboBox;
 import ui.JandorCombo;
 import ui.ProgressBar.ProgressTask;
@@ -33,7 +32,7 @@ import ui.pwidget.PTextField;
 import util.CardUtil;
 import util.MtgJsonUtil;
 
-public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
+public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -112,7 +111,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	}
 
 	@Override
-	protected boolean match(JSONObject info, String att, JComponent editor) throws Exception {
+	protected boolean match(CardJson info, String att, JComponent editor) throws Exception {
 		att = DEFAULT_FIELDS.get(DEFAULT_FIELD_NAMES.indexOf(att));
 
 		if(att.equals("")) {
@@ -123,14 +122,14 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			att = "printings";
 		}
 
-		if(info.has("types")) {
-			JSONArray types = info.getJSONArray("types");
-			if(types.length() == 0) {
+		if(info.types != null) {
+			List<String> types = info.types;
+			if(types.size() == 0) {
 				return false;
 			}
 			Set<String> allTypes = CardUtil.getValues("types");
-			for(int i = 0; i < types.length(); i++) {
-				if(!allTypes.contains(types.getString(i))) {
+			for(String type : types) {
+				if(!allTypes.contains(type)) {
 					return false;
 				}
 			}
@@ -139,11 +138,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		}
 
 		if(!att.equals("printings")) {
-			JSONArray sets = info.getJSONArray("printings");
+			List<String> sets = info.printings;
 			boolean isSilly = false;
 			boolean isAlsoNotSilly = false;
-			for(int i = 0; i < sets.length(); i++) {
-				String set = sets.getString(i);
+			for(String set : sets) {
 				if(set.equals("UNG") || set.equals("UNH") || set.equals("UGL") || set.equals("UST")) {
 					isSilly = true;
 				} else {
@@ -173,10 +171,10 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		return true;
 	}
 
-	private boolean matchStringGeneral(JSONObject info, String att, JComponent editor) throws JSONException {
+	private boolean matchStringGeneral(CardJson info, String att, JComponent editor) throws JSONException {
 		//String jsonValue = info.toString().toLowerCase();
 		//String formattedValue = new Card(info.getString("name")).getToolTipText(0, false).toLowerCase();
-		String formattedValue = new Card(info.getString("name")).getSearchableString();
+		String formattedValue = new Card(info.name).getSearchableString();
 		List<String> editorText = getMatchableTokens((PTextField) editor);
 		for(String s : editorText) {
 			if(!matchToken(s, formattedValue)) {
@@ -253,34 +251,35 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		return list;
 	}
 
-	private boolean matchXOrStar(JSONObject info, String att, JComponent editor) throws JSONException {
-		if(!info.has(att)) {
+	private boolean matchXOrStar(CardJson info, String att, JComponent editor) throws JSONException {
+		String value = info.getString(att);
+		if(value == null) {
 			return ((XOrStarPanel) editor).match("");
 		}
-		return ((XOrStarPanel) editor).match(info.getJSONArray("manaCost").toString());
+		return ((XOrStarPanel) editor).match(value); // XXX This method was really weird before.
 	}
 
-	private boolean matchColor(JSONObject info, String att, JComponent editor) throws JSONException {
-		String colors = info.has(att) ? info.getJSONArray(att).toString() : "";
-		String manaCost = info.has("manaCost") ? info.getString("manaCost") : "";
+	private boolean matchColor(CardJson info, String att, JComponent editor) throws JSONException {
+		String colors = info.colors == null ? "" : StringUtils.join(info.colors, ",");
+		String manaCost = info.manaCost == null ? "" : info.manaCost;
 		return ((ManaPanel) editor).match(colors, manaCost);
 	}
 
-	private boolean matchSet(JSONObject info, String att, JComponent editor) throws JSONException {
+	private boolean matchSet(CardJson info, String att, JComponent editor) throws JSONException {
 		Object selectedItem = ((JComboBox) editor).getSelectedItem();
 		if(selectedItem == null || selectedItem.equals("")) {
 			return true;
 		}
 
 		Object obj = info.get(att);
-		JSONArray set;
+		List set = null;
 		if(obj == null) {
-			set = new JSONArray();
+			set = new ArrayList<>();
 		} else if(obj instanceof String) {
-			set = new JSONArray();
-			set.put(obj);
-		} else if(obj instanceof JSONArray) {
-			set = (JSONArray) obj;
+			set = new ArrayList<>();
+			set.add(obj);
+		} else if(obj instanceof List) {
+			set = (List) obj;
 		} else {
 			return false;
 		}
@@ -290,16 +289,21 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			return true;
 		}
 
-		for(int i = 0; i < set.length(); i++) {
-			if(set.getString(i).toLowerCase().equals(value)) {
+		for(Object o : set) {
+			if(String.valueOf(o).toLowerCase().equals(value)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean matchString(JSONObject info, String att, JComponent editor) throws JSONException {
-		String value = info.has(att) ? info.getString(att).toLowerCase() : "";
+	private boolean matchString(CardJson info, String att, JComponent editor) throws JSONException {
+		String value = info.getString(att);
+		if(value == null) {
+			value = "";
+		} else {
+			value = value.toLowerCase();
+		}
 		List<String> editorText = getMatchableTokens((PTextField) editor);
 		for(String s : editorText) {
 			if(!matchToken(s, value)) {
@@ -309,8 +313,9 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 		return true;
 	}
 
-	private boolean matchInt(JSONObject info, String att, JComponent editor) throws JSONException {
-		if(!info.has(att)) {
+	private boolean matchInt(CardJson info, String att, JComponent editor) throws JSONException {
+		String value = info.getString(att);
+		if(value == null) {
 			return ((NumberPanel) editor).match(0);
 		}
 
@@ -319,16 +324,15 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			return matchSplitCmc(info, editor);
 		}
 
-		return ((NumberPanel) editor).match(toInt(info.get(att)));
+		return ((NumberPanel) editor).match(toInt(value));
 	}
 
-	private boolean matchSplitCmc(JSONObject info, JComponent editor) throws JSONException {
-		JSONArray names = info.getJSONArray("names");
+	private boolean matchSplitCmc(CardJson info, JComponent editor) throws JSONException {
+		List<String> names = info.names;
 		int allCmc = 0;
-		for(int i = 0; i < names.length(); i++) {
-			String name = names.getString(i);
-			JSONObject cardInfo = CardUtil.getCardInfo(name);
-			int cmc = toInt(cardInfo.get(MtgJsonUtil.cmc));
+		for(String name : names) {
+			CardJson cardInfo = CardUtil.getCardInfo(name);
+			int cmc = (int) cardInfo.convertedManaCost;
 
 			// Allow ourselves to match on either individual cards in
 			// the split card, in addition to the some of the two cards
@@ -342,6 +346,9 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	}
 
 	private int toInt(Object val) {
+		if(val == null) {
+			return 0;
+		}
 		if(val instanceof String) {
 			if(val.equals("*")) {
 				val = 0;
@@ -366,7 +373,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 	}
 
 	@Override
-	protected Deck search(SearchNode<JSONObject> rootNode, ProgressTask task) {
+	protected Deck search(SearchNode<CardJson> rootNode, ProgressTask task) {
 		Deck deck = new Deck();
 		try {
 			List<String> cardNames;
@@ -381,7 +388,7 @@ public abstract class CardSearchPanel extends SearchPanel<JSONObject, Deck> {
 			int total = cardNames.size();
 			int i = 0;
 			for(String cardName : cardNames) {
-				JSONObject info = CardUtil.getCardInfo(cardName);
+				CardJson info = CardUtil.getCardInfo(cardName);
 				if(rootNode.evaluate(info)) {
 					deck.add(new Card(cardName));
 				}

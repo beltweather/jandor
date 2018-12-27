@@ -1,6 +1,5 @@
 package deck;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,13 +9,12 @@ import javax.swing.JLabel;
 import canvas.CardRenderer;
 import canvas.IRenderable;
 import canvas.IRenderer;
-import json.JSONArray;
-import json.JSONException;
-import json.JSONObject;
+import jackson.AllCardsJson.CardJson;
+import jackson.AllSetsJson.SetCardJson;
+import jackson.AllSetsJson.SetJson;
 import util.CardUtil;
 import util.ImageUtil;
 import util.ManaUtil;
-import util.MtgJsonUtil;
 
 public class Card extends CardRenderer implements IRenderable<Card> {
 
@@ -73,7 +71,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return c;
 	}
 
-	public JSONObject getCardInfo() {
+	public CardJson getCardInfo() {
 		return CardUtil.getCardInfo(this);
 	}
 
@@ -81,79 +79,16 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return CardUtil.exists(this);
 	}
 
-	public String getCardString(String field) {
-		try {
-			if(!getCardInfo().has(field)) {
-				return null;
-			}
-			return String.valueOf(getCardInfo().get(field));
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
+	public List<String> getSets() {
+		return getCardInfo().printings;
 	}
 
-	public int getCardInt(String field) {
-		try {
-			if(!getCardInfo().has(field)) {
-				return -1;
-			}
-			return getCardInfo().getInt(field);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return -1;
-	}
-
-	public double getCardDouble(String field) {
-		try {
-			if(!getCardInfo().has(field)) {
-				return -1;
-			}
-			return getCardInfo().getDouble(field);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return -1;
-	}
-
-	public JSONArray getCardArray(String field) {
-		try {
-			if(!getCardInfo().has(field)) {
-				return null;
-			}
-			return getCardInfo().getJSONArray(field);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-
-	public JSONArray getSets() {
-		return CardUtil.getCardSets(this);
-	}
-
-	public List<String> getSetsAsList() {
-		JSONArray jsonArray = getSets();
-		List<String> list = new ArrayList<String>();
-		try {
-			for(int i = 0; i < jsonArray.length(); i++) {
-				list.add(jsonArray.getString(i));
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return list;
-	}
-
-
-	public JSONObject getSetCardInfo() {
+	public SetCardJson getSetCardInfo() {
 		return getSetCardInfo(null);
 	}
 
-	public JSONObject getSetCardInfo(String cardSet) {
-		JSONObject setInfo = null;
+	public SetCardJson getSetCardInfo(String cardSet) {
+		SetCardJson setInfo = null;
 		if(cardSet != null) {
 			set = cardSet;
 		}
@@ -164,11 +99,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		if(set == null) {
 			setInfo = CardUtil.getSetCardInfo(this, isLand());
 			if(setInfo != null) {
-				try {
-					set = setInfo.getString("set");
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+				set = setInfo.set;
 			}
 			if(!isLand()) {
 				setsByCardName.put(getName(), set);
@@ -179,71 +110,19 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return setInfo;
 	}
 
-	public String getSetString(String field) {
-		return getSetString(null, field);
-	}
-
-	public String getSetString(String cardSet, String field) {
-		try {
-			if(getSetCardInfo(cardSet) == null || !getSetCardInfo(cardSet).has(field)) {
-				return null;
-			}
-			return getSetCardInfo(cardSet).getString(field);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public int getSetInt(String field) {
-		return getSetInt(null, field);
-	}
-
-	public int getSetInt(String cardSet, String field) {
-		try {
-			if(getSetCardInfo(cardSet) == null || !getSetCardInfo(cardSet).has(field)) {
-				return -1;
-			}
-			return getSetCardInfo(cardSet).getInt(field);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return -1;
-	}
-
-	public JSONArray getSetArray(String field) {
-		return getSetArray(null, field);
-	}
-
-	public JSONArray getSetArray(String cardSet, String field) {
-		try {
-			if(!getSetCardInfo(cardSet).has(field)) {
-				return null;
-			}
-			return getSetCardInfo(cardSet).getJSONArray(field);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 	public int getMultiverseId() {
-		return getSetInt(MtgJsonUtil.multiverseId);
+		return getSetCardInfo().multiverseId;
 	}
 
 	public boolean isLand() {
-		JSONArray types = getTypes();
+		List<String> types = getTypes();
 		if(types == null) {
 			return false;
 		}
-		try {
-			for(int i = 0; i < types.length(); i++) {
-				if(types.getString(i).equals("Land")) {
-					return true;
-				}
+		for(String type : types) {
+			if(type.equals("Land")) {
+				return true;
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
 		}
 		return false;
 	}
@@ -252,28 +131,28 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return isLand() && CardUtil.isBasicLandName(getName());
 	}
 
-	public JSONArray getTypes() {
-		return getCardArray("types");
+	public List<String> getTypes() {
+		return getCardInfo().types;
 	}
 
 	public String getType() {
-		return getCardString("type");
+		return getCardInfo().type;
 	}
 
 	public String getPower() {
-		return getCardString("power");
+		return getCardInfo().power;
 	}
 
 	public String getToughness() {
-		return getCardString("toughness");
+		return getCardInfo().toughness;
 	}
 
 	public String getLoyalty() {
-		return getCardString("loyalty");
+		return getCardInfo().loyalty;
 	}
 
 	public String getText() {
-		return getCardString("text");
+		return getCardInfo().text;
 	}
 
 	public String getToolTipText() {
@@ -416,16 +295,16 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public List<String> getManaCost() {
-		String manaCost = getCardString("manaCost");
+		String manaCost = getCardInfo().manaCost;
 		return manaCost == null ? null : ManaUtil.jsonToGatherer(manaCost);
 	}
 
-	public JSONArray getColorIdentity() {
-		return getCardArray("colorIdentity");
+	public List<String> getColorIdentity() {
+		return getCardInfo().colorIdentity;
 	}
 
 	public int getConvertedManaCost() {
-		return (int) Math.floor(getCardDouble(MtgJsonUtil.cmc));
+		return (int) getCardInfo().convertedManaCost;
 	}
 
 	public String getSetName() {
@@ -491,8 +370,12 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public String getRarity(String set) {
-		String rarity = getSetString("rarity");
-		return rarity == null ? "" : rarity;
+		SetCardJson setCard = getSetCardInfo(set);
+		if(setCard == null) {
+			System.out.println("No set info for " + name);
+		}
+		setCard = getSetCardInfo(set);
+		return setCard.rarity;
 	}
 
 	public void setCommander(boolean commander) {
@@ -512,38 +395,29 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public boolean canTransform() {
-		String layout = getCardString("layout");
+		String layout = getCardInfo().layout;
 		return layout != null && layout.equals("double-faced");
 	}
 
 	public String getTransformName() {
-		JSONArray names = getCardArray("names");
+		List<String> names = getCardInfo().names;
 		if(names == null) {
 			return name;
 		}
-		try {
-			for(int i = 0; i < names.length(); i++) {
-					if(!names.getString(i).equals(name)) {
-						return names.getString(i);
-					}
+		for(String n : names) {
+			if(!n.equals(name)) {
+				return n;
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
 		}
 		return name;
 	}
 
 	public boolean isFirstTransform() {
-		JSONArray names = getCardArray("names");
-		if(names == null || names.length() <= 1) {
+		List<String> names = getCardInfo().names;
+		if(names == null || names.size() <= 1) {
 			return true;
 		}
-		try {
-			return name.equalsIgnoreCase(names.getString(0));
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return true;
+		return name.equalsIgnoreCase(names.get(0));
 	}
 
 	public Card getTransformCard() {
@@ -575,12 +449,9 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public String getTransformImageUrl() {
-		JSONObject info = CardUtil.getSetCardInfo(getTransformName());
-		try {
-			int id = info.getInt(MtgJsonUtil.multiverseId);
-			return ImageUtil.getUrl(id);
-		} catch (JSONException e) {
-			e.printStackTrace();
+		SetCardJson info = CardUtil.getSetCardInfo(getTransformName());
+		if(info != null) {
+			return ImageUtil.getUrl(info.multiverseId);
 		}
 		return ImageUtil.getUrl(getCard().getMultiverseId());
 	}
@@ -592,13 +463,8 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	@Override
 	public String getImageUrl() {
 		if(isTransformed()) {
-			JSONObject info = CardUtil.getSetCardInfo(getTransformName());
-			try {
-				int id = info.getInt(MtgJsonUtil.multiverseId);
-				return ImageUtil.getUrl(id);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+			SetCardJson info = CardUtil.getSetCardInfo(getTransformName());
+			return ImageUtil.getUrl(info.multiverseId);
 		}
 		return ImageUtil.getUrl(getCard().getMultiverseId());
 	}

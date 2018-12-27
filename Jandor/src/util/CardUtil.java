@@ -17,6 +17,8 @@ import deck.Card;
 import jackson.AllCardsJson;
 import jackson.AllCardsJson.CardJson;
 import jackson.AllSetsJson;
+import jackson.AllSetsJson.SetCardJson;
+import jackson.AllSetsJson.SetJson;
 import jackson.JacksonUtil;
 import json.JSONArray;
 import json.JSONException;
@@ -48,17 +50,27 @@ public class CardUtil {
 		bannedSets.add("PC2");
 		bannedSets.add("CNS");
 		bannedSets.add("UST");
+		bannedSets.add("PZ2");
+		bannedSets.add("PAL04");
 	}
 
-	private static Set<String> keysWithValues = new LinkedHashSet<String>();
+	private static Set<String> cardKeysWithValues = new LinkedHashSet<String>();
 	static {
-		keysWithValues.add("subtypes");
-		keysWithValues.add("supertypes");
-		keysWithValues.add("types");
-		keysWithValues.add("rarity"); // XXX ??? Get these from caching set data probably
-		keysWithValues.add("set"); // XXX ??? Get these from caching set data probably
-		keysWithValues.add("manaCost");
-		keysWithValues.add("layout");
+		cardKeysWithValues.add("subtypes");
+		cardKeysWithValues.add("supertypes");
+		cardKeysWithValues.add("types");
+		cardKeysWithValues.add("manaCost");
+		cardKeysWithValues.add("layout");
+	}
+
+	private static Set<String> setKeysWithValues = new LinkedHashSet<String>();
+	static {
+		setKeysWithValues.add(MtgJsonUtil.setCode);
+	}
+
+	private static Set<String> setCardKeysWithValues = new LinkedHashSet<String>();
+	static {
+		setCardKeysWithValues.add("rarity");
 	}
 
 	private static List<String> basicLandNames = new ArrayList<String>();
@@ -80,8 +92,8 @@ public class CardUtil {
 	}
 
 
-	private static JSONObject allSets = null;
-	private static JSONObject allCards = null;
+	//private static JSONObject allSets = null;
+	//private static JSONObject allCards = null;
 	private static AllSetsJson allSetsJson = null;
 	private static AllCardsJson allCardsJson = null;
 	private static List<String> allCardNames = new ArrayList<String>();
@@ -92,7 +104,7 @@ public class CardUtil {
 	public static void init() {
 		loadAllSets();
 		loadAllCards();
-		fixCards();
+		recordValues();
 		loadImages();
 	}
 
@@ -116,7 +128,7 @@ public class CardUtil {
 			}
 		}/
 		for(String key : keysWithValues) {
-			if(trashy && !key.equals("set")) {
+			if(trashy && !key.equals(s)) {
 				continue;
 			}
 			Object value = null;
@@ -143,33 +155,40 @@ public class CardUtil {
 		}
 	}*/
 
-	private static Map<String, Field> fieldsByKey = new HashMap<>();
-
-	private static void recordValues(CardJson card) throws JSONException {
-
-		for(String key : keysWithValues) {
-			if(!fieldsByKey.containsKey(key)) {
-				Field field = null;
-				try {
-					field = CardJson.class.getDeclaredField(key);
-				} catch (NoSuchFieldException | SecurityException e) {
-					e.printStackTrace();
-				}
-				fieldsByKey.put(key, field);
-			}
-
-			Field field = fieldsByKey.get(key);
-			if(field == null) {
-				continue;
-			}
-
-			Object value = null;
+	private static Map<Class, Map<String, Field>> fieldsByKey = new HashMap<>();
+	private static Field getField(Object obj, String fieldName) {
+		Class klass = obj.getClass();
+		if(!fieldsByKey.containsKey(klass)) {
+			fieldsByKey.put(klass, new HashMap<String, Field>());
+		}
+		if(!fieldsByKey.get(klass).containsKey(fieldName)) {
+			Field field = null;
 			try {
-				value = field.get(card);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+				field = klass.getDeclaredField(fieldName);
+			} catch (NoSuchFieldException | SecurityException e) {
 				e.printStackTrace();
 			}
+			fieldsByKey.get(klass).put(fieldName, field);
+		}
+		return fieldsByKey.get(klass).get(fieldName);
+	}
 
+	private static Object getValue(Object obj, String fieldName) {
+		Field field = getField(obj, fieldName);
+		if(field == null) {
+			return null;
+		}
+		try {
+			return field.get(obj);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private static void recordValues(CardJson card) {
+		for(String key : cardKeysWithValues) {
+			Object value = getValue(card, key);
 			if(value == null) {
 				continue;
 			}
@@ -179,12 +198,54 @@ public class CardUtil {
 				for(String m : mana) {
 					recordValue(key, m);
 				}
-			} else if(value instanceof String) {
-				recordValue(key, (String) value);
-			} else if(value instanceof List) {
-				for(Object item : (List) value) {
-					recordValue(key, String.valueOf(item));
-				}
+			} else {
+				recordValue(key, value);
+			}
+		}
+	}
+
+	private static void recordValues(SetJson set) {
+		for(SetCardJson card : set.cards) {
+			recordValues(card);
+		}
+		for(String key : setKeysWithValues) {
+			Object value = null;
+			if(key.equals(MtgJsonUtil.setCode)) {
+				value = getValue(set, "code");
+			} else {
+				value = getValue(set, key);
+			}
+			if(value == null) {
+				continue;
+			}
+			recordValue(key, value);
+		}
+	}
+
+	private static void recordValues(SetCardJson card) {
+		for(String key : setCardKeysWithValues) {
+			Object value = getValue(card, key);
+			if(value == null) {
+				continue;
+			}
+			recordValue(key, value);
+		}
+	}
+
+	private static void recordValue(String key, Object value) {
+		if(value instanceof List) {
+			recordValue(key, (List) value);
+		} else {
+			recordValue(key, String.valueOf(value));
+		}
+	}
+
+	private static void recordValue(String key, List value) {
+		for(Object item : value) {
+			if(item instanceof List) {
+				recordValue(key, (List) item);
+			} else {
+				recordValue(key, String.valueOf(item));
 			}
 		}
 	}
@@ -212,6 +273,7 @@ public class CardUtil {
 	private static void loadAllCards() {
 		//allCards = JSONUtil.toJSON(FileUtil.RESOURCE_CARDS_JSONS);
 		allCardsJson = JacksonUtil.readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_LESS_JSONS);
+		allCardsJson.init(allSetsJson);
 	}
 
 	public static String toCardName(String cardName) {
@@ -250,9 +312,9 @@ public class CardUtil {
 	}
 
 	public static boolean hasType(Card card, String type) throws JSONException {
-		JSONArray types = card.getTypes();
-		for(int i = 0; i < types.length(); i++) {
-			if(types.getString(i).equals(type)) {
+		List<String> types = card.getTypes();
+		for(String t : types) {
+			if(t.equals(type)) {
 				return true;
 			}
 		}
@@ -300,43 +362,41 @@ public class CardUtil {
 	}*/
 
 	private static void recordValues() {
-		Iterator it = allCardsJson.keySet().iterator();
-		try {
-			top: while(it.hasNext()) {
-				String name = it.next().toString();
-				CardJson info = allCardsJson.get(name);
-				cardNamesByLowerCase.put(name.toLowerCase(), name);
+		top: for(String name : allCardsJson.keySet()) {
+			CardJson info = allCardsJson.get(name);
+			cardNamesByLowerCase.put(name.toLowerCase(), name);
 
-				if(info.types != null) {
-					for(String type : info.types) {
-						if(type.equals("Vanguard") || type.equals("Scheme") || /*type.equals("Conspiracy") ||*/ type.equals("Plane")) {
-							//it.remove();
+			if(info.types != null) {
+				for(String type : info.types) {
+					if(type.equals("Vanguard") || type.equals("Scheme") || type.equals("Plane")) {
+						continue top;
+					}
+				}
+			}
+
+			if(info.printings != null) {
+				if(info.printings.size() == 1) {
+					for(String set : info.printings) {
+						if(set.equals("UNH") || set.equals("UGL") || set.equals("UST")) {
 							continue top;
 						}
 					}
 				}
-
-				if(info.printings != null) {
-					if(info.printings.size() == 1) {
-						for(String set : info.printings) {
-							if(set.equals("UNH") || set.equals("UGL") || set.equals("UST")/* || set.equals("pCEL")*/) {
-								//it.remove();
-								continue top;
-							}
-						}
-					}
-				}
-
-				allCardNames.add(name);
-				recordValues(info);
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
+
+			allCardNames.add(name);
+			recordValues(info);
 		}
+
+		for(SetJson set : allSetsJson.values()) {
+			recordValues(set);
+		}
+
 	}
 
 	private static void loadAllSets() {
-		allSets = JSONUtil.toJSON(FileUtil.RESOURCE_SETS_JSONS);
+		//allSets = JSONUtil.toJSON(FileUtil.RESOURCE_SETS_JSONS);
+		allSetsJson = JacksonUtil.readExternal(AllSetsJson.class, FileUtil.RESOURCE_SETS_LESS_JSONS);
 	}
 
 	private static void loadImages() {
@@ -362,197 +422,140 @@ public class CardUtil {
 		return false;
 	}
 
-	private static void fixCards() {
-		Iterator setIds = allSets.keys();
-		try {
-			while(setIds.hasNext()) {
-				String setId = setIds.next().toString();
-				JSONObject set = allSets.getJSONObject(setId);
-				JSONArray cards = set.getJSONArray("cards");
-				JSONObject cardsByName = new JSONObject();
-				for(int i = 0; i < cards.length(); i++) {
-					JSONObject card = cards.getJSONObject(i);
-					String name = CardUtil.clean(card.getString("name"));
-
-					if(isWeirdName(name)) {
-						System.err.println("Found Weird Card Name: " + name);
-					}
-
-					card.put("name", name);
-					cardsByName.put(name, card);
-				}
-				set.put("cards", cardsByName);
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		recordValues();
-	}
-
-	public static JSONObject getSetCardInfo(Card card) {
+	public static SetCardJson getSetCardInfo(Card card) {
 		return getSetCardInfo(card, false);
 	}
 
-	public static JSONObject getSetCardInfo(Card card, String set) {
+	public static SetCardJson getSetCardInfo(Card card, String set) {
 		return getSetCardInfo(card, false, set);
 	}
 
-	public static JSONObject getSetCardInfo(Card card, boolean random) {
+	public static SetCardJson getSetCardInfo(Card card, boolean random) {
 		return getSetCardInfo(card, random, null);
 	}
 
-	public static JSONObject getSetCardInfo(Card card, boolean random, String set) {
-		if(card == null || allSets == null) {
+	public static SetCardJson getSetCardInfo(Card card, boolean random, String set) {
+		if(card == null || allSetsJson == null) {
 			return null;
 		}
 		return getSetCardInfo(card.getName(), random, set);
 	}
 
-	public static JSONObject getSetCardInfo(String cardName) {
+	public static SetCardJson getSetCardInfo(String cardName) {
 		return getSetCardInfo(cardName, false);
 	}
 
-	public static JSONObject getSetCardInfo(String cardName, String set) {
+	public static SetCardJson getSetCardInfo(String cardName, String set) {
 		return getSetCardInfo(cardName, false, set);
 	}
 
-	public static JSONObject getSetCardInfo(String cardName, boolean random) {
+	public static SetCardJson getSetCardInfo(String cardName, boolean random) {
 		return getSetCardInfo(cardName, random, null);
 	}
 
-	public static JSONObject getSetCardInfo(String origCardName, boolean random, String set) {
+	public static SetCardJson getSetCardInfo(String origCardName, boolean random, String set) {
 		String cardName = toCardName(origCardName);
-		if(cardName == null || allSets == null) {
+		if(cardName == null || allSetsJson == null) {
 			return null;
 		}
-		try {
-			if(set != null) {
-				if(allSets.has(set)) {
-					if(allSets.getJSONObject(set).getJSONObject("cards").has(cardName)) {
-						return allSets.getJSONObject(set).getJSONObject("cards").getJSONObject(cardName);
-					}
-				}
-				return null;
-			}
 
-			JSONArray sets = getCardSets(cardName);
-			List<Integer> indices = new ArrayList<Integer>();
-			for(int i = 0; i < sets.length(); i++) {
-				indices.add(i);
-			}
-			if(random) {
-				Collections.shuffle(indices);
-			} else {
-				Collections.reverse(indices);
-			}
-
-			for(int i = 0; i < sets.length(); i++) {
-				String s = sets.getString(indices.get(i));
-				if(allSets.has(s) && (sets.length() == 1 || !bannedSets.contains(s))) {
-					JSONObject card;
-					if(allSets.getJSONObject(s).getJSONObject("cards").has(cardName)) {
-						card = allSets.getJSONObject(s).getJSONObject("cards").getJSONObject(cardName);
-					} else {
-						continue;
-					}
-					if(card.has(MtgJsonUtil.multiverseId) || i == sets.length() - 1) {
-						card.put("set", s);
-						return card;
-					}
+		if(set != null) {
+			if(allSetsJson.containsKey(set)) {
+				if(allSetsJson.get(set).cardsByName.containsKey(cardName)) {
+					return allSetsJson.get(set).cardsByName.get(cardName);
 				}
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
+			return null;
+		}
+
+		List<String> sets = getCardSets(cardName);
+		List<Integer> indices = new ArrayList<Integer>();
+		for(int i = 0; i < sets.size(); i++) {
+			indices.add(i);
+		}
+		if(random) {
+			Collections.shuffle(indices);
+		} else {
+			Collections.reverse(indices);
+		}
+
+		boolean onlyBanned = true;
+		for(String s : sets) {
+			if(!bannedSets.contains(s)) {
+				onlyBanned = false;
+				break;
+			}
+		}
+
+		for(int i = 0; i < sets.size(); i++) {
+			String s = sets.get(indices.get(i));
+			if(allSetsJson.containsKey(s) && (onlyBanned || sets.size() == 1 || !bannedSets.contains(s))) {
+				SetCardJson card;
+				if(allSetsJson.get(s).cardsByName.containsKey(cardName)) {
+					card = allSetsJson.get(s).cardsByName.get(cardName);
+				} else {
+					continue;
+				}
+				if(card.multiverseId != 0 || i == sets.size() - 1 || onlyBanned) {
+					card.set = s;
+					return card;
+				}
+			}
 		}
 		return null;
 	}
 
-	public static JSONObject getCards(String setId) {
-		try {
-			return allSets.getJSONObject(setId).getJSONObject("cards");
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
+	public static List<SetCardJson> getCards(String setId) {
+		return allSetsJson.get(setId).cards;
 	}
 
-	public static JSONArray getBooster(String setId) {
-		try {
-			return allSets.getJSONObject(setId).getJSONArray(MtgJsonUtil.booster);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
+	public static List<Object> getBooster(String setId) {
+		return allSetsJson.get(setId).boosterV3;
 	}
 
 	public static String getSetName(String set) {
-		if(allSets.has(set)) {
-			try {
-				JSONObject setJson = allSets.getJSONObject(set);
-				if(setJson.has("name")) {
-					return setJson.getString("name");
-				}
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+		if(allSetsJson.containsKey(set)) {
+			return allSetsJson.get(set).name;
 		}
 		return set;
 	}
 
 	public static String getSetId(String setName) {
-		Iterator keys = allSets.keys();
-		try {
-			while(keys.hasNext()) {
-				String key = keys.next().toString();
-				JSONObject setJson = allSets.getJSONObject(key);
-				if(setJson.has("name") && setJson.getString("name").equals(setName)) {
-					return key;
-				}
+		for(SetJson set : allSetsJson.values()) {
+			if(set.name != null && set.name.equals(setName)) {
+				return set.code;
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
 		}
 		return null;
 	}
 
 	public static boolean isLand(String cardName) {
-		try {
-		JSONArray types = getCardInfo(cardName).getJSONArray("types");
-			for(int i = 0; i < types.length(); i++) {
-				if(types.getString(i).equals("Land")) {
-					return true;
-				}
+		List<String> types = getCardInfo(cardName).types;
+		for(String type : types) {
+			if(type.equals("Land")) {
+				return true;
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
 		}
 		return false;
 	}
 
-	public static JSONObject getCardInfo(Card card) {
-		if(card == null || allCards == null) {
+	public static CardJson getCardInfo(Card card) {
+		if(card == null || allCardsJson == null) {
 			return null;
 		}
 		return getCardInfo(card.getName());
 	}
 
-	public static JSONObject getCardInfo(String origCardName) {
+	public static CardJson getCardInfo(String origCardName) {
 		String cardName = toCardName(origCardName);
-		if(cardName == null || allCards == null) {
+		if(cardName == null || allCardsJson == null || !allCardsJson.containsKey(cardName)) {
 			return null;
 		}
-		try {
-			if(allCards.has(cardName)) {
-				return allCards.getJSONObject(cardName);
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return allCardsJson.get(cardName);
 	}
 
 	public static boolean exists(Card card) {
-		if(card == null || allCards == null) {
+		if(card == null || allCardsJson == null) {
 			return false;
 		}
 		return exists(card.getName());
@@ -560,29 +563,15 @@ public class CardUtil {
 
 	public static boolean exists(String origCardName) {
 		String cardName = toCardName(origCardName);
-		if(cardName == null || allCards == null) {
-			return false;
-		}
-		return allCards.has(cardName);
+		return cardName != null && allCardsJson != null && allCardsJson.containsKey(cardName);
 	}
 
-	public static JSONArray getCardSets(Card card) {
-		if(card == null || allCards == null) {
+	public static List<String> getCardSets(String cardName) {
+		CardJson card = getCardInfo(cardName);
+		if(card == null) {
 			return null;
 		}
-		return getCardSets(card.getName());
-	}
-
-	public static JSONArray getCardSets(String cardName) {
-		if(cardName == null || allCards == null) {
-			return null;
-		}
-		try {
-			return getCardInfo(cardName).getJSONArray("printings");
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return card.printings;
 	}
 
 	public static String clean(String name) {
@@ -608,10 +597,8 @@ public class CardUtil {
 		if(cardAttributes == null) {
 			CardUtil.loadAllCards();
 			List<String> att = new ArrayList<String>();
-			JSONObject info = getCardInfo("Ornithopter");
-			Iterator it = info.keys();
-			while(it.hasNext()) {
-				att.add(it.next().toString());
+			for(Field field : CardJson.class.getDeclaredFields()) {
+				att.add(field.getName());
 			}
 			cardAttributes = att;
 		}
@@ -637,12 +624,12 @@ public class CardUtil {
 		return "<a href=\"" + GATHERER_URL + multiverseId + "\">" + linkText + "</a>";
 	}
 
-	public static boolean isDoubleFaced(JSONObject info) throws JSONException {
-		return info.has("layout") && info.get("layout").equals("double-faced");
+	public static boolean isDoubleFaced(CardJson info) throws JSONException {
+		return info.layout != null && info.layout.equals("double-faced");
 	}
 
-	public static boolean isSplit(JSONObject info) throws JSONException {
-		return info.has("layout") && (info.get("layout").equals("split") || info.get("layout").equals("aftermath"));
+	public static boolean isSplit(CardJson info) throws JSONException {
+		return info.layout != null && (info.layout.equals("split") || info.layout.equals("aftermath"));
 	}
 
 }

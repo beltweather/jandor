@@ -9,5 +9,7 @@ public class MtgJsonUtil {
 	public static final String flavorText = "flavorText";
 	@Deprecated
 	public static final String booster = "boosterV3";
+	public static final String printings = "printings";
+	public static final String setCode = "set";
 
 }
