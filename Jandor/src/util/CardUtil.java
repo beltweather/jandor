@@ -217,7 +217,6 @@ public class CardUtil {
 	}
 
 	private static void loadAllCards() {
-		//allCards = JSONUtil.toJSON(FileUtil.RESOURCE_CARDS_JSONS);
 		allCardsJson = JacksonUtil.readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_LESS_JSONS);
 		allCardsJson.init(allSetsJson);
 	}
@@ -301,7 +300,6 @@ public class CardUtil {
 	}
 
 	private static void loadAllSets() {
-		//allSets = JSONUtil.toJSON(FileUtil.RESOURCE_SETS_JSONS);
 		allSetsJson = JacksonUtil.readExternal(AllSetsJson.class, FileUtil.RESOURCE_SETS_LESS_JSONS);
 	}
 

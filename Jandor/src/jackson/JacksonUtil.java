@@ -3,11 +3,17 @@ package jackson;
 import java.io.File;
 import java.io.IOException;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import util.CardUtil;
 import util.FileUtil;
 
 public class JacksonUtil {
@@ -19,6 +25,10 @@ public class JacksonUtil {
 	public static <T> T read(Class<T> klass, File file) {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		SimpleModule module = new SimpleModule();
+		module.addDeserializer(String.class, new StringCleanerDeserializer());
+		mapper.registerModule(module);
+
 		T data = null;
 		try {
 			data = mapper.readValue(file, klass);
@@ -71,6 +81,60 @@ public class JacksonUtil {
 
 		writeExternal(cards, FileUtil.RESOURCE_CARDS_LESS_JSONS);
 		writeExternal(sets, FileUtil.RESOURCE_SETS_LESS_JSONS);
+	}
+
+	public static class StringCleanerDeserializerWithWeirdCheck extends StringCleanerDeserializer {
+
+		private static final long serialVersionUID = 1L;
+
+		public StringCleanerDeserializerWithWeirdCheck() {
+			super(true);
+		}
+
+	}
+
+	public static class StringCleanerDeserializer extends StdDeserializer<String> {
+
+		private static final long serialVersionUID = 1L;
+		private boolean checkForWeird = false;
+
+		public StringCleanerDeserializer() {
+			this(false);
+		}
+
+		public StringCleanerDeserializer(boolean checkForWeird) {
+			super((Class<?>) null);
+			this.checkForWeird = checkForWeird;
+		}
+
+		@Override
+		public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+			String clean = CardUtil.clean(p.getText());
+			if(checkForWeird && CardUtil.isWeirdName(clean)) {
+				System.err.println("Found weird string: " + clean);
+			}
+			return clean;
+		}
+
+	}
+
+	public static class UpperCaseDeserializer extends StdDeserializer<String> {
+
+		private static final long serialVersionUID = 1L;
+
+		public UpperCaseDeserializer() {
+			super((Class<?>) null);
+		}
+
+		@Override
+		public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+			String s = p.getText();
+			if(s != null) {
+				return s.toUpperCase();
+			}
+			return s;
+		}
+
 	}
 
 }

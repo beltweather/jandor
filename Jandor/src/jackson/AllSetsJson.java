@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import jackson.AllCardsJson.CardJson;
 import jackson.AllSetsJson.SetJson;
-import util.CardUtil;
+import jackson.JacksonUtil.UpperCaseDeserializer;
 
 public class AllSetsJson extends HashMap<String, SetJson> {
 
@@ -21,6 +21,7 @@ public class AllSetsJson extends HashMap<String, SetJson> {
 
 		public List<Object> boosterV3;
 		public List<SetCardJson> cards;
+		@JsonDeserialize(using = UpperCaseDeserializer.class)
 		public String code;
 		public String name;
 		public String releaseDate;
@@ -63,13 +64,12 @@ public class AllSetsJson extends HashMap<String, SetJson> {
 		if(isInit) {
 			return;
 		}
-		fixKeys();
-		fixNames();
+		//fixKeys();
 		cache();
 		isInit = true;
 	}
 
-	protected void fixKeys() {
+	/*protected void fixKeys() {
 		Set<SetJson> values = new HashSet<>(values());
 		clear();
 		for(SetJson set : values) {
@@ -79,22 +79,11 @@ public class AllSetsJson extends HashMap<String, SetJson> {
 			set.code = set.code.toUpperCase();
 			put(set.code.toUpperCase(), set);
 		}
-	}
+	}*/
 
 	protected void cache() {
 		for(SetJson set : values()) {
 			set.cache();
-		}
-	}
-
-	protected void fixNames() {
-		for(SetJson set : values()) {
-			for(SetCardJson card : set.cards) {
-				String cleanName = CardUtil.clean(card.name);
-				if(!cleanName.equals(card.name)) {
-					card.name = cleanName;
-				}
-			}
 		}
 	}
 

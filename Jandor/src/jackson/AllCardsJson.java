@@ -2,16 +2,15 @@ package jackson;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import jackson.AllCardsJson.CardJson;
 import jackson.AllSetsJson.SetJson;
-import util.CardUtil;
+import jackson.JacksonUtil.StringCleanerDeserializerWithWeirdCheck;
 
 public class AllCardsJson extends HashMap<String, CardJson>  {
 
@@ -25,6 +24,7 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 		public String layout;
 		public String loyalty;
 		public String manaCost;
+		@JsonDeserialize(using = StringCleanerDeserializerWithWeirdCheck.class)
 		public String name;
 		public List<String> names;
 		public String power;
@@ -71,7 +71,6 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 		if(isInit) {
 			return;
 		}
-		fixNames();
 		sets.init();
 		cache(sets);
 		isInit = true;
@@ -86,31 +85,6 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 					continue;
 				}
 				card.multiverseIdsBySetCode.put(code, set.multiverseIdsByName.get(card.name));
-			}
-		}
-	}
-
-	protected void fixNames() {
-		Set<String> names = new HashSet<>(keySet());
-		for(String name : names) {
-			CardJson card = get(name);
-			String cleanName = CardUtil.clean(name);
-			if(CardUtil.isWeirdName(cleanName)) {
-				System.err.println("Found Weird Card Name: " + cleanName);
-			}
-			if(!cleanName.equals(name)) {
-				card.name = cleanName;
-				remove(name);
-				put(cleanName, card);
-			}
-			if(card.names != null && card.names.size() > 0) {
-				for(int i = 0; i < card.names.size(); i++) {
-					String n = card.names.get(i);
-					String cleanN = CardUtil.clean(n);
-					if(!cleanN.equals(n)) {
-						card.names.set(i, cleanN);
-					}
-				}
 			}
 		}
 	}
