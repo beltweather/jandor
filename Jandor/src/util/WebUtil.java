@@ -11,6 +11,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,6 +122,29 @@ public class WebUtil {
 		return null;
 	}
 
+	private static void deriveJsonFiles() throws Exception {
+		System.out.println("Creating \"card\" and \"set\" master files.");
+		AllCardsJson cards = JacksonUtil.readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_JSONS);
+		AllSetsJson sets = JacksonUtil.readExternal(AllSetsJson.class, FileUtil.RESOURCE_SETS_JSONS);
+		cards.init(sets);
+		JacksonUtil.writeExternal(cards, FileUtil.RESOURCE_CARDS_LESS_JSONS);
+		JacksonUtil.writeExternal(sets, FileUtil.RESOURCE_SETS_LESS_JSONS);
+	}
+
+	private static void cleanupJsonFiles() {
+		List<File> files = new ArrayList<File>(6);
+		files.add(FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_SETS_JSONS));
+		files.add(FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_CARDS_JSONS));
+		files.add(FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_SETS_JSONS + ".zip"));
+		files.add(FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_CARDS_JSONS + ".zip"));
+
+		for(File file : files) {
+			if(file.exists()) {
+				file.delete();
+			}
+		}
+	}
+
 	public static int downloadNewestJSONS() {
 		System.setProperty("http.agent", "Chrome");
 		int error = 0;
@@ -138,21 +163,32 @@ public class WebUtil {
 			}
 			return error;
 		} else if(jandorVersion.equals(mtgJsonVersion)) {
+			if(!FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_CARDS_LESS_JSONS).exists() ||
+				!FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_SETS_LESS_JSONS).exists()) {
+				try {
+					deriveJsonFiles();
+				} catch (Exception e) {
+					System.err.println("Could not create master files.");
+					error++;
+					return error;
+				}
+			}
+			cleanupJsonFiles();
 			System.out.println("Jandor is up-to-date with mtgjson.com version " + mtgJsonVersion);
 			return error;
 		}
 
 		System.out.println("Updating Jandor from mtgjson.com version " + jandorVersion + " to " + mtgJsonVersion);
 
-		File setJsons = download(URL_MTG_JSON_SETS, FileUtil.toFile(FileUtil.getExternalResourcesFolder(), FileUtil.RESOURCE_SETS_JSONS + ".zip"));
-		File cardJsons = download(URL_MTG_JSON_CARDS, FileUtil.toFile(FileUtil.getExternalResourcesFolder(), FileUtil.RESOURCE_CARDS_JSONS + ".zip"));
+		File setJsons = download(URL_MTG_JSON_SETS, FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_SETS_JSONS + ".zip"));
+		File cardJsons = download(URL_MTG_JSON_CARDS, FileUtil.getExternalResourcesFile(FileUtil.RESOURCE_CARDS_JSONS + ".zip"));
 
 		if(setJsons == null) {
 			error++;
 			System.err.println("Downloading " + URL_MTG_JSON_SETS + " failed.");
 		} else {
 			ZipUtil.unzip(setJsons, FileUtil.getExternalResourcesFolder());
-			setJsons.delete();
+			//setJsons.delete();
 		}
 
 		if(cardJsons == null) {
@@ -160,20 +196,21 @@ public class WebUtil {
 			System.err.println("Downloading " + URL_MTG_JSON_CARDS + " failed.");
 		} else {
 			ZipUtil.unzip(cardJsons, FileUtil.getExternalResourcesFolder());
-			cardJsons.delete();
+			//cardJsons.delete();
 		}
 
-		// Process the new jsons and save out only what we need
-		AllCardsJson cards = JacksonUtil.readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_JSONS);
-		AllSetsJson sets = JacksonUtil.readExternal(AllSetsJson.class, FileUtil.RESOURCE_SETS_JSONS);
-		cards.init(sets);
-		JacksonUtil.writeExternal(cards, FileUtil.RESOURCE_CARDS_LESS_JSONS);
-		JacksonUtil.writeExternal(sets, FileUtil.RESOURCE_SETS_LESS_JSONS);
+		if(error == 0) {
+			try {
+				deriveJsonFiles();
+			} catch (Exception e) {
+				System.err.println("Could not create master files.");
+				error++;
+			}
+		}
 
-		if(mtgJsonVersion == null) {
-			error++;
-			System.err.println("Could not scrape version from " + URL_MTG_JSON);
-		} else if(error == 0) {
+		cleanupJsonFiles();
+
+		if(error == 0) {
 			FileUtil.writeString(mtgJsonVersion, FileUtil.getExternalResourcesFolder() + File.separator + FileUtil.RESOURCE_MTG_JSON_VERSION, false);
 		}
 
