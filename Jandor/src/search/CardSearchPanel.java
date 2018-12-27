@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import deck.Card;
 import deck.Deck;
 import jackson.AllCardsJson.CardJson;
-import json.JSONException;
 import ui.AutoComboBox;
 import ui.JandorCombo;
 import ui.ProgressBar.ProgressTask;
@@ -171,7 +170,7 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 		return true;
 	}
 
-	private boolean matchStringGeneral(CardJson info, String att, JComponent editor) throws JSONException {
+	private boolean matchStringGeneral(CardJson info, String att, JComponent editor) {
 		//String jsonValue = info.toString().toLowerCase();
 		//String formattedValue = new Card(info.getString("name")).getToolTipText(0, false).toLowerCase();
 		String formattedValue = new Card(info.name).getSearchableString();
@@ -251,7 +250,7 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 		return list;
 	}
 
-	private boolean matchXOrStar(CardJson info, String att, JComponent editor) throws JSONException {
+	private boolean matchXOrStar(CardJson info, String att, JComponent editor) {
 		String value = info.getString(att);
 		if(value == null) {
 			return ((XOrStarPanel) editor).match("");
@@ -259,13 +258,13 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 		return ((XOrStarPanel) editor).match(value); // XXX This method was really weird before.
 	}
 
-	private boolean matchColor(CardJson info, String att, JComponent editor) throws JSONException {
+	private boolean matchColor(CardJson info, String att, JComponent editor) {
 		String colors = info.colors == null ? "" : StringUtils.join(info.colors, ",");
 		String manaCost = info.manaCost == null ? "" : info.manaCost;
 		return ((ManaPanel) editor).match(colors, manaCost);
 	}
 
-	private boolean matchSet(CardJson info, String att, JComponent editor) throws JSONException {
+	private boolean matchSet(CardJson info, String att, JComponent editor) {
 		Object selectedItem = ((JComboBox) editor).getSelectedItem();
 		if(selectedItem == null || selectedItem.equals("")) {
 			return true;
@@ -297,7 +296,7 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 		return false;
 	}
 
-	private boolean matchString(CardJson info, String att, JComponent editor) throws JSONException {
+	private boolean matchString(CardJson info, String att, JComponent editor) {
 		String value = info.getString(att);
 		if(value == null) {
 			value = "";
@@ -313,7 +312,7 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 		return true;
 	}
 
-	private boolean matchInt(CardJson info, String att, JComponent editor) throws JSONException {
+	private boolean matchInt(CardJson info, String att, JComponent editor) {
 		String value = info.getString(att);
 		if(value == null) {
 			return ((NumberPanel) editor).match(0);
@@ -327,7 +326,7 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 		return ((NumberPanel) editor).match(toInt(value));
 	}
 
-	private boolean matchSplitCmc(CardJson info, JComponent editor) throws JSONException {
+	private boolean matchSplitCmc(CardJson info, JComponent editor) {
 		List<String> names = info.names;
 		int allCmc = 0;
 		for(String name : names) {

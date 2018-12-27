@@ -8,8 +8,6 @@ import java.util.Random;
 import deck.Card;
 import deck.Deck;
 import jackson.AllSetsJson.SetCardJson;
-import json.JSONArray;
-import json.JSONException;
 import session.BoosterContent;
 import session.BoosterHeader;
 import session.DraftHeader;

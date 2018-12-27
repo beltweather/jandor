@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.swing.Box;
 
-import json.JSONException;
 import ui.pwidget.PPanel;
 import ui.pwidget.PSimpleCombo;
 import ui.pwidget.PSpinner;
@@ -16,16 +15,16 @@ public class NumberPanel extends PPanel {
 
 	protected PSpinner spinner;
 	protected PSimpleCombo combo;
-	
+
 	public NumberPanel() {
 		super();
 		init();
 	}
-	
+
 	public PSpinner getSpinner() {
 		return spinner;
 	}
-	
+
 	protected void init() {
 		List<String> items = new ArrayList<String>();
 		items.add("<");
@@ -37,25 +36,25 @@ public class NumberPanel extends PPanel {
 
 			@Override
 			protected void handleItemSelected(ItemEvent event, Object item) {
-				
+
 			}
-			
+
 		};
 		combo.setSelectedItem("=");
 		combo.setPreferredSize(new Dimension(50, 22));
 		combo.setMinimumSize(new Dimension(50, 22));
-		
+
 		spinner = new PSpinner(0, 0, 99) {
 
 			@Override
 			protected void handleChange(int value) {
-				
+
 			}
-			
+
 		};
 		spinner.setPreferredSize(new Dimension(150, 20));
 		spinner.setMinimumSize(new Dimension(150, 20));
-		
+
 		c.weaken();
 		add(combo, c);
 		c.gridx++;
@@ -64,8 +63,8 @@ public class NumberPanel extends PPanel {
 		c.strengthen();
 		add(Box.createHorizontalStrut(1), c);
 	}
-	
-	public boolean match(int value) throws JSONException {
+
+	public boolean match(int value) {
 		int valueB = ((Integer) spinner.getValue()).intValue();
 		String op = combo.getSelectedItem().toString();
 		if(op.equals("=")) {
@@ -78,8 +77,8 @@ public class NumberPanel extends PPanel {
 			return value > valueB;
 		} else if(op.equals(">=")) {
 			return value >= valueB;
-		} 
+		}
 		return false;
 	}
-	
+
 }

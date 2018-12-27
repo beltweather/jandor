@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 
 import deck.Card;
-import json.JSONArray;
 import run.Jandor;
 import ui.pwidget.ColorUtil;
 
@@ -92,22 +91,22 @@ public class ManaUtil {
 		return mana;
 	}
 
-	public static JSONArray manaToColors(String manaString) {
-		JSONArray array = new JSONArray();
+	public static List<String> manaToColors(String manaString) {
+		List<String> array = new ArrayList<String>();
 		if(hasWhite(manaString)) {
-			array.put("White");
+			array.add("White");
 		}
 		if(hasBlue(manaString)) {
-			array.put("Blue");
+			array.add("Blue");
 		}
 		if(hasBlack(manaString)) {
-			array.put("Black");
+			array.add("Black");
 		}
 		if(hasRed(manaString)) {
-			array.put("Red");
+			array.add("Red");
 		}
 		if(hasGreen(manaString)) {
-			array.put("Green");
+			array.add("Green");
 		}
 		return array;
 	}

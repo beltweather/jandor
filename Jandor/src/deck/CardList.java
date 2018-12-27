@@ -4,10 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import json.JSONException;
-import json.JSONObject;
 import util.ApprenticeUtil;
-import util.JSONUtil;
 import util.ShuffleType;
 import util.ShuffleUtil;
 
@@ -66,16 +63,6 @@ public class CardList extends RenderableList<Card> {
 
 	public void shuffle(ShuffleType shuffleType) {
 		ShuffleUtil.shuffle(shuffleType, this);
-	}
-
-	public static void main1(String[] args) {
-		String filename = "AllCards.json";
-		JSONObject json = JSONUtil.toJSON(filename);
-		try {
-			System.out.println(json.toString(4));
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public static void main(String[] args) {

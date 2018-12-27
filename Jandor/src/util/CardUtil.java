@@ -19,7 +19,6 @@ import jackson.AllSetsJson;
 import jackson.AllSetsJson.SetCardJson;
 import jackson.AllSetsJson.SetJson;
 import jackson.JacksonUtil;
-import json.JSONException;
 
 public class CardUtil {
 
@@ -88,9 +87,6 @@ public class CardUtil {
 		rarityOrder.add("Special");
 	}
 
-
-	//private static JSONObject allSets = null;
-	//private static JSONObject allCards = null;
 	private static AllSetsJson allSetsJson = null;
 	private static AllCardsJson allCardsJson = null;
 	private static List<String> allCardNames = new ArrayList<String>();
@@ -104,53 +100,6 @@ public class CardUtil {
 		recordValues();
 		loadImages();
 	}
-
-	/*static {
-		loadAllSets();
-		loadAllCards();
-		fixCards();
-	}*/
-
-	/*private static void recordValuesOld(JSONObject obj) throws JSONException {
-		JSONObject setObj = getSetCardInfo(obj.getString("name"));
-		boolean trashy = false;
-		/if(obj.has("printings")) {
-			JSONArray sets = obj.getJSONArray("printings");
-			for(int i = 0; i < sets.length(); i++) {
-				String set = sets.getString(i);
-				if(bannedSets.contains(set)) {
-					trashy = true;
-					break;
-				}
-			}
-		}/
-		for(String key : keysWithValues) {
-			if(trashy && !key.equals(s)) {
-				continue;
-			}
-			Object value = null;
-			if(obj.has(key)) {
-				value = obj.get(key);
-			} else if(setObj != null && setObj.has(key)) {
-				value = setObj.get(key);
-			} else {
-				continue;
-			}
-
-			if(key.equals("manaCost")) {
-				List<String> mana = ManaUtil.jsonToGatherer((String) value);
-				for(String m : mana) {
-					recordValue(key, m);
-				}
-			} else if(value instanceof String) {
-				recordValue(key, (String) value);
-			} else if(value instanceof JSONArray) {
-				for(int i = 0; i < ((JSONArray) value).length(); i++) {
-					recordValue(key, ((JSONArray) value).getString(i));
-				}
-			}
-		}
-	}*/
 
 	private static Map<Class, Map<String, Field>> fieldsByKey = new HashMap<>();
 	private static Field getField(Object obj, String fieldName) {
@@ -308,7 +257,7 @@ public class CardUtil {
 		return cardNamesByLowerCase.get(closestName);
 	}
 
-	public static boolean hasType(Card card, String type) throws JSONException {
+	public static boolean hasType(Card card, String type) {
 		List<String> types = card.getTypes();
 		for(String t : types) {
 			if(t.equals(type)) {
@@ -317,46 +266,6 @@ public class CardUtil {
 		}
 		return false;
 	}
-
-	/*private static void recordValuesOld() {
-		Iterator it = allCards.keys();
-		try {
-			top: while(it.hasNext()) {
-				String name = it.next().toString();
-				JSONObject info = allCards.getJSONObject(name);
-				cardNamesByLowerCase.put(name.toLowerCase(), name);
-
-				if(info.has("types")) {
-					JSONArray types = info.getJSONArray("types");
-					for(int i = 0; i < types.length(); i++) {
-						String type = types.getString(i);
-						if(type.equals("Vanguard") || type.equals("Scheme") || /type.equals("Conspiracy") ||/ type.equals("Plane")) {
-							//it.remove();
-							continue top;
-						}
-					}
-				}
-
-				if(info.has("printings")) {
-					JSONArray sets = info.getJSONArray("printings");
-					if(sets.length() == 1) {
-						for(int i = 0; i < sets.length(); i++) {
-							String set = sets.getString(i);
-							if(set.equals("UNH") || set.equals("UGL") || set.equals("UST")/ || set.equals("pCEL")/) {
-								//it.remove();
-								continue top;
-							}
-						}
-					}
-				}
-
-				allCardNames.add(name);
-				recordValues(info);
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}*/
 
 	private static void recordValues() {
 		top: for(String name : allCardsJson.keySet()) {
@@ -621,11 +530,11 @@ public class CardUtil {
 		return "<a href=\"" + GATHERER_URL + multiverseId + "\">" + linkText + "</a>";
 	}
 
-	public static boolean isDoubleFaced(CardJson info) throws JSONException {
+	public static boolean isDoubleFaced(CardJson info) {
 		return info.layout != null && info.layout.equals("double-faced");
 	}
 
-	public static boolean isSplit(CardJson info) throws JSONException {
+	public static boolean isSplit(CardJson info) {
 		return info.layout != null && (info.layout.equals("split") || info.layout.equals("aftermath"));
 	}
 

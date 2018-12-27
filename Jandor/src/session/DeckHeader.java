@@ -9,15 +9,13 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import json.JSONArray;
-import json.JSONException;
+import deck.Card;
+import deck.Deck;
 import util.DebugUtil;
 import util.FileUtil;
 import util.LoginUtil;
 import util.ManaUtil;
 import util.UserUtil;
-import deck.Card;
-import deck.Deck;
 
 @XmlRootElement
 public class DeckHeader extends SessionData {
