@@ -14,6 +14,10 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jackson.AllCardsJson;
+import jackson.AllSetsJson;
+import jackson.JacksonUtil;
+
 public class WebUtil {
 
 	public static final String URL_MTG_JSON = "https://www.mtgjson.com";
@@ -158,6 +162,13 @@ public class WebUtil {
 			ZipUtil.unzip(cardJsons, FileUtil.getExternalResourcesFolder());
 			cardJsons.delete();
 		}
+
+		// Process the new jsons and save out only what we need
+		AllCardsJson cards = JacksonUtil.readExternal(AllCardsJson.class, FileUtil.RESOURCE_CARDS_JSONS);
+		AllSetsJson sets = JacksonUtil.readExternal(AllSetsJson.class, FileUtil.RESOURCE_SETS_JSONS);
+		cards.init(sets);
+		JacksonUtil.writeExternal(cards, FileUtil.RESOURCE_CARDS_LESS_JSONS);
+		JacksonUtil.writeExternal(sets, FileUtil.RESOURCE_SETS_LESS_JSONS);
 
 		if(mtgJsonVersion == null) {
 			error++;
