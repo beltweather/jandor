@@ -391,6 +391,7 @@ public class CardUtil {
 			}
 		}
 
+		SetCardJson bestGuess = null;
 		for(int i = 0; i < sets.size(); i++) {
 			String s = sets.get(indices.get(i));
 			if(allSetsJson.containsKey(s) && (onlyBanned || sets.size() == 1 || !bannedSets.contains(s))) {
@@ -403,9 +404,17 @@ public class CardUtil {
 				if(card.multiverseId != 0 || i == sets.size() - 1 || onlyBanned) {
 					card.set = s;
 					return card;
+				} else {
+					card.set = s;
+					bestGuess = card;
 				}
 			}
 		}
+
+		if(bestGuess != null) {
+			return bestGuess;
+		}
+
 		return null;
 	}
 

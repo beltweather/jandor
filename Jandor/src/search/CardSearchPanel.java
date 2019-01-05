@@ -194,6 +194,9 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 	}
 
 	private boolean matchToken(String tok, Pattern pattern, String... fullText) {
+		if(tok != null) {
+			tok = tok.toLowerCase();
+		}
 		if(pattern != null) {
 			if(fullText.length == 0) {
 				return false;
@@ -221,7 +224,6 @@ public abstract class CardSearchPanel extends SearchPanel<CardJson, Deck> {
 			if(fullText.length == 0) {
 				return false;
 			}
-
 			for(String v : fullText) {
 				if(v.contains(tok)) {
 					return true;

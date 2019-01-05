@@ -101,7 +101,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 			if(setInfo != null) {
 				set = setInfo.set;
 			}
-			if(!isLand()) {
+			if(set != null && !isLand()) {
 				setsByCardName.put(getName(), set);
 			}
 		} else {
@@ -374,7 +374,9 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		if(setCard == null) {
 			System.out.println("No set info for " + name);
 		}
-		setCard = getSetCardInfo(set);
+		if(setCard == null) {
+			return null;
+		}
 		return setCard.rarity;
 	}
 
