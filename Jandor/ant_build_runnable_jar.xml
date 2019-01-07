@@ -10,29 +10,30 @@
                 <attribute name="SplashScreen-Image" value="images/jandor-splash.png"/>
             </manifest>
             <fileset dir="X:/GitHub/jandor/Jandor/bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.api-client/google-api-client/1.22.0/244350c0c845c583717ade13f5666a452fd0cfa/google-api-client-1.22.0.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client-jetty/1.22.0/b94c1e7d6c73cb1c15e2e5569cc6fda08cc80099/google-oauth-client-jetty-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.apis/google-api-services-sheets/v4-rev478-1.22.0/a9363ad0a21357edefd003a590350c3eab26db69/google-api-services-sheets-v4-rev478-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.apis/google-api-services-drive/v3-rev76-1.22.0/e963292eb8083eaae05c147b32d44e127b34da9e/google-api-services-drive-v3-rev76-1.22.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.api-client/google-api-client/1.22.0/244350c0c845c583717ade13f5666a452fd0cfa/google-api-client-1.22.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client-jetty/1.22.0/b94c1e7d6c73cb1c15e2e5569cc6fda08cc80099/google-oauth-client-jetty-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/javax.mail/mail/1.5.0-b01/c128515e42609622ce3f7dc0b431026d80bdb688/mail-1.5.0-b01.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/commons-lang/commons-lang/2.6/ce1edb914c94ebc388f086c6827e8bdeec71ac2/commons-lang-2.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/redis.clients/jedis/2.9.0/292bc9cc26553acd3cccc26f2f95620bf88a04c2/jedis-2.9.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.9.8/11283f21cc480aa86c4df7a0a3243ec508372ed2/jackson-databind-2.9.8.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client-java6/1.22.0/6cbd19cd33d55bcaac2d842a57f5ade9260bed99/google-oauth-client-java6-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client/1.22.0/1d63f369ac78e4838a3197147012026e791008cb/google-oauth-client-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.http-client/google-http-client-jackson2/1.22.0/cc014d64ae11117e159d334c99d9c246d9b36f44/google-http-client-jackson2-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.guava/guava-jdk5/17.0/463f8378feba44df7ba7cd9272d01837dad62b36/guava-jdk5-17.0.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.oauth-client/google-oauth-client-java6/1.22.0/6cbd19cd33d55bcaac2d842a57f5ade9260bed99/google-oauth-client-java6-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/org.mortbay.jetty/jetty/6.1.26/2f546e289fddd5b1fab1d4199fbb6e9ef43ee4b0/jetty-6.1.26.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/javax.activation/activation/1.1/e6cb541461c2834bdea3eb920f1884d1eb508b50/activation-1.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-pool2/2.4.2/e5f4f28f19d57716fbc3989d7a357ebf1e454fea/commons-pool2-2.4.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.9.0/7c10d545325e3a6e72e06381afe469fd40eb701/jackson-annotations-2.9.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.9.8/f5a654e4675769c716e5b387830d19b501ca191/jackson-core-2.9.8.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.http-client/google-http-client/1.22.0/d441fc58329c4a4c067acec04ac361627f66ecc8/google-http-client-1.22.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/1.3.9/40719ea6961c0cb6afaeb6a921eaa1f6afd4cfdf/jsr305-1.3.9.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.1.3/f6c3aed1cdfa21b5c1737c915186ea93a95a58bd/jackson-core-2.1.3.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/org.mortbay.jetty/jetty-util/6.1.26/e5642fe0399814e1687d55a3862aa5a3417226a9/jetty-util-6.1.26.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/org.mortbay.jetty/servlet-api/2.5-20081211/22bff70037e1e6fa7e6413149489552ee2064702/servlet-api-2.5-20081211.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.0.1/1d7d28fa738bdbfe4fbd895d9486308999bdf440/httpclient-4.0.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.0.1/e813b8722c387b22e1adccf7914729db09bcb4a9/httpcore-4.0.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.1.1/5043bfebc3db072ed80fbd362e7caf00e885d8ae/commons-logging-1.1.1.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.3/fd32786786e2adb664d5ecc965da47629dca14ba/commons-codec-1.3.jar"/>
-        </jar>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Jon/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.3/fd32786786e2adb664d5ecc965da47629dca14ba/commons-codec-1.3.jar"/></jar>
     </target>
 </project>
