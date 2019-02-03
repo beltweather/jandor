@@ -7,6 +7,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Box;
@@ -34,16 +35,22 @@ public class InspectView extends JandorView {
 	protected int topCount;
 	protected List<Card> topDeckCards = new ArrayList<Card>();
 	protected List<Card> bottomDeckCards = new ArrayList<Card>();
-	
+	protected boolean reverse = false;
+
 	public InspectView(String name, CardLayer layer, ZoneType zoneType) {
 		this(name, layer, zoneType, -1);
 	}
-	
+
 	public InspectView(String name, CardLayer layer, ZoneType zoneType, int topCount) {
+		this(name, layer, zoneType, topCount, false);
+	}
+
+	public InspectView(String name, CardLayer layer, ZoneType zoneType, int topCount, boolean reverse) {
 		super(name, true);
 		this.layer = layer;
 		this.zoneType = zoneType;
 		this.topCount = topCount;
+		this.reverse = reverse;
 		rebuild();
 	}
 
@@ -52,7 +59,7 @@ public class InspectView extends JandorView {
 		if(shuffle == null) {
 			return;
 		}
-		
+
 		if(shuffle.isSelected()) {
 			layer.shuffleCards(layer.getCardZoneManager().getZone(zoneType), true, true);
 			for(Card card : topDeckCards) {
@@ -68,27 +75,33 @@ public class InspectView extends JandorView {
 	protected void rebuild() {
 		removeAll();
 		PPanel cardPanel = new PPanel();
-		
+
 		if(layer.getCardZoneManager().getZone(zoneType).size() == 0) {
 			JLabel label = new JLabel("There are no cards to inspect.");
 			label.setForeground(Color.WHITE);
 			add(label);
 			return;
 		}
-		
+
 		cardPanel.c.weighty = 0.01;
 		cardPanel.c.fill = G.HORIZONTAL;
 		cardPanel.c.anchor = G.CENTER;
-		
+
 		cardPanel.c.strengthen();
 		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
 		cardPanel.c.gridx++;
-		
+
 		cardPanel.c.weaken();
-		Zone zone = layer.getCardZoneManager().getZone(zoneType);
+		List<Card> zone = layer.getCardZoneManager().getZone(zoneType);
 		final List<ClickableCardRow> cardRows = new ArrayList<ClickableCardRow>();
 		List<Card> cards = new ArrayList<Card>();
 		int i = 0;
+
+		if(reverse) {
+			zone = new ArrayList<Card>(zone);
+			Collections.reverse(zone);
+		}
+
 		for(Object o : zone) {
 			if(topCount > 0 && i >= topCount) {
 				break;
@@ -96,7 +109,7 @@ public class InspectView extends JandorView {
 			Card card = (Card) o;
 			cards.add(card);
 			ClickableCardRow row = new ClickableCardRow(layer, card) {
-				
+
 				@Override
 				public void handleMovedToZone(ClickableCardRow r, ZoneType zone) {
 					List<Card> cardsToSearch = new ArrayList<Card>();
@@ -106,7 +119,7 @@ public class InspectView extends JandorView {
 						row.update();
 					}
 					cardSearchPanel.setCardsToSearch(cardsToSearch);
-					
+
 					if(cardRows.size() == 0) {
 						Component root = SwingUtilities.getRoot(InspectView.this);
 						if(root != null) {
@@ -114,7 +127,7 @@ public class InspectView extends JandorView {
 						}
 					}
 				}
-				
+
 				@Override
 				public void handleMovedToTopOrBottom(ClickableCardRow row, ZoneType zone, boolean top) {
 					if(top) {
@@ -123,19 +136,19 @@ public class InspectView extends JandorView {
 						bottomDeckCards.add(row.getCard());
 					}
 				}
-				
+
 			};
 			cardPanel.add(row, cardPanel.c);
 			cardPanel.c.gridx++;
-			
+
 			cardRows.add(row);
 			i++;
 		}
-		
+
 		cardPanel.c.gridx++;
 		cardPanel.c.strengthen();
 		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
-		
+
 		final JCheckBox showImages = new JCheckBox("Show Full Cards");
 		showImages.setOpaque(false);
 		showImages.setForeground(Color.BLACK);
@@ -147,24 +160,24 @@ public class InspectView extends JandorView {
 					row.setShowFullCard(showImages.isSelected());
 				}
 			}
-			
+
 		});
-		
+
 		shuffle = new JCheckBox("Shuffle");
 		shuffle.setOpaque(false);
 		shuffle.setForeground(Color.BLACK);
 		shuffle.setSelected(topCount <= 0);
-		
+
 		PPanel checkPanel = new PPanel();
 		//checkPanel.add(showImages, checkPanel.c);
 		checkPanel.c.gridx++;
-		
+
 		if(zoneType == ZoneType.DECK) {
 			checkPanel.add(shuffle, checkPanel.c);
 		} else {
 			shuffle.setSelected(false);
 		}
-		
+
 		cardSearchPanel = new CardSearchPanel(cards) {
 
 			@Override
@@ -181,17 +194,17 @@ public class InspectView extends JandorView {
 				}
 				repaint();
 			}
-			
+
 		};
-		
+
 		cardPanel.add(Box.createHorizontalStrut(1), cardPanel.c);
 
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		double width = screenSize.getWidth();
-		
+
 		int windowX = (int) Math.min(Math.round(width * 0.8), 1400);
 		int windowY = 400;
-		
+
 		c.strengthen();
 		add(new PScrollPane(cardPanel, new Dimension(windowX, windowY), true), c);
 		c.gridy++;
@@ -204,7 +217,7 @@ public class InspectView extends JandorView {
 
 	@Override
 	public void reset() {
-		
+
 	}
 
 }

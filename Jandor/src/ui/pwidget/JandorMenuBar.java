@@ -825,7 +825,9 @@ public class JandorMenuBar extends JMenuBar {
 
 		PPanel p = new PPanel();
 
-		PButton top = new PButton("View Top");
+		PButton top = new PButton("Top");
+		top.setWidth(70);
+
 		final PSpinner topSpinner = new PSpinner(1, 1, 9999) {
 
 			@Override
@@ -835,25 +837,38 @@ public class JandorMenuBar extends JMenuBar {
 
 		};
 
-		PButton all = new PButton("View All");
+		PButton bottom = new PButton("Bottom");
+		bottom.setWidth(70);
+
+		PButton all = new PButton("All");
+		all.setWidth(70);
 
 		p.fill();
 		p.c.gridx++;
+		p.c.gridx++;
+		p.c.insets(0, 0, 10, 0);
+		p.addc(Box.createHorizontalStrut(1));
+		//p.addc(new PLabel("View"));
+		p.c.gridx--;
+		p.c.gridy++;
 		p.c.insets(0, 0, 5, 0);
 		p.addc(top);
 		p.c.gridx++;
 		p.c.insets(0, 5, 5, 0);
 		p.addc(topSpinner);
+		p.c.gridx++;
 		p.c.insets(0, 0, 5, 0);
-		p.c.gridx = 1;
-		p.c.gridwidth = 2;
+		p.addc(bottom);
+		p.c.gridx = 2;
+		p.c.gridwidth = 1;
 		p.c.gridy++;
+		p.c.insets(15, 0, 5, 0);
 		p.addc(all);
 		p.c.gridwidth = 1;
 		p.c.gridx = 3;
 		p.fill();
 
-		final JDialog d = JUtil.buildBlankDialog(this, "Inspect Deck", p);
+		final JDialog d = JUtil.buildBlankDialog(frame, "Inspect Deck - View", p);
 
 		top.addActionListener(new ActionListener() {
 
@@ -863,6 +878,20 @@ public class JandorMenuBar extends JMenuBar {
 				BoardView boardView = (BoardView) getJandorView();
 				String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
 				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK, topCount);
+				JUtil.showDialog(boardView, title, inspectView);
+				d.setVisible(false);
+			}
+
+		});
+
+		bottom.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int topCount = (int) topSpinner.getValue();
+				BoardView boardView = (BoardView) getJandorView();
+				String title = JUtil.getFrame(boardView).getTitle() + " - Deck";
+				InspectView inspectView = new InspectView(title, boardView.getCardLayer(), ZoneType.DECK, topCount, true);
 				JUtil.showDialog(boardView, title, inspectView);
 				d.setVisible(false);
 			}
