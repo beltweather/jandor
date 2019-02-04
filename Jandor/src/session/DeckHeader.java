@@ -199,6 +199,9 @@ public class DeckHeader extends SessionData {
 		if(tagId == Tag.INBOX_ID) {
 			return inbox;
 		}
+		if(tagId ==  Session.getInstance().getTagIdForAuthor(getAuthorFormatted())) {
+			return true;
+		}
 		return tagIds.contains(tagId);
 	}
 

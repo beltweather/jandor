@@ -17,18 +17,18 @@ public class TagButton extends PButton {
 	protected CollectionEditorView view;
 	protected int tagId;
 	protected boolean selected = false;
-	
+
 	public TagButton(CollectionEditorView view, Tag tag) {
 		this(view, tag.getId());
 	}
-	
+
 	public TagButton(CollectionEditorView view, int tagId) {
 		super();
 		this.view = view;
 		this.tagId = tagId;
 		init();
 	}
-	
+
 	private void init() {
 		Tag tag = getTag();
 		if(tagId == Tag.INBOX_ID) {
@@ -45,11 +45,11 @@ public class TagButton extends PButton {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				view.setCurrentTagId(tagId);
+				view.handleTagRowClicked(tagId);
 			}
-			
+
 		});
-		
+
 		setBackground(ColorUtil.TRANSPARENT);
 		setHoverBackground(ColorUtil.DARK_GRAY_2);
 		setBorder(null);
@@ -58,15 +58,15 @@ public class TagButton extends PButton {
 		setFont(getFont().deriveFont(Font.PLAIN));
 		setSelected(false);
 	}
-	
+
 	public int getTagId() {
 		return tagId;
 	}
-	
+
 	public Tag getTag() {
 		return Session.getInstance().getTag(tagId);
 	}
-	
+
 	public void setSelected(boolean selected) {
 		this.selected = selected;
 		if(selected) {
@@ -82,5 +82,5 @@ public class TagButton extends PButton {
 			setFont(getFont().deriveFont(Font.PLAIN));
 		}
 	}
-	
+
 }
