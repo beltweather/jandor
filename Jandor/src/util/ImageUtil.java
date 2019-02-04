@@ -585,6 +585,14 @@ public class ImageUtil {
     			cachedImage = null;
     		}
     		if(cachedImage != null) {
+
+    			// Fix the cache's image size if possible
+    			BufferedImage resizedImage = maybeFixCardSize(cachedImage, true);
+    			if(resizedImage != null) {
+    				addImageToCacheToDisc(cachedImageFile, resizedImage);
+    				return resizedImage;
+    			}
+
     			return cachedImage;
     		}
     	}
@@ -648,6 +656,10 @@ public class ImageUtil {
     }
 
     private static BufferedImage maybeFixCardSize(BufferedImage image) {
+    	return maybeFixCardSize(image, false);
+    }
+
+    private static BufferedImage maybeFixCardSize(BufferedImage image, boolean nullIfNoChange) {
     	if(image == null) {
     		return null;
     	}
@@ -657,7 +669,7 @@ public class ImageUtil {
     	if(Math.abs(w - DEFAULT_CARD_WIDTH) > allowance || Math.abs(h - DEFAULT_CARD_HEIGHT) > allowance) {
     		return scale(image, DEFAULT_CARD_WIDTH, DEFAULT_CARD_HEIGHT);
     	}
-    	return image;
+    	return nullIfNoChange ? null : image;
     }
 
     private static void startImageDiscCachingListener() {
