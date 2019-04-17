@@ -23,11 +23,12 @@ import jackson.JacksonUtil;
 public class WebUtil {
 
 	public static final String URL_MTG_JSON = "https://www.mtgjson.com";
+	public static final String URL_MTG_CHANGE_LOG = URL_MTG_JSON + "/json/version.json";
 	public static final String URL_MTG_JSON_SETS = URL_MTG_JSON + "/json/AllSets.json.zip";
 	public static final String URL_MTG_JSON_CARDS = URL_MTG_JSON + "/json/AllCards.json.zip";
 
-	private static final String SCRAPE_START_VERSION = "<h4>Current version: ";
-	private static final String SCRAPE_END_VERSION = "</h4>";
+	private static final String SCRAPE_START_VERSION = "\"version\": \"";
+	private static final String SCRAPE_END_VERSION = "\"";
 
 	public static void init() {
 		downloadNewestJSONS();
@@ -150,7 +151,7 @@ public class WebUtil {
 		int error = 0;
 
 		String jandorVersion = VersionUtil.readVersionFromFile();
-		String mtgJsonVersion = scrapeUrl(URL_MTG_JSON, SCRAPE_START_VERSION, SCRAPE_END_VERSION);
+		String mtgJsonVersion = scrapeUrl(URL_MTG_CHANGE_LOG, SCRAPE_START_VERSION, SCRAPE_END_VERSION);
 
 		if(jandorVersion == null || mtgJsonVersion == null) {
 			if(jandorVersion == null) {

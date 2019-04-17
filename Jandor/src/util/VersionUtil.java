@@ -6,31 +6,31 @@ import session.Session;
 import session.User;
 
 public class VersionUtil {
-	
-	public static final String VERSION = "2.2";
-	
-	public static String MTG_JSON_VERSION = "3.18";
+
+	public static final String VERSION = "2.3";
+
+	public static String MTG_JSON_VERSION = "4.3.2"; // Latest version when I last modified code
 
 	private VersionUtil() {}
-	
+
 	public static String readVersionFromFile() {
 		return FileUtil.getFirstLine(FileUtil.getResourceReader(FileUtil.RESOURCE_MTG_JSON_VERSION));
 	}
-	
+
 	public static void init() {
 		String version = readVersionFromFile();
 		if(version != null) {
 			MTG_JSON_VERSION = version;
 		}
 	}
-	
+
 	public static void update() {
 		// Update out of date entities based on version
 		Contact contact = Session.getInstance().getContact();
 		if(!LoginUtil.isLoggedIn() || contact == null) {
 			return;
 		}
-		
+
 		User user = LoginUtil.getUser();
 		for(DeckHeader header : Session.getInstance().getDeckHeaders()) {
 			if(!header.getVersion().startsWith("1.")) {
@@ -44,7 +44,7 @@ public class VersionUtil {
 				header.save();
 			}
 		}
-		
+
 	}
-	
+
 }
