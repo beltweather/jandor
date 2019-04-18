@@ -49,6 +49,7 @@ public class UserSearchPanel extends PPanel {
 
 			@Override
 			public Object convertTextToItem(String text) {
+				System.out.println("Text: \"" + text + "\"");
 				User user = UserUtil.getUserByUsername(text);
 				if(user == null) {
 					user = UserUtil.getUserByEmail(text);
