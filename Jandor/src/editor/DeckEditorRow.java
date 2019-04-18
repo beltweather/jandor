@@ -36,15 +36,15 @@ public class DeckEditorRow extends PPanel {
 	private JandorButton moveButton;
 	private String cardName;
 	private String otherDeckName;
-	
+
 	public DeckEditorRow(DeckEditorView view, Deck deck) {
 		this(view, deck, 0, "");
 	}
-	
+
 	public DeckEditorRow(DeckEditorView view, Deck deck, int count, String cardName) {
 		this(view, deck, count, cardName, null, null);
 	}
-	
+
 	public DeckEditorRow(DeckEditorView view, Deck deck, int count, String cardName, String otherDeckName, Deck otherDeck) {
 		super();
 		this.view = view;
@@ -54,7 +54,7 @@ public class DeckEditorRow extends PPanel {
 		this.otherDeck = otherDeck;
 		init(count);
 	}
-	
+
 	protected void init(int count) {
 		removeButton = JUtil.buildCloseButton();
 		removeButton.setFocusable(false);
@@ -65,29 +65,29 @@ public class DeckEditorRow extends PPanel {
 			public void actionPerformed(ActionEvent e) {
 				remove();
 			}
-			
+
 		});
-		
+
 		if(otherDeckName != null) {
 			moveButton = new JandorButton(otherDeckName);
 			moveButton.setFocusable(false);
 			moveButton.hide();
 			moveButton.addActionListener(new ActionListener() {
-	
+
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					moveToDeck();
 				}
-				
+
 			});
 		}
-		
+
 		colorLabel = new JLabel("");
 		colorLabel.setFocusable(false);
         //colorLabel.setOpaque(true);
         //colorLabel.setPreferredSize(new Dimension(14, 18));
         //colorLabel.setBorder(BorderFactory.createLineBorder(ColorUtil.DARK_GRAY_0));
-		
+
 		countSpinner = new PSpinner(count, isDraft() && !CardUtil.isBasicLandName(cardName) ? 0 : 1, 99) {
 
 			@Override
@@ -99,12 +99,12 @@ public class DeckEditorRow extends PPanel {
 							int deckCount = deck.getCount(cardName);
 							int sbCount = view.getDeck().getSideboard().getCount(cardName);
 							sbCount += deckCount - value;
-							
+
 							if(sbCount < 0) {
 								countSpinner.setValue(deckCount);
 								return;
 							}
-							
+
 							view.setCardCount(deck, cardName, value);
 							view.setCardCount(view.getDeck().getSideboard(), cardName, sbCount);
 						// Removing from sideboard
@@ -117,30 +117,30 @@ public class DeckEditorRow extends PPanel {
 								countSpinner.setValue(sbCount);
 								return;
 							}
-							
+
 							view.setCardCount(deck, cardName, value);
 							view.setCardCount(view.getDeck(), cardName, deckCount);
 						}
 						view.rebuildDeckRows();
 					}
-					
+
 					view.setCardCount(deck, cardName, value);
 				}
 			}
-			
+
 		};
 		//countSpinner.setBorder(BorderFactory.createEmptyBorder());
 		//countSpinner.setArrowColor(ColorUtil.DARK_GRAY_3);
-		
+
 		//countSpinner.setShowArrows(false);
-		
+
 		cardCombo = new AutoComboBox<String>() {
 
 			@Override
 			public Collection<String> getSearchCollection(String searchString) {
 				if(isDraft()) {
 					return CardUtil.getAllBasicLandNames();
-				} 
+				}
 				return CardUtil.getAllCardNames();
 			}
 
@@ -162,7 +162,7 @@ public class DeckEditorRow extends PPanel {
 				if(selectedItem == null) {
 					selectedItem = getText();
 				}
-				
+
 				//String tt = new Card(clean(selectedItem)).getToolTipText();
 				Card card = new Card(clean(selectedItem));
 				if(card.getCardInfo() == null) {
@@ -173,13 +173,13 @@ public class DeckEditorRow extends PPanel {
 				updateColorLabelTooltip();
 				return tt;
 			}
-			
+
         };
         cardCombo.getTextField().setText(cardName);
         cardCombo.setSelectedItem(cardName);
         cardCombo.updateTooltip();
         //cardCombo.setBorder(BorderFactory.createLineBorder(Color.WHITE));
-        
+
         cardCombo.getTextField().getDocument().addDocumentListener(new DocumentListener() {
 
 			@Override
@@ -196,18 +196,18 @@ public class DeckEditorRow extends PPanel {
 			public void removeUpdate(DocumentEvent arg0) {
 				updateComboColor();
 			}
-        	
+
         });
-        
+
         cardCombo.getTextField().setEditable(false);
         cardCombo.getTextField().setFocusable(false);
         cardCombo.setFocusable(false);
-        
+
         Dimension dim = new Dimension(200,cardCombo.getPreferredSize().height);
         cardCombo.setPreferredSize(dim);
         cardCombo.setMaximumSize(dim);
         updateComboColor();
-        
+
         c.insets(0, 0, 0, 10);
         add(removeButton, c);
         c.gridx++;
@@ -225,10 +225,10 @@ public class DeckEditorRow extends PPanel {
         }
         c.insets(0, 10);
         c.weaken();
-        
+
         updateColorLabelTooltip();
 	}
-	
+
 	public void updateColorLabelTooltip() {
 		if(hasCard()) {
 			Card card = getCard();
@@ -240,37 +240,37 @@ public class DeckEditorRow extends PPanel {
 		} else {
 			//colorLabel.setToolTipText("There is no card named \"" + getText() + "\"");
 		}
-		
+
 		// Super weird size fix, but technically works
 		if(view != null && view.getParent() != null && view.getParent().getParent() != null && view.getParent().getParent().getParent() != null) {
 			view.getParent().getParent().getParent().revalidate();
 		}
 	}
-	
+
 	public void hideColorLabel() {
 		colorLabel.setVisible(false);
 	}
-	
+
 	public void hideSpinner() {
 		countSpinner.setVisible(false);
 	}
-	
+
 	public boolean isDraft() {
 		return view instanceof DraftEditorView;
 	}
-	
+
 	public boolean isSideboard() {
 		return !view.getDeck().equals(deck);
 	}
-	
+
 	public JandorButton getRemoveButton() {
 		return removeButton;
 	}
-	
+
 	public JandorButton getMoveButton() {
 		return moveButton;
 	}
-	
+
 	public void remove() {
 		if(isDraft() && !CardUtil.isBasicLandName(cardName)) {
 			// Removing from main deck
@@ -290,7 +290,7 @@ public class DeckEditorRow extends PPanel {
 			view.rebuildDeckRows();
 		}
 	}
-	
+
 	public void moveToDeck() {
 		if(otherDeck == null) {
 			return;
@@ -301,11 +301,11 @@ public class DeckEditorRow extends PPanel {
 		view.rebuildDeckRows();
 		view.flagModified();
 	}
-	
+
 	public AutoComboBox<String> getCardCombo() {
 		return cardCombo;
 	}
-	
+
 	private void updateComboColor() {
 		if(hasCard()) {
 			colorLabel.setBackground(ManaUtil.getColor(getCard()));
@@ -315,18 +315,18 @@ public class DeckEditorRow extends PPanel {
 		view.revalidate();
 		updateColorLabelTooltip();
 	}
-	
+
 	public int getCount() {
 		return (Integer) countSpinner.getValue();
 	}
-	
+
 	public Card getCard() {
 		if(!hasCard()) {
 			return null;
 		}
 		return new Card(getText());
 	}
-	
+
 	public String clean(String text) {
 		/*if(text == null) {
 			return null;
@@ -349,18 +349,18 @@ public class DeckEditorRow extends PPanel {
 		}
 		return cardName;
 	}
-	
+
 	public String getText() {
 		return clean(cardCombo.getTextField().getText());
 	}
-	
+
 	public boolean hasCard() {
 		return CardUtil.getCardInfo(getText()) != null;
 	}
-	
+
 	public GlassPane buildGlassPane() {
 		GlassPane gp = new GlassPane(this) {
-			
+
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				removeButton.show();
@@ -378,7 +378,7 @@ public class DeckEditorRow extends PPanel {
 				}
 				super.mouseExited(e);
 			}
-				
+
 		};
 		return gp;
 	}

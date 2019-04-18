@@ -44,6 +44,7 @@ public class ImageUtil {
 
 	public static final double DEFAULT_SCALE = 1.0; //0.8; //0.675;
 
+	private static Map<String, Boolean> customImagesByName = new HashMap<String, Boolean>();
 	private static Map<File, BufferedImage> imagesToCacheToDisc = new HashMap<File, BufferedImage>();
 	private static final Map<String, BufferedImage> imageCache = new HashMap<String, BufferedImage>();
 	private static double scale = DEFAULT_SCALE;
@@ -344,7 +345,13 @@ public class ImageUtil {
 	    guiCard.printLabels(g, manaColor, w, h);
 	    g.dispose();
 
+	    customImagesByName.put(name, true);
+
 	    return bimg;
+	}
+
+	public static boolean isCustomImage(String name) {
+		return customImagesByName.containsKey(name) && customImagesByName.get(name);
 	}
 
 	public static double getScale() {
@@ -647,7 +654,10 @@ public class ImageUtil {
     	}
     	for(File file : copyCachedImagesToDisc.keySet()) {
     		try {
-    			ImageIO.write(copyCachedImagesToDisc.get(file), "png", file);
+    			BufferedImage img = copyCachedImagesToDisc.get(file);
+    			if(img != null) {
+    				ImageIO.write(img, "png", file);
+    			}
 				imagesToCacheToDisc.remove(file);
     		} catch (IOException e) {
 				e.printStackTrace();

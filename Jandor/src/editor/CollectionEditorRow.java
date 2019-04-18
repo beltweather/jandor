@@ -294,7 +294,7 @@ public class CollectionEditorRow extends PPanel {
 	}
 
 	public void share() {
-		if(DebugUtil.isOfflineMode()) {
+		if(DebugUtil.OFFLINE_MODE) {
 			JUtil.showWarningDialog(this, "Cannot Send Deck", "Currently running in offline mode. Cannot send decks.");
 			return;
 		}

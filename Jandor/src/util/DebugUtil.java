@@ -16,6 +16,7 @@ import ui.pwidget.JUtil;
 public class DebugUtil {
 
 	public static boolean OFFLINE_MODE = false;
+	public static boolean IMAGES_OFFLINE_MODE = false;
 	public static final boolean CACHE_IMAGES_FOR_OFFLINE = true;
 
 	private DebugUtil() {}
@@ -23,10 +24,6 @@ public class DebugUtil {
 	public static void init() {
 		trustAllCerts();
 		detectOffline();
-	}
-
-	public static boolean isOfflineMode() {
-		return OFFLINE_MODE;
 	}
 
 	private static void trustAllCerts() {
@@ -58,11 +55,19 @@ public class DebugUtil {
 			image = null;
 		}
 
+		if(image == null) {
+			System.out.println("Failed to load test image \"" + urlString + "\". Navigate to that location in a web browser to see if it exists.");
+			IMAGES_OFFLINE_MODE = true;
+			JUtil.showWarningDialog(null, "Cannot Download Images", "Could not connect to image service. You will not be able to see images for cards that you haven't already cached.");
+		}
+
+		// Test we can get our user data
+		boolean success = UserUtil.getUsers().size() > 0;
+
 		// If we couldn't load this image from a url, assume we are offline.
 		// Note that if we are already in OFFLINE_MODE, we don't toggle it
 		// on even if we're able to load the image.
-		if(image == null) {
-			System.out.println("Failed to load test image \"" + urlString + "\". Navigate to that location in a web browser to see if it exists.");
+		if(!success) {
 			OFFLINE_MODE = true;
 			System.out.println("Something is wrong, running in offline mode.");
 			JUtil.showWarningDialog(null, "Running in Offline Mode", "Could not connect to services. Running in offline mode. You will not be able to send decks, play against friends, or any other online features.");

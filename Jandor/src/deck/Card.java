@@ -13,6 +13,7 @@ import jackson.AllCardsJson.CardJson;
 import jackson.AllSetsJson.SetCardJson;
 import jackson.AllSetsJson.SetJson;
 import util.CardUtil;
+import util.DebugUtil;
 import util.ImageUtil;
 import util.ManaUtil;
 
@@ -480,6 +481,10 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public String getImageHtml() {
+		if(ImageUtil.isCustomImage(getImageAlias()) || DebugUtil.IMAGES_OFFLINE_MODE) {
+			String html = getToolTipText();
+			return html.substring(6, html.length()-7);
+		}
 		return ImageUtil.getImageHtml(this);
 	}
 
