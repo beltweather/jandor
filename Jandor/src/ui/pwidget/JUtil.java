@@ -668,12 +668,12 @@ public class JUtil {
 		return JOptionPane.showConfirmDialog(SwingUtilities.getRoot(parent), component, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION;
 	}
 
-	public static boolean showWarningDialog(Component parent, String title, Component component) {
-		return JOptionPane.showConfirmDialog(SwingUtilities.getRoot(parent), component, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
+	public static void showWarningDialog(Component parent, String title, Component component) {
+		JOptionPane.showMessageDialog(SwingUtilities.getRoot(parent), component, title, JOptionPane.WARNING_MESSAGE);
 	}
 
-	public static boolean showWarningDialog(Component parent, String title, String message) {
-		 return JOptionPane.showConfirmDialog(SwingUtilities.getRoot(parent), message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
+	public static void showWarningDialog(Component parent, String title, String message) {
+		JOptionPane.showMessageDialog(SwingUtilities.getRoot(parent), message, title, JOptionPane.WARNING_MESSAGE);
 	}
 
 	public static void showMessageDialog(Component parent, String title, String message) {

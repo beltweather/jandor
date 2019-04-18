@@ -3,8 +3,15 @@ package util;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import ui.pwidget.JUtil;
 
 public class DebugUtil {
 
@@ -14,7 +21,32 @@ public class DebugUtil {
 	private DebugUtil() {}
 
 	public static void init() {
+		trustAllCerts();
 		detectOffline();
+	}
+
+	public static boolean isOfflineMode() {
+		return OFFLINE_MODE;
+	}
+
+	private static void trustAllCerts() {
+		// Create a new trust manager that trust all certificates
+		TrustManager[] trustAllCerts = new TrustManager[]{
+		    new X509TrustManager() {
+		        public X509Certificate[] getAcceptedIssuers() { return null; }
+		        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+		        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+		    }
+		};
+
+		// Activate the new trust manager
+		try {
+		    SSLContext sc = SSLContext.getInstance("SSL");
+		    sc.init(null, trustAllCerts, new java.security.SecureRandom());
+		    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (Exception e) {
+
+		}
 	}
 
 	private static void detectOffline() {
@@ -30,8 +62,10 @@ public class DebugUtil {
 		// Note that if we are already in OFFLINE_MODE, we don't toggle it
 		// on even if we're able to load the image.
 		if(image == null) {
+			System.out.println("Failed to load test image \"" + urlString + "\". Navigate to that location in a web browser to see if it exists.");
 			OFFLINE_MODE = true;
 			System.out.println("Something is wrong, running in offline mode.");
+			JUtil.showWarningDialog(null, "Running in Offline Mode", "Could not connect to services. Running in offline mode. You will not be able to send decks, play against friends, or any other online features.");
 		}
 	}
 

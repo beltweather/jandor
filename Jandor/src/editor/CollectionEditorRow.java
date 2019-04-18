@@ -26,6 +26,7 @@ import ui.pwidget.PTabPane;
 import ui.view.BoardView;
 import ui.view.CollectionEditorView;
 import ui.view.DeckEditorView;
+import util.DebugUtil;
 import util.LoginUtil;
 import util.ManaUtil;
 import util.TimeUtil;
@@ -46,18 +47,18 @@ public class CollectionEditorRow extends PPanel {
 	protected JandorButton copyButton;
 	protected JandorButton tagButton;
 	protected PPanel tagPanel;
-	
+
 	public CollectionEditorRow(CollectionEditorView view, DeckHeader header) {
 		this(view, header.getId());
 	}
-	
+
 	public CollectionEditorRow(CollectionEditorView view, int deckHeaderId) {
 		super();
 		this.view = view;
 		this.deckHeaderId = deckHeaderId;
 		init();
 	}
-	
+
 	protected void init() {
 		final DeckHeader header = getDeckHeader();
 
@@ -71,9 +72,9 @@ public class CollectionEditorRow extends PPanel {
 					remove();
 				}
 			}
-			
+
 		});
-		
+
 		playButton = new JandorButton("Play");
 		playButton.hide();
 		playButton.addActionListener(new ActionListener() {
@@ -82,9 +83,9 @@ public class CollectionEditorRow extends PPanel {
 			public void actionPerformed(ActionEvent e) {
 				play();
 			}
-			
+
 		});
-		
+
 		copyButton = new JandorButton("Copy");
 		copyButton.hide();
 		copyButton.addActionListener(new ActionListener() {
@@ -93,9 +94,9 @@ public class CollectionEditorRow extends PPanel {
 			public void actionPerformed(ActionEvent e) {
 				copy();
 			}
-			
+
 		});
-		
+
 		shareButton = new JandorButton(header.isInbox() ? "Move" : "Send");
 		shareButton.hide();
 		shareButton.addActionListener(new ActionListener() {
@@ -108,9 +109,9 @@ public class CollectionEditorRow extends PPanel {
 					share();
 				}
 			}
-			
+
 		});
-		
+
 		tagButton = new JandorButton("+ Tag");
 		tagButton.hide();
 		tagButton.addActionListener(new ActionListener() {
@@ -119,9 +120,9 @@ public class CollectionEditorRow extends PPanel {
 			public void actionPerformed(ActionEvent e) {
 				addTag();
 			}
-			
+
 		});
-		
+
 		nameButton = new JandorButton(header.getName());
 		nameButton.setShowTextAlways(true);
 		nameButton.hide();
@@ -136,15 +137,15 @@ public class CollectionEditorRow extends PPanel {
 				DeckEditorView.addDeckEditorView(accordion, deckHeaderId, view);
 				accordion.rebuild();
 			}
-			
+
 		});
-		
+
 		nameButton.setToolTipText(buildTooltip());
-		
+
 		User user = LoginUtil.getUser();
-		authorLabel = new JLabel(header.getAuthor().isEmpty() || header.getAuthorGUID().equals(user.getGUID()) ? "" : "by " + header.getAuthorFormatted() + ""); 
+		authorLabel = new JLabel(header.getAuthor().isEmpty() || header.getAuthorGUID().equals(user.getGUID()) ? "" : "by " + header.getAuthorFormatted() + "");
 		colorLabel = new JLabel("<html>" + getManaString() + "</html>");
-		
+
 		c.anchor = G.CENTER;
 		c.weaken();
 		c.insets(0, 5, 0, 5);
@@ -162,7 +163,7 @@ public class CollectionEditorRow extends PPanel {
         add(colorLabel, c);
         c.gridx++;
         add(playButton, c);
-        
+
         tagPanel = new PPanel();
         if(view.isShowTags()) {
         	tagPanel.addc(new JLabel(""));
@@ -178,7 +179,7 @@ public class CollectionEditorRow extends PPanel {
     			public int compare(Tag tagA, Tag tagB) {
     				return tagA.getName().compareTo(tagB.getName());
     			}
-    			
+
     		});
         	for(Tag tag : tags) {
         		TagLabel tagLabel = new TagLabel(tag.getId()) {
@@ -188,7 +189,7 @@ public class CollectionEditorRow extends PPanel {
 						header.removeTagId(tagId);
 						header.save();
 					}
-        			
+
         		};
         		tagPanel.c.gridx++;
         		tagPanel.addc(tagLabel);
@@ -196,25 +197,25 @@ public class CollectionEditorRow extends PPanel {
         		tagPanel.addc(gp);
         		tagPanel.setComponentZOrder(gp, 1);
         	}
-        	
+
         	c.gridy++;
             c.gridx = 0;
             c.gridwidth = 10;
             c.anchor = G.EAST;
             c.insets(5, 0, 5, 0);
         	addc(tagPanel);
-        	
+
             c.insets(0, 5, 0, 5);
             c.gridx = 11;
             addc(tagButton);
         }
-        
+
 	}
-	
+
 	public JLabel getAuthorLabel() {
 		return authorLabel;
 	}
-	
+
 	public PPanel getTagPanel() {
 		return tagPanel;
 	}
@@ -227,11 +228,11 @@ public class CollectionEditorRow extends PPanel {
 		}
 		return header.getColors() == null || header.getColors().isEmpty() ? "" : ManaUtil.toManaHtml(manaSymbols);
 	}
-	
+
 	public DeckHeader getDeckHeader() {
 		return Session.getInstance().getDeckHeader(deckHeaderId);
 	}
-	
+
 	private String buildTooltip() {
 		DeckHeader header = getDeckHeader();
 		StringBuilder sb = new StringBuilder();
@@ -252,7 +253,7 @@ public class CollectionEditorRow extends PPanel {
 			sb.append("<br>");
 			sb.append(header.getNote() + "</div>");
 		}
-		
+
 		if(header.getTagIds().size() > 0) {
 			sb.append("<br>");
 			sb.append("<br>");
@@ -268,21 +269,21 @@ public class CollectionEditorRow extends PPanel {
 		sb.append("</html>");
 		return sb.toString();
 	}
-	
+
 	public JandorButton getRemoveButton() {
 		return removeButton;
 	}
-	
+
 	public void remove() {
 		if(getDeckHeader() != null) {
 			getDeckHeader().delete();
 		}
 		view.rebuildDeckRows();
 	}
-	
+
 	public void play() {
 		Deck deck = getDeck();
-		
+
 		JandorTabFrame frame = JUtil.getFrame(this);
 		PTabPane tabPane = frame.getTabPane();
 		BoardView boardView = new BoardView(BoardView.DEFAULT_TITLE);
@@ -291,12 +292,16 @@ public class CollectionEditorRow extends PPanel {
 		tabPane.addTab(JandorTabFrame.toBoardTitle(deck), boardView);
 		tabPane.setSelectedIndex(tabPane.getTabCount() - 1);
 	}
-	
+
 	public void share() {
+		if(DebugUtil.isOfflineMode()) {
+			JUtil.showWarningDialog(this, "Cannot Send Deck", "Currently running in offline mode. Cannot send decks.");
+			return;
+		}
 		SendDialog dialog = new SendDialog(deckHeaderId);
 		dialog.showDialog();
 	}
-	
+
 	public void moveToCollection() {
 		DeckHeader header = getDeckHeader();
 		if(JUtil.showConfirmDialog(JUtil.getFrame(this), "Move Deck \"" + header.getName() + "\"", new JLabel("Move deck \"" + header.getName() + "\" to your collection?"))) {
@@ -304,11 +309,11 @@ public class CollectionEditorRow extends PPanel {
 			header.save();
 		}
 	}
-	
+
 	public void copy() {
-		
+
 	}
-	
+
 	public void addTag() {
 		TagDialog dialog = new TagDialog(view, deckHeaderId) {
 
@@ -318,18 +323,18 @@ public class CollectionEditorRow extends PPanel {
 				header.addTag(tag);
 				header.save();
 			}
-			
+
 		};
 		dialog.showDialog();
 	}
-	
+
 	public Deck getDeck() {
 		return new Deck(getDeckHeader(), Session.getInstance().getDeckContent(deckHeaderId));
 	}
-	
+
 	public GlassPane buildGlassPane() {
 		GlassPane gp = new GlassPane(this) {
-			
+
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				removeButton.show();
@@ -351,7 +356,7 @@ public class CollectionEditorRow extends PPanel {
 				copyButton.hide();
 				super.mouseExited(e);
 			}
-				
+
 		};
 		return gp;
 	}

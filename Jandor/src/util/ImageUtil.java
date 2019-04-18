@@ -106,7 +106,7 @@ public class ImageUtil {
 		if(size.equals(ManaUtil.SIZE_SMALL)) {
 			return getResourceUrl(symbolName + ".jpg");
 		}
-		return "http://gatherer.wizards.com/Handlers/Image.ashx?size=" + size + "&name=" + symbolName + "&type=symbol";
+		return "https://gatherer.wizards.com/Handlers/Image.ashx?size=" + size + "&name=" + symbolName + "&type=symbol";
 	}
 
 	public static BufferedImage readImage(int multiverseId, String name) {
