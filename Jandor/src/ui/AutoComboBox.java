@@ -24,17 +24,17 @@ import ui.pwidget.PScrollPane.PScrollBarUI;
 public abstract class AutoComboBox<T> extends JComboBox<T> {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	protected SearchHandler<T> handler;
-	
+
 	public AutoComboBox() {
 		this(null, true);
 	}
-	
+
 	public AutoComboBox(SearchHandler<T> handler, boolean hideArrow) {
 		super();
 		setEditable(true);
-		
+
 		if(hideArrow) {
 			setUI(new BasicComboBoxUI() {
 	            @Override
@@ -48,7 +48,7 @@ public abstract class AutoComboBox<T> extends JComboBox<T> {
 	            }
 	        });
 		}
-		
+
 		remove(this.getComponent(0));
         setMaximumRowCount(20);
         setItems(new Vector<T>());
@@ -61,25 +61,25 @@ public abstract class AutoComboBox<T> extends JComboBox<T> {
 	    	this.handler = new SearchHandler<T>(this);
 	    }
 	    text.addKeyListener(this.handler);
-	    
+
 	    setRenderer(new AutoListCellRenderer<T>(this));
-	
+
 	    addActionListener(new ActionListener() {
 	        public void actionPerformed(ActionEvent e) {
 	        	updateTooltip();
 	        }
 	    });
-	    
+
 	    addPopupMenuListener(new PopupMenuListener() {
 
 			@Override
 			public void popupMenuCanceled(PopupMenuEvent e) {
-				
+
 			}
 
 			@Override
 			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-				
+
 			}
 
 			@Override
@@ -95,23 +95,23 @@ public abstract class AutoComboBox<T> extends JComboBox<T> {
 					setBorder(null);
 				}
 			}
-	    	
+
 	    });
 	}
-	
+
 	public JTextField getTextField() {
 		return (JTextField) this.getEditor().getEditorComponent();
 	}
-	
+
 	public SearchHandler<T> getSearchHandler() {
 		return handler;
 	}
-	
+
 	public void setItems(Vector<T> items) {
 		 setModel(new DefaultComboBoxModel<T>(items));
 		 setSelectedIndex(-1);
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void updateTooltip() {
 		Object obj = getSelectedItem();
@@ -119,7 +119,7 @@ public abstract class AutoComboBox<T> extends JComboBox<T> {
 			setToolTipText(null);
 			return;
 		}
-		
+
 		Class klass = (Class<T>)
                 ((ParameterizedType)getClass()
                 .getGenericSuperclass())
@@ -129,14 +129,41 @@ public abstract class AutoComboBox<T> extends JComboBox<T> {
 		} else {
 			setToolTipText(null);
 		}
-	} 
-	
+	}
+
 	public abstract String buildTooltip(T selectedItem);
-	
+
 	public abstract Collection<T> getSearchCollection(String searchString);
-	
-	public abstract String toString(T searchedObject); 
-	
+
+	public abstract String toString(T searchedObject);
+
 	public abstract void handleFound(T found);
-	
+
+	/**
+	 * Override this method to handle how to convert text to an item in the combo.
+	 */
+	public Object convertTextToItem(String text) {
+		return text;
+	}
+
+	@Override
+	public Object getSelectedItem() {
+		Object obj = super.getSelectedItem();
+		if(obj == null) {
+			return null;
+		}
+
+		Class klass = (Class<T>)
+                ((ParameterizedType)getClass()
+                .getGenericSuperclass())
+                .getActualTypeArguments()[0];
+		if(klass.isAssignableFrom(obj.getClass())) {
+			return obj;
+		} else if(obj instanceof String) {
+			return convertTextToItem((String) obj);
+		}
+
+		return obj;
+	}
+
 }

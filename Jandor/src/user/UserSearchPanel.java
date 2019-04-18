@@ -17,14 +17,14 @@ import util.UserUtil;
 public class UserSearchPanel extends PPanel {
 
 	protected AutoComboBox<User> userCombo;
-	
+
 	public UserSearchPanel() {
 		init();
 	}
-	
+
 	private void init() {
 		JLabel toLabel = new JLabel("To:");
-		
+
 		userCombo = new AutoComboBox<User>() {
 
 			@Override
@@ -44,18 +44,27 @@ public class UserSearchPanel extends PPanel {
 
 			@Override
 			public void handleFound(User found) {
-				
+
 			}
-		
+
+			@Override
+			public Object convertTextToItem(String text) {
+				User user = UserUtil.getUserByUsername(text);
+				if(user == null) {
+					user = UserUtil.getUserByEmail(text);
+				}
+				return user;
+			}
+
 		};
 		userCombo.setBorder(BorderFactory.createLineBorder(Color.WHITE));
 		userCombo.setPreferredSize(new Dimension(400,20));
 		userCombo.getTextField().setText("");
-		
+
 		PPanel toPanel = new PPanel();
 		toPanel.addc(userCombo);
 		toPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE));
-	
+
 		c.weaken();
 		c.anchor = G.NORTHEAST;
 		addc(toLabel);
@@ -63,7 +72,7 @@ public class UserSearchPanel extends PPanel {
 		c.insets(0,5);
 		addc(toPanel);
 	}
-	
+
 	public String getText() {
 		return userCombo.getTextField().getText();
 	}
@@ -71,9 +80,18 @@ public class UserSearchPanel extends PPanel {
 	public void setText(String text) {
 		userCombo.getTextField().setText(text);
 	}
-	
+
 	public User getUser() {
-		User user = (User) userCombo.getSelectedItem();
+		Object item = userCombo.getSelectedItem();
+		if(item == null) {
+			return null;
+		}
+
+		if(!(item instanceof User)) {
+			return null;
+		}
+
+		User user = (User) item;
 		if(user == null) {
 			String text = userCombo.getTextField().getText();
 			user = UserUtil.getUserByUsername(text);
@@ -89,9 +107,9 @@ public class UserSearchPanel extends PPanel {
 		}
 		return user;
 	}
-	
+
 	public boolean isValidUser() {
 		return getUser() != null;
 	}
-	
+
 }
