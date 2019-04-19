@@ -146,7 +146,8 @@ public class PriceUtil {
 				results.append(", ");
 			}
 
-			double marketPrice = Math.random() * 10;
+			//double marketPrice = Math.random() * 10;
+			double marketPrice = 1.00;
 
 			results.append(
 				"{" +

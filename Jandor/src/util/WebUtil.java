@@ -1,5 +1,6 @@
 package util;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -35,6 +37,22 @@ public class WebUtil {
 	}
 
 	private WebUtil() {}
+
+	public static void browse(String url) {
+		try {
+			browse(new URL(url));
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void browse(URL url) {
+		try {
+			Desktop.getDesktop().browse(url.toURI());
+		} catch (IOException | URISyntaxException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static File download(String url, File outputFile) {
 		return download(url, outputFile == null ? null : outputFile.getAbsolutePath());

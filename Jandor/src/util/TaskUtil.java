@@ -1,31 +1,28 @@
 package util;
 
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 public class TaskUtil {
 
 	private TaskUtil() {}
 
-	public static interface Task {
-
-		public void run();
-
-	}
-
-	public static void run(Task task) {
-		if(task == null) {
-			return;
-		}
+	// Usage: run(() -> { ... do something ... })
+	public static void run(Runnable runnable) {
 		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {
-				task.run();
+				runnable.run();
 				return null;
 			}
 
 		};
 		worker.execute();
+	}
+
+	public static void runSwing(Runnable runnable) {
+		SwingUtilities.invokeLater(runnable);
 	}
 
 }

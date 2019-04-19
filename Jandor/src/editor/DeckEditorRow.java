@@ -20,6 +20,8 @@ import ui.GlassPane;
 import ui.JandorButton;
 import ui.pwidget.ColorUtil;
 import ui.pwidget.JUtil;
+import ui.pwidget.PButton;
+import ui.pwidget.PLinkButton;
 import ui.pwidget.PPanel;
 import ui.pwidget.PSpinner;
 import ui.view.DeckEditorView;
@@ -27,11 +29,12 @@ import ui.view.DraftEditorView;
 import util.CardUtil;
 import util.ManaUtil;
 import util.PriceUtil.PriceJson;
+import util.WebUtil;
 
 public class DeckEditorRow extends PPanel {
 
-	private static final Color PRICE_COLOR = new Color(190, 248, 205);
-	private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(new Locale("en", "US"));
+	public static final Color PRICE_COLOR = new Color(190, 248, 205);
+	public static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(new Locale("en", "US"));
 
 	private PSpinner countSpinner;
 	private AutoComboBox<String> cardCombo;
@@ -43,7 +46,8 @@ public class DeckEditorRow extends PPanel {
 	private JandorButton moveButton;
 	private String cardName;
 	private String otherDeckName;
-	private JLabel priceLabel;
+	//private JLabel priceLabel;
+	private PButton priceLabel;
 
 	public DeckEditorRow(DeckEditorView view, Deck deck) {
 		this(view, deck, 0, "");
@@ -216,9 +220,17 @@ public class DeckEditorRow extends PPanel {
         cardCombo.setMaximumSize(dim);
         updateComboColor();
 
-        priceLabel = new JLabel(getPriceText());
+        priceLabel = new PLinkButton(getPriceText());
         priceLabel.setForeground(PRICE_COLOR);
 		priceLabel.setFocusable(false);
+		priceLabel.addActionListener((e) -> {
+			String url = getCard().getTCGPlayerPurchaseUrl();
+			if(url == null) {
+				JUtil.showWarningDialog(DeckEditorRow.this, "Cannot Redirect to TCGPlayer", "No url found for card \"" + getCard().getName() + "\".");
+			} else {
+				WebUtil.browse(getCard().getTCGPlayerPurchaseUrl());
+			}
+		});
 
         c.insets(0, 0, 0, 10);
         add(removeButton, c);

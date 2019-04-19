@@ -20,7 +20,6 @@ import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -57,6 +56,7 @@ import util.ImageUtil;
 import util.PriceUtil;
 import util.ShuffleType;
 import util.ShuffleUtil;
+import util.TaskUtil;
 import util.TimeUtil;
 import util.event.SessionEvent;
 import util.event.SessionEventListener;
@@ -166,6 +166,7 @@ public class DeckEditorView extends JandorView {
 
 	protected Map<String, Map<String, JLabel>> typeLabels = new HashMap<String, Map<String, JLabel>>();
 	protected Map<String, JLabel> totalLabels = new HashMap<String, JLabel>();
+	protected JLabel priceLabel;
 	protected SortHandler sortHandler;
 	protected PPanel deckPanel;
 	protected PPanel sideboardPanel;
@@ -594,9 +595,11 @@ public class DeckEditorView extends JandorView {
 			PriceUtil.fetchPrices(deck, (List<Card> cards) -> {
 				if(cards.size() > 0) {
 					System.out.println("Updated the price of " + cards.size() + " cards. Rebuilding again.");
-					SwingUtilities.invokeLater(() -> {
+					TaskUtil.runSwing(() -> {
 						rebuildDeckRows();
 					});
+				} else if(force) {
+					rebuildDeckRows();
 				}
 			});
 		} else if(force) {
@@ -1187,11 +1190,18 @@ public class DeckEditorView extends JandorView {
 		cardTotalLabel.setFocusable(false);
 		totalLabels.put(deck.getName(), cardTotalLabel);
 
+		priceLabel = new JLabel(getDeckPriceText(deck));
+		priceLabel.setForeground(DeckEditorRow.PRICE_COLOR);
+		priceLabel.setFocusable(false);
+
 		p.c.gridy++;
 		p.c.anchor = G.CENTER;
 		p.c.insets(20, 0, 0, 0);
 		p.add(totalLabels.get(deck.getName()), p.c);
 		p.c.gridy++;
+		p.add(priceLabel, p.c);
+		p.c.gridy++;
+
 		p.c.insets(50);
 		p.c.anchor = G.WEST;
 		p.c.insets();
@@ -1199,6 +1209,21 @@ public class DeckEditorView extends JandorView {
 		p.c.gridx++;
 		p.c.strengthen();
 		p.add(Box.createHorizontalStrut(1), p.c);
+	}
+
+	public String getDeckPriceText(Deck deck) {
+		if(!isShowPrice()) {
+			return "";
+		}
+		double price = 0;
+		Map<Card, Integer> cards = deck.getCountsByCard();
+		for(Card card : cards.keySet()) {
+			if(card.getCardInfo() == null || card.getCardInfo().price == null) {
+				continue;
+			}
+			price += card.getCardInfo().price.marketPrice * cards.get(card);
+		}
+		return DeckEditorRow.CURRENCY_FORMAT.format(price);
 	}
 
 	@Override
@@ -1263,6 +1288,7 @@ public class DeckEditorView extends JandorView {
 			allTotal += total;
 		}
 		totalLabels.get(deck.getName()).setText("Cards (" + allTotal + ")");
+		priceLabel.setText(getDeckPriceText(deck));
 	}
 
 	public PPanel getPageHeader() {
