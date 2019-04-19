@@ -39,6 +39,22 @@ public class JacksonUtil {
 		return data;
 	}
 
+	public static <T> T read(Class<T> klass, String json) {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		SimpleModule module = new SimpleModule();
+		module.addDeserializer(String.class, new StringCleanerDeserializer());
+		mapper.registerModule(module);
+
+		T data = null;
+		try {
+			data = mapper.readValue(json, klass);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return data;
+	}
+
 	public static <T> boolean writeExternal(T data, String filename) {
 		return write(data, FileUtil.getExternalResourcesFile(filename));
 	}

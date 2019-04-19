@@ -20,6 +20,7 @@ import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -53,6 +54,7 @@ import ui.pwidget.PTextField;
 import util.CardUtil;
 import util.IDUtil;
 import util.ImageUtil;
+import util.PriceUtil;
 import util.ShuffleType;
 import util.ShuffleUtil;
 import util.TimeUtil;
@@ -63,6 +65,16 @@ import util.event.SessionEventManager;
 public class DeckEditorView extends JandorView {
 
 	public static final String DEFAULT_TITLE = "Editor";
+
+	private static boolean defaultShowPrice = false;
+
+	public static boolean isDefaultShowPrice() {
+		return defaultShowPrice;
+	}
+
+	public static void setDefaultShowPrice(boolean show) {
+		defaultShowPrice = show;
+	}
 
 	public static final List<String> types = new ArrayList<String>();
 	static {
@@ -172,6 +184,7 @@ public class DeckEditorView extends JandorView {
 	protected PButton highlanderButton;
 	protected PButton editDraftButton;
 	protected PButton editDeckButton;
+	protected PCheckBox showPriceCheck;
 	protected PPanel commanderPanel;
 	protected DeckEditorRow commanderEditor;
 	protected JLabel commanderLabel;
@@ -182,6 +195,7 @@ public class DeckEditorView extends JandorView {
 
 	protected int deckId;
 	protected boolean ignoreNextSave = false;
+	protected boolean showPrice = isDefaultShowPrice();
 
 	private static String toDeckName(int deckId) {
 		DeckHeader header = Session.getInstance().getDeckHeader(deckId);
@@ -239,6 +253,7 @@ public class DeckEditorView extends JandorView {
 			}
 
 		});
+
 	}
 
 	public void initDeckHeader() {
@@ -272,6 +287,14 @@ public class DeckEditorView extends JandorView {
 
 	public DeckContent getDeckContent() {
 		return deckContent;
+	}
+
+	public boolean isShowPrice() {
+		return showPrice;
+	}
+
+	public void setShowPrice(boolean showPrice) {
+		this.showPrice = showPrice;
 	}
 
 	@Override
@@ -349,6 +372,19 @@ public class DeckEditorView extends JandorView {
 
 			});
 			highlanderButton.setToolTipText("There can be only one!");
+
+			showPriceCheck = new PCheckBox("Show Price");
+			showPriceCheck.setSelected(isShowPrice());
+			showPriceCheck.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					setDefaultShowPrice(showPriceCheck.isSelected());
+					setShowPrice(showPriceCheck.isSelected());
+					syncPrices(true);
+				}
+
+			});
 
 			editDeckButton = new PButton("Edit as Deck");
 			editDeckButton.addActionListener(new ActionListener() {
@@ -473,6 +509,8 @@ public class DeckEditorView extends JandorView {
 			headerPanel.c.gridx++;
 			headerPanel.addc(highlanderButton);
 			headerPanel.c.gridx++;
+			headerPanel.addc(showPriceCheck);
+			headerPanel.c.gridx++;
 			headerPanel.addc(editDeckButton);
 			headerPanel.c.weightx = 1.0;
 			headerPanel.c.gridx++;
@@ -547,6 +585,23 @@ public class DeckEditorView extends JandorView {
 
 		revalidate();
 
+		syncPrices(false);
+	}
+
+	protected void syncPrices(boolean force) {
+		// Fire another rebuild for price related things
+		if(isShowPrice()) {
+			PriceUtil.fetchPrices(deck, (List<Card> cards) -> {
+				if(cards.size() > 0) {
+					System.out.println("Updated the price of " + cards.size() + " cards. Rebuilding again.");
+					SwingUtilities.invokeLater(() -> {
+						rebuildDeckRows();
+					});
+				}
+			});
+		} else if(force) {
+			rebuildDeckRows();
+		}
 	}
 
 	protected PTextField nameText;
@@ -822,6 +877,8 @@ public class DeckEditorView extends JandorView {
 			revalidate();
 			repaint();
 		}
+
+		syncPrices(false);
 	}
 
 	protected String getDeckText() {

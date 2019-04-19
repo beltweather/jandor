@@ -11,11 +11,11 @@ import canvas.IRenderable;
 import canvas.IRenderer;
 import jackson.AllCardsJson.CardJson;
 import jackson.AllSetsJson.SetCardJson;
-import jackson.AllSetsJson.SetJson;
 import util.CardUtil;
 import util.DebugUtil;
 import util.ImageUtil;
 import util.ManaUtil;
+import util.PriceUtil.PriceJson;
 
 public class Card extends CardRenderer implements IRenderable<Card> {
 
@@ -306,6 +306,22 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 
 	public int getConvertedManaCost() {
 		return (int) getCardInfo().convertedManaCost;
+	}
+
+	public int getTCGPlayerProductId() {
+		return getCardInfo().tcgplayerProductId;
+	}
+
+	public String getTCGPlayerPurchaseUrl() {
+		return getCardInfo().tcgplayerPurchaseUrl;
+	}
+
+	public boolean hasPriceInfo() {
+		return getCardInfo().price != null;
+	}
+
+	public PriceJson getPriceInfo() {
+		return getCardInfo().price;
 	}
 
 	public String getSetName() {

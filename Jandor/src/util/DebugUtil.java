@@ -3,7 +3,7 @@ package util;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.security.cert.X509Certificate;
+import java.security.cert.CertificateException;
 
 import javax.imageio.ImageIO;
 import javax.net.ssl.HttpsURLConnection;
@@ -22,7 +22,7 @@ public class DebugUtil {
 	private DebugUtil() {}
 
 	public static void init() {
-		trustAllCerts();
+		//trustAllCerts();
 		detectOffline();
 	}
 
@@ -30,27 +30,40 @@ public class DebugUtil {
 		// Create a new trust manager that trust all certificates
 		TrustManager[] trustAllCerts = new TrustManager[]{
 		    new X509TrustManager() {
-		        public X509Certificate[] getAcceptedIssuers() { return null; }
-		        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-		        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+		        @Override
+				public void checkClientTrusted(java.security.cert.X509Certificate[] arg0, String arg1)
+						throws CertificateException {
+
+				}
+				@Override
+				public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+						throws CertificateException {
+				}
+				@Override
+				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+					return null;
+				}
 		    }
 		};
 
 		// Activate the new trust manager
 		try {
-		    SSLContext sc = SSLContext.getInstance("SSL");
+		    SSLContext sc = SSLContext.getInstance("TLS");
 		    sc.init(null, trustAllCerts, new java.security.SecureRandom());
 		    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 		} catch (Exception e) {
 
 		}
+
+
 	}
 
 	private static void detectOffline() {
 		String urlString = ImageUtil.getUrl(1);
 		BufferedImage image = null;
 		try {
-			image = ImageIO.read(new URL(urlString));
+			URL url = new URL(urlString);
+			image = ImageIO.read(url);
 		} catch (IOException e) {
 			image = null;
 		}

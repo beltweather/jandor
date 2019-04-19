@@ -52,79 +52,79 @@ import drive.DefaultSheet;
 import drive.FileListener;
 
 public class DriveUtil {
-	
+
 	static {
 		// Fix buggy logger for warning on windows
 		final java.util.logging.Logger buggyLogger = java.util.logging.Logger.getLogger(FileDataStoreFactory.class.getName());
 		buggyLogger.setLevel(java.util.logging.Level.SEVERE);
 	}
-	
+
 	public static final long CHANGE_LISTENER_TIMEOUT = 10000;
 	public static final long INBOX_LISTENER_TIMEOUT = 1000;
-	
+
 	public static final String TAB_DEFAULT = "Sheet1";
 
-	public static final String DOWNLOAD_NAME_ALL_CARDS_X_JSON = FileUtil.RESOURCE_CARDS_JSONS;
-	public static final String DOWNLOAD_NAME_ALL_SETS_JSON = FileUtil.RESOURCE_SETS_JSONS;
-	
+	//public static final String DOWNLOAD_NAME_ALL_CARDS_X_JSON = FileUtil.RESOURCE_CARDS_JSONS;
+	//public static final String DOWNLOAD_NAME_ALL_SETS_JSON = FileUtil.RESOURCE_SETS_JSONS;
+
 	public static final String FOLDER_ID_INBOXES = "0B7KQ1AZJL7icVlczR1lVNWI1LU0";
 	public static final String FOLDER_ID_BACKUPS = "0B7KQ1AZJL7icOXZFNFhNYUpTYkU";
-	
+
 	public static final String SHEET_ID_USERS = "1q9d7gM0z2t7oo_T8DFPDpWjW1C7mqqvrh_PDWtzbOtg";
 	public static final String TAB_NAME_USERS = "Users";
 	public static final String START_RANGE_USERS = "A";
 	public static final String END_RANGE_USERS = "F";
-	
+
 	public static final String TAB_NAME_INBOX = "Inbox";
 	public static final String START_RANGE_INBOX = "A";
 	public static final String END_RANGE_INBOX = "B";
-	
+
 	private static final Map<String, List<FileListener>> fileListenersByFileId = new HashMap<String, List<FileListener>>();
 	private static final List<FileListener> emptyListeners = new ArrayList<FileListener>();
-	
+
 	public static void init() {
 		startListeningForInboxChanges();
 	}
-	
+
 	public static synchronized void addFileListener(FileListener listener) {
 		if(!fileListenersByFileId.containsKey(listener.getFileId())) {
 			fileListenersByFileId.put(listener.getFileId(), new ArrayList<FileListener>());
 		}
 		fileListenersByFileId.get(listener.getFileId()).add(listener);
 	}
-	
+
 	public static synchronized void removeFileListener(FileListener listener) {
 		if(fileListenersByFileId.containsKey(listener.getFileId()) &&
 			fileListenersByFileId.get(listener.getFileId()).contains(listener)) {
 			fileListenersByFileId.get(listener.getFileId()).remove(listener);
 		}
 	}
-	
+
 	public static synchronized List<FileListener> getFileListeners(String fileId) {
 		if(!fileListenersByFileId.containsKey(fileId)) {
 			return emptyListeners;
 		}
 		return fileListenersByFileId.get(fileId);
 	}
-	
+
 	public static final String toInboxFolderId(User user) {
 		return DriveUtil.toFileId(toInboxFolderName(user));
 	}
-	
+
 	public static final String toInboxFolderName(User user) {
 		return "Inbox-" + user.getGUID();
 	}
-	
+
 	public static final String toBackupFolderId(User user) {
 		return DriveUtil.toFileId(toBackupFolderName(user));
 	}
-	
+
 	public static final String toBackupFolderName(User user) {
 		return "Backup-" + user.getGUID();
 	}
-	
+
 	private DriveUtil() {}
-	
+
     /** Application name. */
     private static final String APPLICATION_NAME = "Jandor";
 
@@ -132,7 +132,7 @@ public class DriveUtil {
     /*private static final java.io.File DATA_STORE_DIR = new java.io.File(
         System.getProperty("user.home"), ".credentials/sheets.googleapis.com-java-quickstart");*/
     private static final java.io.File DATA_STORE_DIR = FileUtil.getCredentialsFolder();
-    
+
     private static Credential credential = null;
 
     /** Global instance of the {@link FileDataStoreFactory}. */
@@ -144,7 +144,7 @@ public class DriveUtil {
 
     /** Global instance of the HTTP transport. */
     private static HttpTransport HTTP_TRANSPORT;
-    
+
     /** Global instance of the scopes required by this quickstart.
      *
      * If modifying these scopes, delete your previously saved credentials
@@ -152,10 +152,10 @@ public class DriveUtil {
      */
     private static final List<String> SCOPES =
         Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE, DriveScopes.DRIVE_METADATA);
-    
+
     private static Sheets sheetService = null;
     private static Drive driveService = null;
-    
+
     static {
         try {
             HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -173,13 +173,13 @@ public class DriveUtil {
      */
     private static Credential authorize() throws IOException {
     	if(credential == null) {
-    		
+
 	        // Load client secrets.
 	        InputStream in =
 	            DriveUtil.class.getResourceAsStream("/client_secret.json");
 	        GoogleClientSecrets clientSecrets =
 	            GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-	
+
 	        // Build flow and trigger user authorization request.
 	        GoogleAuthorizationCodeFlow flow =
 	                new GoogleAuthorizationCodeFlow.Builder(
@@ -194,7 +194,7 @@ public class DriveUtil {
     	}
         return credential;
     }
-    
+
     /**
      * Build and return an authorized Sheets API client service.
      * @return an authorized Sheets API client service
@@ -209,7 +209,7 @@ public class DriveUtil {
     	}
         return sheetService;
     }
-    
+
     /**
      * Build and return an authorized Drive client service.
      * @return an authorized Drive client service
@@ -225,7 +225,7 @@ public class DriveUtil {
     	}
     	return driveService;
     }
-    
+
     public static List<List<Object>> getValues(String spreadsheetId, String tabName, String rangeStart, String rangeEnd) {
     	List<List<Object>> values = null;
     	try {
@@ -242,25 +242,25 @@ public class DriveUtil {
 		}
     	return values;
     }
-    
+
     public static void setValue(String spreadsheetId, String tabName, String rangeStart, String rangeEnd, DefaultSheet sheet) {
     	try {
     		Sheets service = getSheetsService();
     		String range = tabName + "!" + rangeStart + ":" + rangeEnd;
-    		
+
     		List<List<Object>> arrData = sheet.getRawData();
-    		
+
       	  	ValueRange oRange = new ValueRange();
       	  	oRange.setRange(range); // I NEED THE NUMBER OF THE LAST ROW
       	  	oRange.setValues(arrData);
-      	  	
+
       	  	List<ValueRange> oList = new ArrayList<>();
       	  	oList.add(oRange);
 
       	  	BatchUpdateValuesRequest oRequest = new BatchUpdateValuesRequest();
       	  	oRequest.setValueInputOption("RAW");
       	  	oRequest.setData(oList);
-    		
+
       	  	BatchUpdateValuesResponse oResp1 = service.spreadsheets().values().batchUpdate(spreadsheetId, oRequest)
     												.execute();
     	} catch (IOException e) {
@@ -269,36 +269,36 @@ public class DriveUtil {
 			}
 		}
     }
-    
+
     public static void setValue(String spreadsheetId, String tabName, String... values) {
     	if(values.length == 0) {
     		return;
     	}
-    	
+
     	String rangeStart = "A";
     	String rangeEnd = String.valueOf((char)('A' + (values.length - 1)));
-    	
+
     	try {
     		Sheets service = getSheetsService();
     		String range = tabName + "!" + rangeStart + ":" + rangeEnd;
-    		
+
     		List<List<Object>> arrData = new ArrayList<List<Object>>();
     		arrData.add(new ArrayList<Object>());
     		for(String value : values) {
     			arrData.get(0).add(value);
     		}
-    		
+
       	  	ValueRange oRange = new ValueRange();
       	  	oRange.setRange(range); // I NEED THE NUMBER OF THE LAST ROW
       	  	oRange.setValues(arrData);
-      	  	
+
       	  	List<ValueRange> oList = new ArrayList<>();
       	  	oList.add(oRange);
 
       	  	BatchUpdateValuesRequest oRequest = new BatchUpdateValuesRequest();
       	  	oRequest.setValueInputOption("RAW");
       	  	oRequest.setData(oList);
-    		
+
       	  	BatchUpdateValuesResponse oResp1 = service.spreadsheets().values().batchUpdate(spreadsheetId, oRequest)
     												.execute();
     	} catch (IOException e) {
@@ -307,13 +307,13 @@ public class DriveUtil {
 			}
 		}
     }
-   
+
     public static String createSheet(String spreadsheetName, String tabName, String... headers) {
     	String sheetId = createSheet(spreadsheetName, tabName);
     	setValue(sheetId, tabName, headers);
     	return sheetId;
     }
-    
+
     public static String createSheet(String spreadsheetName, String tabName) {
     	String sheetId = DriveUtil.createSheet(spreadsheetName);
 		if(sheetId == null) {
@@ -324,17 +324,17 @@ public class DriveUtil {
 		}
 		return sheetId;
     }
-    
+
     public static String createSheet(String spreadsheetName) {
     	String sheetId = null;
     	try {
     		Sheets service = getSheetsService();
-    		
+
     		Spreadsheet sheet = new Spreadsheet();
     		SpreadsheetProperties properties = new SpreadsheetProperties();
     		properties.setTitle(spreadsheetName);
     		sheet.setProperties(properties);
-    		
+
     		Spreadsheet response = service.spreadsheets().create(sheet).execute();
     		sheetId = response.getSpreadsheetId();
     	} catch (IOException e) {
@@ -344,32 +344,32 @@ public class DriveUtil {
 		}
     	return sheetId;
     }
-    
+
     public static void createTab(String spreadsheetId, String tabName) {
     	AddSheetRequest sheetRequest = new AddSheetRequest();
 		SheetProperties properties = new SheetProperties();
 		properties.setTitle(tabName);
 		sheetRequest.setProperties(properties);
-		
+
 		Request request = new Request();
 		request.setAddSheet(sheetRequest);
-		
+
 		performRequest(spreadsheetId, request);
     }
-    
+
     public static void deleteTab(String spreadsheetId, String tabName) {
     	DeleteSheetRequest sheetRequest = new DeleteSheetRequest().setSheetId(getTabId(spreadsheetId, tabName));
-		
+
 		Request request = new Request();
 		request.setDeleteSheet(sheetRequest);
-		
+
 		performRequest(spreadsheetId, request);
     }
-    
+
     public static Integer getTabId(String spreadsheetId, String tabName) {
     	return getTabIdsByName(spreadsheetId).get(tabName);
     }
-    
+
     public static Map<String, Integer> getTabIdsByName(String spreadsheetId) {
     	Map<String, Integer> tabIdsByName = new LinkedHashMap<String, Integer>();
     	Sheets service;
@@ -385,14 +385,14 @@ public class DriveUtil {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return tabIdsByName;
     }
-    
+
     private static void performRequest(String spreadsheetId, Request request) {
     	try {
     		Sheets service = getSheetsService();
-    		
+
     		List<Request> requests = new ArrayList<>();
     		requests.add(request);
     		BatchUpdateSpreadsheetRequest oRequest = new BatchUpdateSpreadsheetRequest();
@@ -403,16 +403,16 @@ public class DriveUtil {
 			if(!handleNotFound(e, spreadsheetId, null)) {
 				e.printStackTrace();
 			}
-		}  
+		}
     }
-    
+
     public static void startListeningForInboxChanges() {
 		if(DebugUtil.OFFLINE_MODE) {
 			return;
 		}
-	
+
 		new Thread() {
-	    		
+
     		@Override
 			public void run() {
     			System.out.println("Started listening to user's inbox");
@@ -423,7 +423,7 @@ public class DriveUtil {
 							if(files != null && !files.isEmpty()) {
 								MailUtil.receiveFilesFromDrive(files);
 							}
-							
+
 							/*if(!getFileListeners(inboxId).isEmpty()) {
 								List<File> files = getFilesInFolder(LoginUtil.getUser().getInboxId());
 								if(files != null && !files.isEmpty()) {
@@ -439,10 +439,10 @@ public class DriveUtil {
     				e.printStackTrace();
     			}
     		}
-    		
+
 	    }.start();
 	}
-    
+
     public static List<File> getFiles() {
         Drive service = null;
         FileList result = null;
@@ -458,11 +458,11 @@ public class DriveUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        
+
         if(service == null || result == null) {
         	return null;
         }
-        
+
         List<File> files = result.getFiles();
         if (files == null || files.size() == 0) {
             //System.out.println("No files found.");
@@ -472,10 +472,10 @@ public class DriveUtil {
                 System.out.printf("%s (%s)\n", file.getName(), file.getId());
             }
         }
-        
+
         return files;
     }
-    
+
     public static List<File> getFilesInFolder(String folderId) {
         Drive service = null;
         FileList result = null;
@@ -494,11 +494,11 @@ public class DriveUtil {
 				e.printStackTrace();
 			}
 		}
-        
+
         if(service == null || result == null) {
         	return null;
         }
-        
+
         List<File> files = result.getFiles();
         if (files == null || files.size() == 0) {
             //System.out.println("No files found.");
@@ -508,10 +508,10 @@ public class DriveUtil {
                 System.out.printf("%s (%s)\n", file.getName(), file.getId());
             }
         }
-        
+
         return files;
     }
-    
+
     private static boolean handleNotFound(IOException e, String fileId, String fileName) {
     	boolean notFound = false;
     	String cause = null;
@@ -532,7 +532,7 @@ public class DriveUtil {
     	if(!notFound) {
     		return false;
     	}
-    	
+
     	if(fileId == null && fileName == null) {
     		System.err.println(cause + " fileId : null, fileName: null");
     	} else if(fileId == null) {
@@ -544,7 +544,7 @@ public class DriveUtil {
     	}
     	return true;
     }
-    
+
     private static Map<String, String> getFileIdsByName() {
     	Map<String, String> sheetIdsByName = new HashMap<String, String>();
     	for(File file : getFiles()) {
@@ -552,12 +552,12 @@ public class DriveUtil {
     	}
     	return sheetIdsByName;
     }
-    
+
     public static String toFileId(String fileName) {
     	File file = findFile(fileName);
     	return file == null ? null : file.getId();
     }
-    
+
     private static File findFile(String fileName) {
     	try {
     		if(fileName == null) {
@@ -575,23 +575,23 @@ public class DriveUtil {
 		}
     	return null;
     }
-    
+
     public static boolean exists(String fileName) {
     	return findFile(fileName) != null;
     }
-    
+
     public static void moveFile(String fileId, String folderId) {
     	try {
 	    	File file = getDriveService().files().get(fileId)
 	    	        .setFields("parents")
 	    	        .execute();
-	    	
+
 	    	StringBuilder previousParents = new StringBuilder();
 	    	for(String parent: file.getParents()) {
 	    	    previousParents.append(parent);
 	    	    previousParents.append(',');
 	    	}
-	    	
+
 	    	// Move the file to the new folder
 	    	file = getDriveService().files().update(fileId, null)
 	    	        .setAddParents(folderId)
@@ -602,11 +602,11 @@ public class DriveUtil {
     		e.printStackTrace();
     	}
     }
-    
+
     public static String createFile(String fileName, String content) {
     	return createFile(fileName, content, null);
     }
-    
+
     public static String createFile(String fileName, String content, String folderId) {
     	try {
     		File body = new File();
@@ -618,18 +618,18 @@ public class DriveUtil {
     		ByteArrayInputStream bis = new ByteArrayInputStream(textContent.getBytes("UTF-8"));
     		InputStreamContent isc = new InputStreamContent(null, bis);
     		File file = getDriveService().files().create(body, isc).execute();
-    		
+
     		if(folderId != null) {
     			moveFile(file.getId(), folderId);
     		}
-    		
+
     		return file.getId();
     	} catch(IOException e) {
     		e.printStackTrace();
     	}
     	return null;
     }
-    
+
     public static void deleteFile(String fileId) {
     	try {
     		getDriveService().files().delete(fileId).execute();
@@ -637,7 +637,7 @@ public class DriveUtil {
     		e.printStackTrace();
     	}
     }
-    
+
     public static String createFolder(String folderName, String parentFolderId) {
     	File fileMetadata = new File();
     	fileMetadata.setName(folderName);
@@ -648,23 +648,23 @@ public class DriveUtil {
 			file = getDriveService().files().create(fileMetadata)
 					.setFields("id")
 			        .execute();
-			
+
 			if(parentFolderId != null) {
 				moveFile(file.getId(), parentFolderId);
 			}
-		
+
 		} catch (IOException e) {
 			if(!handleNotFound(e, file == null ? null : file.getId(), folderName)) {
 				e.printStackTrace();
 			}
 		}
-		
+
 		if(file == null) {
 			return null;
 		}
     	return file.getId();
     }
-    
+
     public static String getFileContent(String fileId) {
     	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     	try {
@@ -677,7 +677,7 @@ public class DriveUtil {
 		}
     	return null;
     }
-    
+
     public static void main2(String[] args) throws IOException {
         // Build a new authorized API client service.
         Sheets service = getSheetsService();
@@ -686,11 +686,11 @@ public class DriveUtil {
         // https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
         //String spreadsheetId = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms";
         //String range = "Class Data!A2:E";
-        
+
         // jandor.saddlebags: Database/Resources/Users
         String spreadsheetId = "1q9d7gM0z2t7oo_T8DFPDpWjW1C7mqqvrh_PDWtzbOtg";
         String range = "Users!A1:E";
-        
+
         ValueRange response = service.spreadsheets().values()
             .get(spreadsheetId, range)
             .execute();
@@ -704,7 +704,7 @@ public class DriveUtil {
           }
         }
     }
-    
+
     public static void main(String[] args) throws IOException {
     	System.out.println("Files:");
     	for (File file : getFiles()) {

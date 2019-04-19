@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jackson.AllCardsJson.CardJson;
 import jackson.AllSetsJson.SetJson;
 import jackson.JacksonUtil.StringCleanerDeserializerWithWeirdCheck;
+import util.PriceUtil.PriceJson;
 
 public class AllCardsJson extends HashMap<String, CardJson>  {
 
@@ -36,7 +37,10 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 		public String toughness;
 		public String type;
 		public List<String> types;
+		public int tcgplayerProductId;
+		public String tcgplayerPurchaseUrl;
 		public String uuid;
+		public PriceJson price;
 
 		@JsonIgnore
 		public Map<String, List<Integer>> multiverseIdsBySetCode;

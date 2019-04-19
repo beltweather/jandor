@@ -1,10 +1,13 @@
 package editor;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.Locale;
 
 import javax.swing.JLabel;
 import javax.swing.event.DocumentEvent;
@@ -23,8 +26,12 @@ import ui.view.DeckEditorView;
 import ui.view.DraftEditorView;
 import util.CardUtil;
 import util.ManaUtil;
+import util.PriceUtil.PriceJson;
 
 public class DeckEditorRow extends PPanel {
+
+	private static final Color PRICE_COLOR = new Color(190, 248, 205);
+	private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(new Locale("en", "US"));
 
 	private PSpinner countSpinner;
 	private AutoComboBox<String> cardCombo;
@@ -36,6 +43,7 @@ public class DeckEditorRow extends PPanel {
 	private JandorButton moveButton;
 	private String cardName;
 	private String otherDeckName;
+	private JLabel priceLabel;
 
 	public DeckEditorRow(DeckEditorView view, Deck deck) {
 		this(view, deck, 0, "");
@@ -208,6 +216,10 @@ public class DeckEditorRow extends PPanel {
         cardCombo.setMaximumSize(dim);
         updateComboColor();
 
+        priceLabel = new JLabel(getPriceText());
+        priceLabel.setForeground(PRICE_COLOR);
+		priceLabel.setFocusable(false);
+
         c.insets(0, 0, 0, 10);
         add(removeButton, c);
         c.gridx++;
@@ -219,6 +231,12 @@ public class DeckEditorRow extends PPanel {
         c.insets(0, 5);
         add(colorLabel, c);
         c.gridx++;
+
+        if(view.isShowPrice() && hasCard()) {
+        	add(priceLabel, c);
+        	c.gridx++;
+        }
+
         if(otherDeckName != null) {
         	add(moveButton, c);
         	c.gridx++;
@@ -245,6 +263,17 @@ public class DeckEditorRow extends PPanel {
 		if(view != null && view.getParent() != null && view.getParent().getParent() != null && view.getParent().getParent().getParent() != null) {
 			view.getParent().getParent().getParent().revalidate();
 		}
+	}
+
+	public String getPriceText() {
+		if(!hasCard() || getCard().getPriceInfo() == null) {
+			return "";
+		}
+		PriceJson price = getCard().getPriceInfo();
+		if(price.marketPrice == 0) {
+			return "";
+		}
+		return CURRENCY_FORMAT.format(price.marketPrice);
 	}
 
 	public void hideColorLabel() {
