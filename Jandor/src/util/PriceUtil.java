@@ -194,6 +194,16 @@ public class PriceUtil {
 
 	}
 
+	private static final class NameIdentifier extends CollectionIdentifier {
+
+		public NameIdentifier(String name) {
+			this.name = name;
+		}
+
+		public String name;
+
+	}
+
 	private static class CollectionResponse {
 
 		public List<CollectionCard> data;
@@ -249,7 +259,7 @@ public class PriceUtil {
 	private static CollectionRequest toCollectionRequest(List<Card> cards) {
 		CollectionRequest request = new CollectionRequest();
 		for(Card card : cards) {
-			request.identifiers.add(new MultiverseIdentifier(card.getMultiverseId()));
+			request.identifiers.add(new NameIdentifier(card.getName()));
 		}
 		return request;
 	}
