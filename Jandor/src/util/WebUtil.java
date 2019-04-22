@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -17,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import jackson.AllCardsJson;
 import jackson.AllSetsJson;
@@ -234,6 +237,99 @@ public class WebUtil {
 		}
 
 		return error;
+	}
+
+	public static interface OnSuccess {
+
+		public void onSuccess(String response);
+
+	}
+
+	public static interface OnError {
+
+		public void onError(String error);
+
+	}
+
+	public static void doPost(String urlStr, Object postDataJson, OnSuccess onSuccess, OnError onError) {
+		try {
+			doPost(new URL(urlStr), postDataJson, onSuccess, onError);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void doPost(URL url, Object postDataJson, OnSuccess onSuccess, OnError onError) {
+		TaskUtil.run(() -> {
+			doPostInner(url, postDataJson, onSuccess, onError);
+		});
+	}
+
+	private static void doPostInner(URL url, Object postDataJson, OnSuccess onSuccess, OnError onError) {
+		String postDataStr = JacksonUtil.toString(postDataJson);
+	    System.out.println("POST url: " + url);
+	    System.out.println("POST params: " + postDataStr);
+	    HttpsURLConnection postConnection;
+		try {
+			postConnection = (HttpsURLConnection) url.openConnection();
+			postConnection.setRequestMethod("POST");
+		    postConnection.setRequestProperty("Content-Type", "application/json");
+		    postConnection.setDoOutput(true);
+		    OutputStream os = postConnection.getOutputStream();
+		    os.write(postDataStr.getBytes());
+		    os.flush();
+		    os.close();
+
+		    int responseCode = postConnection.getResponseCode();
+		    System.out.println("POST Response Code :  " + responseCode);
+		    System.out.println("POST Response Message : " + postConnection.getResponseMessage());
+		    if (responseCode == HttpsURLConnection.HTTP_OK) { //success
+		        BufferedReader in = new BufferedReader(new InputStreamReader(postConnection.getInputStream()));
+		        String inputLine;
+		        StringBuffer response = new StringBuffer();
+		        while ((inputLine = in .readLine()) != null) {
+		            response.append(inputLine);
+		        }
+		        in .close();
+
+		        if(onSuccess != null) {
+		        	onSuccess.onSuccess(response.toString());
+		        }
+		    } else {
+		    	if(onError != null) {
+		    		onError.onError("POST did not work!");
+		    	}
+		    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static <T> void doMultiPost(String urlStr, List<T> postDataJsons, OnSuccess onSuccess, OnError onError) {
+		try {
+			doMultiPost(new URL(urlStr), postDataJsons, onSuccess, onError);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static <T> void doMultiPost(URL url, List<T> postDataJsons, OnSuccess onSuccess, OnError onError) {
+		TaskUtil.run(() -> {
+			StringBuilder sb = new StringBuilder();
+			sb.append("[");
+			for(Object postDataJson : postDataJsons) {
+				doPostInner(url, postDataJson, (String responseStr) -> {
+					if(sb.length() > 1) {
+						sb.append(",");
+					}
+					sb.append(responseStr);
+				}, null);
+			}
+			sb.append("]");
+			if(onSuccess != null) {
+				onSuccess.onSuccess(sb.toString());
+			}
+		});
 	}
 
 }

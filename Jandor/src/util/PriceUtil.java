@@ -29,7 +29,7 @@ public class PriceUtil {
 	}
 
 	public static void fetchPrices(List<Card> cards, OnPriceFetchComplete onComplete) {
-		List<Integer> productIds = new ArrayList<>();
+		/*List<Integer> productIds = new ArrayList<>();
 		List<Card> productIdCards = new ArrayList<>();
 		for(Card c : cards) {
 			if(!c.hasPriceInfo() && c.getTCGPlayerProductId() != 0) {
@@ -43,9 +43,19 @@ public class PriceUtil {
 				onComplete.onPriceFetchComplete(productIdCards);
 			}
 			return;
+		}*/
+
+		List<Card> cardsToFetch = new ArrayList<>();
+		for(Card card : cards) {
+			if(!card.hasPriceInfo()) {
+				card.getCardInfo().price = new PriceJson();
+				cardsToFetch.add(card);
+			}
 		}
 
-		TaskUtil.run(() -> {
+		fetchPricesInternal(cardsToFetch, onComplete);
+
+		/*TaskUtil.run(() -> {
 
 			String productIdStr = toListStr(productIds);
 
@@ -89,7 +99,7 @@ public class PriceUtil {
 
 			});
 
-		});
+		});*/
 	}
 
 	private static String toListStr(List objs) {
@@ -162,6 +172,111 @@ public class PriceUtil {
 		}
 		String response = "{\"success\": true, \"errors\": [\"string\"], \"results\": [" + results + "]}";
 		return response;
+	}
+
+	private static final class CollectionRequest {
+
+		public List<CollectionIdentifier> identifiers = new ArrayList<>();
+
+	}
+
+	private static class CollectionIdentifier {
+
+	}
+
+	private static final class MultiverseIdentifier extends CollectionIdentifier {
+
+		public MultiverseIdentifier(int multiverse_id) {
+			this.multiverse_id = multiverse_id;
+		}
+
+		public int multiverse_id;
+
+	}
+
+	private static class CollectionResponse {
+
+		public List<CollectionCard> data;
+
+	}
+
+	private static class CollectionCard {
+
+		public String id;
+		public List<Integer> multiverse_ids;
+		public int tcgplayer_id;
+		public double usd;
+
+	}
+
+	private static final int REQUEST_IDENTIFIER_LIMIT = 75;
+
+	private static void fetchPricesInternal(List<Card> cards, OnPriceFetchComplete onComplete) {
+		String url = "https://api.scryfall.com/cards/collection";
+
+		List<CollectionRequest> requests = new ArrayList<>();
+		final List<List<Card>> cardChunks = split(cards, REQUEST_IDENTIFIER_LIMIT);
+		for(List<Card> chunk : cardChunks) {
+			requests.add(toCollectionRequest(chunk));
+		}
+		WebUtil.doMultiPost(url, requests, (String responseStr) -> {
+
+			List<CollectionResponse> responses = JacksonUtil.readList(CollectionResponse.class, responseStr);
+			for(int i = 0; i < responses.size(); i++) {
+				CollectionResponse response = responses.get(i);
+				List<Card> chunk = cardChunks.get(i);
+				handleResponse(chunk, response);
+			}
+
+			if(onComplete != null) {
+				onComplete.onPriceFetchComplete(cards);
+			}
+
+		}, null);
+
+		/*CollectionRequest request = toCollectionRequest(cards);
+		WebUtil.doPost(url, request, (String responseStr) -> {
+			CollectionResponse response = JacksonUtil.read(CollectionResponse.class, responseStr);
+
+			handleResponse(cards, response);
+
+			if(onComplete != null) {
+				onComplete.onPriceFetchComplete(cards);
+			}
+		}, null);*/
+	}
+
+	private static CollectionRequest toCollectionRequest(List<Card> cards) {
+		CollectionRequest request = new CollectionRequest();
+		for(Card card : cards) {
+			request.identifiers.add(new MultiverseIdentifier(card.getMultiverseId()));
+		}
+		return request;
+	}
+
+	private static List<List<Card>> split(List<Card> cards, int chunkSize) {
+		List<List<Card>> cardChunks = new ArrayList<>();
+		List<Card> chunk = new ArrayList<>();
+		for(Card card : cards) {
+			if(chunk.size() < chunkSize) {
+				chunk.add(card);
+			} else {
+				cardChunks.add(chunk);
+				chunk = new ArrayList<>();
+			}
+		}
+		if(chunk.size() > 0) {
+			cardChunks.add(chunk);
+		}
+		return cardChunks;
+	}
+
+	private static void handleResponse(List<Card> cards, CollectionResponse response) {
+		for(int i = 0; i < response.data.size(); i++) {
+			Card card = cards.get(i);
+			double price = response.data.get(i).usd;
+			card.getCardInfo().price.marketPrice = price;
+		}
 	}
 
 }

@@ -2,9 +2,11 @@ package jackson;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -36,6 +38,22 @@ public class JacksonUtil {
 			e.printStackTrace();
 		}
 
+		return data;
+	}
+
+	public static <T> List<T> readList(Class<T> klass, String jsonArray) {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		SimpleModule module = new SimpleModule();
+		module.addDeserializer(String.class, new StringCleanerDeserializer());
+		mapper.registerModule(module);
+
+		List<T> data = null;
+		try {
+			data = mapper.readValue(jsonArray, mapper.getTypeFactory().constructCollectionType(List.class, klass));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return data;
 	}
 
@@ -75,6 +93,24 @@ public class JacksonUtil {
 		}
 
 		return true;
+	}
+
+	public static <T> String toString(T data) {
+		if(data == null) {
+			return null;
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+
+		String result = null;
+		try {
+			result = writer.writeValueAsString(data);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return result;
 	}
 
 	public static <T> T readAndWriteExternal(Class<T> klass, String fromFilename, String toFilename) {
