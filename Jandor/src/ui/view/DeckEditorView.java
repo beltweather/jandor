@@ -599,7 +599,9 @@ public class DeckEditorView extends JandorView {
 						rebuildDeckRows();
 					});
 				} else if(force) {
-					rebuildDeckRows();
+					TaskUtil.runSwing(() -> {
+						rebuildDeckRows();
+					});
 				}
 			});
 		} else if(force) {
@@ -1191,7 +1193,7 @@ public class DeckEditorView extends JandorView {
 		totalLabels.put(deck.getName(), cardTotalLabel);
 
 		priceLabel = new JLabel(getDeckPriceText(deck));
-		priceLabel.setForeground(DeckEditorRow.PRICE_COLOR);
+		priceLabel.setForeground(PriceUtil.PRICE_COLOR);
 		priceLabel.setFocusable(false);
 
 		p.c.gridy++;
@@ -1218,12 +1220,12 @@ public class DeckEditorView extends JandorView {
 		double price = 0;
 		Map<Card, Integer> cards = deck.getCountsByCard();
 		for(Card card : cards.keySet()) {
-			if(card.getCardInfo() == null || card.getCardInfo().price == null) {
+			if(card.getPriceInfo().price < 0) {
 				continue;
 			}
-			price += card.getCardInfo().price.marketPrice * cards.get(card);
+			price += card.getPriceInfo().price * cards.get(card);
 		}
-		return DeckEditorRow.CURRENCY_FORMAT.format(price);
+		return PriceUtil.formatPrice(price);
 	}
 
 	@Override

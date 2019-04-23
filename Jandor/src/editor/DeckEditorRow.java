@@ -1,13 +1,10 @@
 package editor;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Locale;
 
 import javax.swing.JLabel;
 import javax.swing.event.DocumentEvent;
@@ -28,13 +25,11 @@ import ui.view.DeckEditorView;
 import ui.view.DraftEditorView;
 import util.CardUtil;
 import util.ManaUtil;
+import util.PriceUtil;
 import util.PriceUtil.PriceJson;
 import util.WebUtil;
 
 public class DeckEditorRow extends PPanel {
-
-	public static final Color PRICE_COLOR = new Color(190, 248, 205);
-	public static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(new Locale("en", "US"));
 
 	private PSpinner countSpinner;
 	private AutoComboBox<String> cardCombo;
@@ -221,14 +216,14 @@ public class DeckEditorRow extends PPanel {
         updateComboColor();
 
         priceLabel = new PLinkButton(getPriceText());
-        priceLabel.setForeground(PRICE_COLOR);
+        priceLabel.setForeground(PriceUtil.PRICE_COLOR);
 		priceLabel.setFocusable(false);
 		priceLabel.addActionListener((e) -> {
-			String url = getCard().getTCGPlayerPurchaseUrl();
+			String url = getCard().getPurchaseUrl();
 			if(url == null) {
 				JUtil.showWarningDialog(DeckEditorRow.this, "Cannot Redirect to TCGPlayer", "No url found for card \"" + getCard().getName() + "\".");
 			} else {
-				WebUtil.browse(getCard().getTCGPlayerPurchaseUrl());
+				WebUtil.browse(getCard().getPurchaseUrl());
 			}
 		});
 
@@ -278,14 +273,10 @@ public class DeckEditorRow extends PPanel {
 	}
 
 	public String getPriceText() {
-		if(!hasCard() || getCard().getPriceInfo() == null) {
+		if(!hasCard()) {
 			return "";
 		}
-		PriceJson price = getCard().getPriceInfo();
-		if(price.marketPrice == 0) {
-			return "";
-		}
-		return CURRENCY_FORMAT.format(price.marketPrice);
+		return getCard().getPriceInfo().getPriceString();
 	}
 
 	public void hideColorLabel() {

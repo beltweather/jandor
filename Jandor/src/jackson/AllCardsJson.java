@@ -40,7 +40,9 @@ public class AllCardsJson extends HashMap<String, CardJson>  {
 		public int tcgplayerProductId;
 		public String tcgplayerPurchaseUrl;
 		public String uuid;
-		public PriceJson price;
+
+		@JsonIgnore
+		public PriceJson priceInfo = new PriceJson();
 
 		@JsonIgnore
 		public Map<String, List<Integer>> multiverseIdsBySetCode;

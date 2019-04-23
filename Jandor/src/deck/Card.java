@@ -308,20 +308,19 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return (int) getCardInfo().convertedManaCost;
 	}
 
-	public int getTCGPlayerProductId() {
+	/*public int getTCGPlayerProductId() {
 		return getCardInfo().tcgplayerProductId;
-	}
+	}*/
 
-	public String getTCGPlayerPurchaseUrl() {
+	public String getPurchaseUrl() {
+		if(getPriceInfo().purchaseUrl != null) {
+			return getPriceInfo().purchaseUrl;
+		}
 		return getCardInfo().tcgplayerPurchaseUrl;
 	}
 
-	public boolean hasPriceInfo() {
-		return getCardInfo().price != null;
-	}
-
 	public PriceJson getPriceInfo() {
-		return getCardInfo().price;
+		return getCardInfo().priceInfo;
 	}
 
 	public String getSetName() {

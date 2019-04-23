@@ -1,15 +1,28 @@
 package util;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.awt.Color;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import deck.Card;
 import deck.Deck;
 import jackson.JacksonUtil;
 
 public class PriceUtil {
+
+	public static final Color PRICE_COLOR = new Color(190, 248, 205);
+	private static final NumberFormat PRICE_FORMAT = NumberFormat.getCurrencyInstance(new Locale("en", "US"));
+
+	public static String formatPrice(double price) {
+		if(price < 0) {
+			return "n/a";
+		}
+		return PRICE_FORMAT.format(price);
+	}
 
 	private PriceUtil() {}
 
@@ -29,149 +42,27 @@ public class PriceUtil {
 	}
 
 	public static void fetchPrices(List<Card> cards, OnPriceFetchComplete onComplete) {
-		/*List<Integer> productIds = new ArrayList<>();
-		List<Card> productIdCards = new ArrayList<>();
-		for(Card c : cards) {
-			if(!c.hasPriceInfo() && c.getTCGPlayerProductId() != 0) {
-				productIds.add(c.getTCGPlayerProductId());
-				productIdCards.add(c);
-			}
-		}
-
-		if(productIdCards.size() == 0) {
-			if(onComplete != null) {
-				onComplete.onPriceFetchComplete(productIdCards);
-			}
-			return;
-		}*/
-
 		List<Card> cardsToFetch = new ArrayList<>();
 		for(Card card : cards) {
-			if(!card.hasPriceInfo()) {
-				card.getCardInfo().price = new PriceJson();
+			if(!card.getPriceInfo().fetched) {
+				card.getPriceInfo().fetched = true;
 				cardsToFetch.add(card);
 			}
 		}
 
 		fetchPricesInternal(cardsToFetch, onComplete);
-
-		/*TaskUtil.run(() -> {
-
-			String productIdStr = toListStr(productIds);
-
-			URL url = null;
-			try {
-				url = new URL("http://api.tcgplayer.com/v1.19.0/pricing/product/" + productIdStr);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-				return;
-			}
-			doGetPrice(url, (response) -> {
-
-				// Do a get to tcg player some how and then when it returns with results, parse them.
-				String fakeResponse = getFakeResponse(productIds);
-
-				PriceResponse priceResponse = JacksonUtil.read(PriceResponse.class, fakeResponse);
-				if(priceResponse == null) {
-					System.err.print("fetchPrices request returned null!");
-					return;
-				}
-
-				if(!priceResponse.success) {
-					System.err.println("fetchPrices returned with errors:");
-					if(priceResponse.errors != null) {
-						for(String error : priceResponse.errors) {
-							System.err.println(error);
-						}
-					}
-					return;
-				}
-
-				for(int i = 0; i < productIdCards.size(); i++) {
-					Card card = productIdCards.get(i);
-					PriceJson price = priceResponse.results.get(i);
-					card.getCardInfo().price = price;
-				}
-
-				if(onComplete != null) {
-					onComplete.onPriceFetchComplete(productIdCards);
-				}
-
-			});
-
-		});*/
-	}
-
-	private static String toListStr(List objs) {
-		StringBuilder sb = new StringBuilder();
-		boolean first = true;
-		for(Object o : objs) {
-			if(first) {
-				first = false;
-			} else {
-				sb.append(",");
-			}
-			sb.append(o);
-		}
-		return sb.toString();
-	}
-
-	private static interface OnGetResponse {
-
-		public void onGetResponse(Object response);
-
-	}
-
-	private static void doGetPrice(URL url, OnGetResponse onGetResponse) {
-		onGetResponse.onGetResponse(null);
-	}
-
-	private static final class PriceResponse {
-
-		public boolean success;
-		public List<String> errors;
-		public List<PriceJson> results;
-
 	}
 
 	public static final class PriceJson {
 
-		public int productId;
-		public double lowPrice;
-		public double midPrice;
-		public double highPrice;
-		public double marketPrice;
-		public double directLowPrice;
-		public String subTypeName;
+		public boolean fetched = false;
+		public double price = -1;
+		public String purchaseUrl;
 
-	}
-
-	private static String getFakeResponse(List<Integer> productIds) {
-		StringBuilder results = new StringBuilder();
-		boolean first = true;
-		for(Integer id : productIds) {
-			if(first) {
-				first = false;
-			} else {
-				results.append(", ");
-			}
-
-			//double marketPrice = Math.random() * 10;
-			double marketPrice = 1.00;
-
-			results.append(
-				"{" +
-			      "\"productId\": " + id + "," +
-			      "\"lowPrice\": 1.23," +
-			      "\"midPrice\": 2.34," +
-			      "\"highPrice\": 3.45," +
-			      "\"marketPrice\": " + marketPrice + "," +
-			      "\"directLowPrice\": 0.12," +
-			      "\"subTypeName\": \"string\"" +
-			    "}");
+		public String getPriceString() {
+			return formatPrice(price);
 		}
-		String response = "{\"success\": true, \"errors\": [\"string\"], \"results\": [" + results + "]}";
-		return response;
+
 	}
 
 	private static final class CollectionRequest {
@@ -184,7 +75,7 @@ public class PriceUtil {
 
 	}
 
-	private static final class MultiverseIdentifier extends CollectionIdentifier {
+	/*private static final class MultiverseIdentifier extends CollectionIdentifier {
 
 		public MultiverseIdentifier(int multiverse_id) {
 			this.multiverse_id = multiverse_id;
@@ -192,7 +83,7 @@ public class PriceUtil {
 
 		public int multiverse_id;
 
-	}
+	}*/
 
 	private static final class NameIdentifier extends CollectionIdentifier {
 
@@ -213,9 +104,11 @@ public class PriceUtil {
 	private static class CollectionCard {
 
 		public String id;
+		public String name;
 		public List<Integer> multiverse_ids;
 		public int tcgplayer_id;
 		public double usd;
+		public Map<String, String> purchase_uris;
 
 	}
 
@@ -243,17 +136,6 @@ public class PriceUtil {
 			}
 
 		}, null);
-
-		/*CollectionRequest request = toCollectionRequest(cards);
-		WebUtil.doPost(url, request, (String responseStr) -> {
-			CollectionResponse response = JacksonUtil.read(CollectionResponse.class, responseStr);
-
-			handleResponse(cards, response);
-
-			if(onComplete != null) {
-				onComplete.onPriceFetchComplete(cards);
-			}
-		}, null);*/
 	}
 
 	private static CollectionRequest toCollectionRequest(List<Card> cards) {
@@ -282,11 +164,150 @@ public class PriceUtil {
 	}
 
 	private static void handleResponse(List<Card> cards, CollectionResponse response) {
-		for(int i = 0; i < response.data.size(); i++) {
-			Card card = cards.get(i);
-			double price = response.data.get(i).usd;
-			card.getCardInfo().price.marketPrice = price;
+		Map<String, CollectionCard> collectionCardsByName = new HashMap<>();
+		Map<String, Card> cardsByName = new HashMap<>();
+
+		for(CollectionCard c : response.data) {
+			collectionCardsByName.put(c.name, c);
+		}
+
+		for(Card c : cards) {
+			cardsByName.put(c.getName(), c);
+		}
+
+		for(String name : cardsByName.keySet()) {
+			if(!collectionCardsByName.containsKey(name)) {
+				continue;
+			}
+			Card c = cardsByName.get(name);
+			CollectionCard cc = collectionCardsByName.get(name);
+			c.getPriceInfo().price = cc.usd;
+			if(cc.purchase_uris != null && cc.purchase_uris.containsKey("tcgplayer")) {
+				c.getPriceInfo().purchaseUrl = cc.purchase_uris.get("tcgplayer");
+			}
 		}
 	}
+
+	/*private static String toListStr(List objs) {
+	StringBuilder sb = new StringBuilder();
+	boolean first = true;
+	for(Object o : objs) {
+		if(first) {
+			first = false;
+		} else {
+			sb.append(",");
+		}
+		sb.append(o);
+	}
+	return sb.toString();
+}*/
+
+/*private static interface OnGetResponse {
+
+	public void onGetResponse(Object response);
+
+}*/
+
+/*private static void doGetPrice(URL url, OnGetResponse onGetResponse) {
+	onGetResponse.onGetResponse(null);
+}
+
+private static final class PriceResponse {
+
+	public boolean success;
+	public List<String> errors;
+	public List<PriceJson> results;
+
+}*/
+
+/*private static String getFakeResponse(List<Integer> productIds) {
+	StringBuilder results = new StringBuilder();
+	boolean first = true;
+	for(Integer id : productIds) {
+		if(first) {
+			first = false;
+		} else {
+			results.append(", ");
+		}
+
+		//double marketPrice = Math.random() * 10;
+		double marketPrice = 1.00;
+
+		results.append(
+			"{" +
+		      "\"productId\": " + id + "," +
+		      "\"lowPrice\": 1.23," +
+		      "\"midPrice\": 2.34," +
+		      "\"highPrice\": 3.45," +
+		      "\"marketPrice\": " + marketPrice + "," +
+		      "\"directLowPrice\": 0.12," +
+		      "\"subTypeName\": \"string\"" +
+		    "}");
+	}
+	String response = "{\"success\": true, \"errors\": [\"string\"], \"results\": [" + results + "]}";
+	return response;
+}*/
+
+	/*List<Integer> productIds = new ArrayList<>();
+	List<Card> productIdCards = new ArrayList<>();
+	for(Card c : cards) {
+		if(!c.hasPriceInfo() && c.getTCGPlayerProductId() != 0) {
+			productIds.add(c.getTCGPlayerProductId());
+			productIdCards.add(c);
+		}
+	}
+
+	if(productIdCards.size() == 0) {
+		if(onComplete != null) {
+			onComplete.onPriceFetchComplete(productIdCards);
+		}
+		return;
+	}*/
+
+/*TaskUtil.run(() -> {
+
+		String productIdStr = toListStr(productIds);
+
+		URL url = null;
+		try {
+			url = new URL("http://api.tcgplayer.com/v1.19.0/pricing/product/" + productIdStr);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return;
+		}
+		doGetPrice(url, (response) -> {
+
+			// Do a get to tcg player some how and then when it returns with results, parse them.
+			String fakeResponse = getFakeResponse(productIds);
+
+			PriceResponse priceResponse = JacksonUtil.read(PriceResponse.class, fakeResponse);
+			if(priceResponse == null) {
+				System.err.print("fetchPrices request returned null!");
+				return;
+			}
+
+			if(!priceResponse.success) {
+				System.err.println("fetchPrices returned with errors:");
+				if(priceResponse.errors != null) {
+					for(String error : priceResponse.errors) {
+						System.err.println(error);
+					}
+				}
+				return;
+			}
+
+			for(int i = 0; i < productIdCards.size(); i++) {
+				Card card = productIdCards.get(i);
+				PriceJson price = priceResponse.results.get(i);
+				card.getCardInfo().price = price;
+			}
+
+			if(onComplete != null) {
+				onComplete.onPriceFetchComplete(productIdCards);
+			}
+
+		});
+
+	});*/
 
 }
