@@ -107,8 +107,14 @@ public class PriceUtil {
 		public String name;
 		public List<Integer> multiverse_ids;
 		public int tcgplayer_id;
-		public double usd;
+		public Prices prices;
 		public Map<String, String> purchase_uris;
+
+	}
+
+	private static class Prices {
+
+		public double usd;
 
 	}
 
@@ -181,7 +187,7 @@ public class PriceUtil {
 			}
 			Card c = cardsByName.get(name);
 			CollectionCard cc = collectionCardsByName.get(name);
-			c.getPriceInfo().price = cc.usd;
+			c.getPriceInfo().price = cc.prices.usd;
 			if(cc.purchase_uris != null && cc.purchase_uris.containsKey("tcgplayer")) {
 				c.getPriceInfo().purchaseUrl = cc.purchase_uris.get("tcgplayer");
 			}
