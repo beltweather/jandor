@@ -365,7 +365,7 @@ public class MailUtil {
 			if(useType) {
 				sb.append("<b>" + type + "s (" + total + ")" + "</b><br>");
 				for(Card card : cardsForType) {
-					sb.append(cards.get(card) + " " + CardUtil.toGathererLink(card.getMultiverseId(), card.getName()) + "<br>");
+					sb.append(cards.get(card) + " " + CardUtil.toGathererLink(card.getMultiverseId(), card.getFullName()) + "<br>");
 				}
 				sb.append("<br>");
 			}

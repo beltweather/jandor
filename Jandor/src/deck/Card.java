@@ -46,6 +46,13 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		return this;
 	}
 
+	public String getFullName() {
+		if(isMultiName()) {
+			return getMultiName();
+		}
+		return getName();
+	}
+
 	public String getName() {
 		return name;
 	}
