@@ -68,6 +68,7 @@ public class DeckEditorView extends JandorView {
 	public static final String DEFAULT_TITLE = "Editor";
 
 	private static boolean defaultShowPrice = false;
+	private static boolean defaultShowFullCards = false;
 
 	public static boolean isDefaultShowPrice() {
 		return defaultShowPrice;
@@ -75,6 +76,14 @@ public class DeckEditorView extends JandorView {
 
 	public static void setDefaultShowPrice(boolean show) {
 		defaultShowPrice = show;
+	}
+
+	public static boolean isDefaultShowFullCards() {
+		return defaultShowFullCards;
+	}
+
+	public static void setDefaultShowFullCards(boolean show) {
+		defaultShowFullCards = show;
 	}
 
 	public static final List<String> types = new ArrayList<String>();
@@ -187,6 +196,7 @@ public class DeckEditorView extends JandorView {
 	protected PButton editDraftButton;
 	protected PButton editDeckButton;
 	protected PCheckBox showPriceCheck;
+	protected PCheckBox showFullCardsCheck;
 	protected PPanel commanderPanel;
 	protected DeckEditorRow commanderEditor;
 	protected JLabel commanderLabel;
@@ -198,6 +208,7 @@ public class DeckEditorView extends JandorView {
 	protected int deckId;
 	protected boolean ignoreNextSave = false;
 	protected boolean showPrice = isDefaultShowPrice();
+	protected boolean showFullCards = isDefaultShowFullCards();
 
 	protected Deck filterByDeck = null;
 	protected Deck filterBySideboard = null;
@@ -302,6 +313,14 @@ public class DeckEditorView extends JandorView {
 		this.showPrice = showPrice;
 	}
 
+	public boolean isShowFullCards() {
+		return showFullCards;
+	}
+
+	public void setShowFullCards(boolean showFullCards) {
+		this.showFullCards = showFullCards;
+	}
+
 	@Override
 	public void handleClosed() {
 		if(isModified() && JUtil.showConfirmYesNoDialog(this, "Closing Editor \"" + deckHeader.getName() + "\"", "Would you like to save your unsaved changes?")) {
@@ -387,6 +406,19 @@ public class DeckEditorView extends JandorView {
 					setDefaultShowPrice(showPriceCheck.isSelected());
 					setShowPrice(showPriceCheck.isSelected());
 					syncPrices(true);
+				}
+
+			});
+
+			showFullCardsCheck = new PCheckBox("Show Full Cards");
+			showFullCardsCheck.setSelected(isShowFullCards());
+			showFullCardsCheck.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					setDefaultShowFullCards(showFullCardsCheck.isSelected());
+					setShowFullCards(showFullCardsCheck.isSelected());
+					rebuild();
 				}
 
 			});
@@ -515,6 +547,8 @@ public class DeckEditorView extends JandorView {
 			headerPanel.addc(highlanderButton);
 			headerPanel.c.gridx++;
 			headerPanel.addc(showPriceCheck);
+			headerPanel.c.gridx++;
+			headerPanel.addc(showFullCardsCheck);
 			headerPanel.c.gridx++;
 			headerPanel.addc(editDeckButton);
 			headerPanel.c.weightx = 1.0;

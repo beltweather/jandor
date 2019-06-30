@@ -16,6 +16,10 @@ public class CardLabel extends JLabel {
 	protected Card card;
 	protected boolean showFullCard;
 
+	public CardLabel(String cardName) {
+		this(new Card(cardName));
+	}
+
 	public CardLabel(Card card) {
 		super(card.getName());
 		this.card = card;

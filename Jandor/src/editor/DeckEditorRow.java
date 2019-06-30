@@ -13,6 +13,7 @@ import javax.swing.event.DocumentListener;
 import deck.Card;
 import deck.Deck;
 import ui.AutoComboBox;
+import ui.CardLabel;
 import ui.GlassPane;
 import ui.JandorButton;
 import ui.pwidget.ColorUtil;
@@ -26,7 +27,6 @@ import ui.view.DraftEditorView;
 import util.CardUtil;
 import util.ManaUtil;
 import util.PriceUtil;
-import util.PriceUtil.PriceJson;
 import util.WebUtil;
 
 public class DeckEditorRow extends PPanel {
@@ -43,6 +43,7 @@ public class DeckEditorRow extends PPanel {
 	private String otherDeckName;
 	//private JLabel priceLabel;
 	private PButton priceLabel;
+	private CardLabel cardLabel;
 
 	public DeckEditorRow(DeckEditorView view, Deck deck) {
 		this(view, deck, 0, "");
@@ -215,6 +216,12 @@ public class DeckEditorRow extends PPanel {
         cardCombo.setMaximumSize(dim);
         updateComboColor();
 
+        cardLabel = null;
+        if(view.isShowFullCards() && cardName != null && CardUtil.exists(cardName)) {
+        	cardLabel = new CardLabel(cardName);
+        	cardLabel.setShowFullCard(true);
+        }
+
         priceLabel = new PLinkButton(getPriceText());
         priceLabel.setForeground(PriceUtil.PRICE_COLOR);
 		priceLabel.setFocusable(false);
@@ -248,6 +255,14 @@ public class DeckEditorRow extends PPanel {
         	add(moveButton, c);
         	c.gridx++;
         }
+
+        if(cardLabel != null) {
+        	c.gridy++;
+        	c.gridx = 2;
+        	c.insets(10, 0, 0, 0);
+        	add(cardLabel, c);
+        }
+
         c.insets(0, 10);
         c.weaken();
 
