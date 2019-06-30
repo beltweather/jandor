@@ -75,7 +75,7 @@ public class PriceUtil {
 
 	}
 
-	/*private static final class MultiverseIdentifier extends CollectionIdentifier {
+	private static final class MultiverseIdentifier extends CollectionIdentifier {
 
 		public MultiverseIdentifier(int multiverse_id) {
 			this.multiverse_id = multiverse_id;
@@ -83,12 +83,16 @@ public class PriceUtil {
 
 		public int multiverse_id;
 
-	}*/
+	}
 
 	private static final class NameIdentifier extends CollectionIdentifier {
 
-		public NameIdentifier(String name) {
-			this.name = name;
+		public NameIdentifier(Card card) {
+			if(card.isMultiName()) {
+				this.name = card.getMultiName();
+			} else {
+				this.name = card.getName();
+			}
 		}
 
 		public String name;
@@ -118,7 +122,7 @@ public class PriceUtil {
 
 	}
 
-	private static final int REQUEST_IDENTIFIER_LIMIT = 75;
+	private static final int REQUEST_IDENTIFIER_LIMIT = 75; // Actual is 75
 
 	private static void fetchPricesInternal(List<Card> cards, OnPriceFetchComplete onComplete) {
 		String url = "https://api.scryfall.com/cards/collection";
@@ -147,7 +151,11 @@ public class PriceUtil {
 	private static CollectionRequest toCollectionRequest(List<Card> cards) {
 		CollectionRequest request = new CollectionRequest();
 		for(Card card : cards) {
-			request.identifiers.add(new NameIdentifier(card.getName()));
+			if(card.isWeirdName()) {
+				request.identifiers.add(new MultiverseIdentifier(card.getMultiverseId()));
+			} else {
+				request.identifiers.add(new NameIdentifier(card));
+			}
 		}
 		return request;
 	}
@@ -174,7 +182,11 @@ public class PriceUtil {
 		Map<String, Card> cardsByName = new HashMap<>();
 
 		for(CollectionCard c : response.data) {
-			collectionCardsByName.put(c.name, c);
+			if(c.name.contains(" // ")) {
+				collectionCardsByName.put(c.name.split(" // ")[0], c);
+			} else {
+				collectionCardsByName.put(c.name, c);
+			}
 		}
 
 		for(Card c : cards) {

@@ -503,7 +503,7 @@ public class CardUtil {
 	}
 
 	public static boolean isWeirdName(String name) {
-		return !name.matches(".*[a-zA-Z_].*");
+		return !name.matches("^[a-zA-Z_\\-'\\s,\\(\\)!?\\.\\\"&:0-9]*$");
 	}
 
 	public static List<String> getCardAttributes() {
@@ -543,6 +543,10 @@ public class CardUtil {
 
 	public static boolean isSplit(CardJson info) {
 		return info.layout != null && (info.layout.equals("split") || info.layout.equals("aftermath"));
+	}
+
+	public static void main(String[] args) {
+		System.out.println(isWeirdName("Lim-Dûl's Vault"));
 	}
 
 }

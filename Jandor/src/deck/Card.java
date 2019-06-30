@@ -30,6 +30,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	private boolean transformed = false;
 	private Card transformCard = null;
 	private boolean commander = false;
+	private String multiname = null;
 
 	public Card() {
 		this(null);
@@ -501,6 +502,43 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 			return html.substring(6, html.length()-7);
 		}
 		return ImageUtil.getImageHtml(this);
+	}
+
+	public boolean isMultiName() {
+		return getCardInfo().names != null && getCardInfo().names.size() > 1;
+	}
+
+	public String getMultiName() {
+		if(multiname != null) {
+			return multiname;
+		}
+		if(!isMultiName()) {
+			return getName();
+		}
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for(String name : getCardInfo().names) {
+			if(first) {
+				sb.append(name);
+				first = false;
+			} else {
+				sb.append(" // " + name);
+			}
+			multiname = sb.toString();
+		}
+		return multiname;
+	}
+
+	public boolean isWeirdName() {
+		if(isMultiName()) {
+			for(String n : getCardInfo().names) {
+				if(CardUtil.isWeirdName(n)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return CardUtil.isWeirdName(name);
 	}
 
 }
