@@ -7,9 +7,11 @@ import session.User;
 
 public class VersionUtil {
 
-	public static final String VERSION = "2.4";
+	public static final String VERSION = "2.5";
+	public static final String DATE = "6/29/2019";
 
 	public static String MTG_JSON_VERSION = "4.3.2"; // Latest version when I last modified code
+
 
 	private VersionUtil() {}
 

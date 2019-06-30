@@ -20,10 +20,10 @@ public class PPanel extends JPanel implements MouseListener /*implements ICreate
 	private Component tooltipPanel;
 	private boolean showTooltip;
 	private JToolTip tooltip;
-	private ToolTipCreator creator; 
-	
+	private ToolTipCreator creator;
+
 	public G c;
-		
+
 	public PPanel() {
 		super(new GridBagLayout());
 		setOpaque(false);
@@ -32,32 +32,56 @@ public class PPanel extends JPanel implements MouseListener /*implements ICreate
 		init();
 		addMouseListener(this);
 	}
-	
+
 	public PPanel(Component comp) {
 		this();
 		addc(comp);
 	}
-	
+
 	private void init() {
 		setToolTipText(null);
 		showTooltip = false;
 	}
-	
+
 	public void fill() {
 		JUtil.fill(this, c);
 	}
-		
+
+	public void weaken() {
+		c.weaken();
+	}
+
+	public void strengthen() {
+		c.strengthen();
+	}
+
 	public void clear() {
 		removeAll();
 		c = G.c();
 	}
-	
+
 	public void addc(Component component) {
 		add(component, c);
 	}
-	
+
 	public void addcStrut() {
 		addc(Box.createHorizontalStrut(1));
+	}
+
+	public void up() {
+		c.gridy--;
+	}
+
+	public void down() {
+		c.gridy++;
+	}
+
+	public void left() {
+		c.gridx--;
+	}
+
+	public void right() {
+		c.gridx++;
 	}
 
 	@Override
@@ -80,19 +104,19 @@ public class PPanel extends JPanel implements MouseListener /*implements ICreate
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 	}
-	
+
 	/*@Override
 	public JToolTip createToolTip() {
 		if(tooltip != null) {
 			return tooltip;
 		}
-		
+
 		if(!showTooltip || creator == null) {
 			return new JToolTip();
 		}
-		
+
 		tooltip = new JToolTip() {
-			
+
 			@Override
 			public Dimension getPreferredSize() {
 				if (getLayout() != null) {
@@ -100,30 +124,30 @@ public class PPanel extends JPanel implements MouseListener /*implements ICreate
 			    }
 			    return super.getPreferredSize();
 			}
-			
+
 		};
-		
+
 		tooltipPanel = creator.create();
-		
+
 		tooltip.setComponent(this);
 		tooltip.setLayout(new GridBagLayout());
 		tooltip.setBackground(new Color(0, 0, 0, 0));
 		tooltip.setOpaque(false);
 		tooltip.setBorder(null);
 		tooltip.add(tooltipPanel, JUtil.gbc());
-		
+
 		return tooltip;
 	}*/
-	
+
 	/*@Override
 	public Point getToolTipLocation(MouseEvent e) {
 		if(tooltipPanel == null) {
 			return e.getPoint();
 		}
-		
+
 		return JUtil.fitOnScreen(e, tooltipPanel);
 	}*/
-	
+
 	/*public PPanel setShowTooltip(boolean showTooltip) {
 		this.showTooltip = showTooltip;
 		if(showTooltip) {
@@ -145,7 +169,7 @@ public class PPanel extends JPanel implements MouseListener /*implements ICreate
 	public ToolTipCreator getToolTipCreator() {
 		return creator;
 	}*/
-	
-	
-	
+
+
+
 }

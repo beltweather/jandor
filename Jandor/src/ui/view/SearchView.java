@@ -1,5 +1,6 @@
 package ui.view;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -7,45 +8,46 @@ import java.util.List;
 
 import javax.swing.JLabel;
 
-import search.CardSearchFakeTable;
-import search.CardSearchPanel;
-import search.CardSearchTableModel;
-import search.PageHandler;
-import search.SearchPanel;
-import search.SortHandler;
-import ui.pwidget.JUtil;
-import ui.pwidget.PButton;
-import ui.pwidget.PPanel;
-import ui.pwidget.PTableModel;
-import util.ImageUtil;
-import util.ShuffleType;
-import util.ShuffleUtil;
 import accordion.PAccordion;
 import accordion.PAccordionData;
 import accordion.PAccordionPanel;
 import deck.Card;
 import deck.Deck;
+import search.CardSearchFakeTable;
+import search.CardSearchPanel;
+import search.PageHandler;
+import search.SearchPanel;
+import search.SortHandler;
+import ui.pwidget.JUtil;
+import ui.pwidget.PButton;
+import ui.pwidget.PCheckBox;
+import ui.pwidget.PPanel;
+import ui.pwidget.PTableModel;
+import util.ImageUtil;
+import util.ShuffleType;
+import util.ShuffleUtil;
 
 public class SearchView extends JandorView {
-	
+
 	public static final String DEFAULT_TITLE = "Search";
-	
+
 	public static void addSearchView(PAccordion accordion) {
 		addSearchView(accordion, null);
 	}
-	
+
 	public static void addSearchView(PAccordion accordion, DeckEditorView parent) {
 		if(parent != null) {
 			parent.getAccordionData().getAccordionPanel().contractChildren();
 		}
-		
+
 		final PAccordionData searchViewData = new PAccordionData("Search");
 		final PAccordionData searchResultData = new PAccordionData("Results");
-		
+
 		SearchView searchView = new SearchView("Search", false) {
-		
+
 			@Override
 			public void handleResults(Deck results) {
+				super.handleResults(results);
 				if(results.size() == 0) {
 					searchResultData.getAccordionPanel().contract();
 					searchViewData.getAccordionPanel().expand();
@@ -54,9 +56,9 @@ public class SearchView extends JandorView {
 					searchViewData.getAccordionPanel().contract();
 				}
 			}
-			
+
 		};
-		
+
 		searchViewData.setComponent(searchView);
 		searchViewData.setDefaultExpanded(true);
 		searchViewData.setRemoveable(true);
@@ -64,28 +66,33 @@ public class SearchView extends JandorView {
 		searchResultData.setFooterComponent(searchView.getPageFooter());
 		searchResultData.setDefaultExpanded(false);
 		searchResultData.setRemoveable(false);
-		
+
 		if(parent != null) {
 			searchView.getSearchTable().setAddToDeck(true);
 			parent.linkView(searchView);
 		}
-			
+
 		accordion.add(searchViewData, parent == null? null : parent.getAccordionData());
 		accordion.add(searchResultData, searchViewData);
 	}
-	
+
 	protected CardSearchPanel searchPanel;
 	protected CardSearchFakeTable searchTable;
 	protected PageHandler<Card> pageHandler;
 	protected SortHandler sortHandler;
 	protected PPanel pageFooter;
-	
+	protected PPanel optionsPanel;
+	protected PCheckBox searchDeck;
+	protected PCheckBox searchSideboard;
+	protected boolean defaultSearchDeck = true;
+	protected boolean defaultSearchSideboard = true;
+
 	private boolean enableResultsListener = true;
-	
+
 	public SearchView(boolean embedded) {
 		this(DEFAULT_TITLE, embedded);
 	}
-	
+
 	public SearchView(String name, boolean embedded) {
 		super(name, true);
 		rebuild();
@@ -93,15 +100,19 @@ public class SearchView extends JandorView {
 
 	@Override
 	public void handleClosed() {
-
+		for(JandorView view : getLinkedViews()) {
+			if(view instanceof DeckEditorView) {
+				((DeckEditorView) view).setFilterByDeckAndSideboard(null);
+			}
+		}
 	}
 
 	@Override
 	protected void rebuild() {
 		removeAll();
-		
+
 		final PPanel pageHandlerPanel = new PPanel();
-		
+
 		searchTable = new CardSearchFakeTable() {
 
 			@Override
@@ -110,10 +121,10 @@ public class SearchView extends JandorView {
 					view.addCard(card, sideboard);
 				}
 			}
-			
+
 		};
 		final PTableModel model = searchTable.getModel();
-		
+
 		searchPanel = new CardSearchPanel() {
 
 			@Override
@@ -141,7 +152,7 @@ public class SearchView extends JandorView {
 						ImageUtil.cacheImageInBackground(cardsToCache, 0.4, searchTable);
 						model.setData(new Deck(pageItems));
 						searchTable.rebuild();
-						
+
 						revalidate();
 						PAccordionPanel panel = JUtil.getAccordionPanel(getSearchTable());
 						if(panel != null) {
@@ -149,41 +160,53 @@ public class SearchView extends JandorView {
 						}
 						sortHandler.setVisible(pageItems.size() > 0);
 					}
-					
+
 				};
-				
+
 				pageHandlerPanel.removeAll();
 				pageHandlerPanel.add(pageHandler);
 				pageHandler.triggerChange();
-				
+
 				if(enableResultsListener) {
 					SearchView.this.handleResults(results);
 				}
 			}
-			
+
 		};
-		
+
+		optionsPanel = new PPanel();
+		searchDeck = new PCheckBox("Search Deck", defaultSearchDeck);
+		searchDeck.addChangeListener((e) -> { defaultSearchDeck = searchDeck.isSelected(); });
+
+		searchSideboard = new PCheckBox("Search Sideboard", defaultSearchSideboard);
+		searchSideboard.addChangeListener((e) -> { defaultSearchSideboard = searchSideboard.isSelected(); });
+
+		optionsPanel.weaken();
+		optionsPanel.addc(searchDeck);
+		optionsPanel.right();
+		optionsPanel.addc(searchSideboard);
+
 		sortHandler = new SortHandler("Sort Results by") {
 
 			@Override
 			protected void handleSort(ShuffleType type) {
 				searchPanel.search();
 			}
-			
+
 		};
 		sortHandler.setVisible(false);
-		
+
 		if(pageFooter == null) {
 			pageFooter = new PPanel();
 		} else {
 			pageFooter.removeAll();
 			c.reset();
 		}
-		pageFooter.c.strengthen();
+		pageFooter.strengthen();
 		pageFooter.add(sortHandler, pageFooter.c);
-		pageFooter.c.gridx++;
+		pageFooter.right();
 		pageFooter.add(pageHandlerPanel, pageFooter.c);
-		
+
 		PButton addAllToDeck = new PButton("+ All Deck");
 		addAllToDeck.addActionListener(new ActionListener() {
 
@@ -211,9 +234,9 @@ public class SearchView extends JandorView {
 					}
 				}
 			}
-			
+
 		});
-		
+
 		PButton addAllToSideboard = new PButton("+ All Sideboard");
 		addAllToSideboard.addActionListener(new ActionListener() {
 
@@ -243,46 +266,76 @@ public class SearchView extends JandorView {
 					}
 				}
 			}
-			
+
 		});
-		
-		pageFooter.c.weaken();
-		pageFooter.c.gridx++;
+
+		pageFooter.weaken();
+		pageFooter.right();
 		pageFooter.addc(addAllToDeck);
-		pageFooter.c.gridx++;
+		pageFooter.right();
 		pageFooter.c.insets(0,5);
 		pageFooter.addc(addAllToSideboard);
-		
-		c.strengthen();
-		add(searchPanel, c);
-	
+
+		PPanel p = new PPanel();
+		p.weaken();
+		p.addc(searchPanel);
+		p.down();
+		p.addc(optionsPanel);
+		p.down();
+		p.fill();
+
+		strengthen();
+		addc(p);
+
 		enableResultsListener = false;
 		searchPanel.clearSearch();
 		enableResultsListener = true;
 	}
-	
+
 	public PPanel getPageFooter() {
 		return pageFooter;
 	}
-	
+
 	public SearchPanel getSearchPanel() {
 		return searchPanel;
 	}
-	
+
 	public CardSearchFakeTable getSearchTable() {
 		return searchTable;
 	}
-	
+
 	/**
 	 * Override this method as a listener for when results change
 	 */
 	public void handleResults(Deck results) {
-		
+		if(searchDeck.isSelected() && searchSideboard.isSelected()) {
+			for(JandorView view : getLinkedViews()) {
+				if(view instanceof DeckEditorView) {
+					((DeckEditorView) view).setFilterByDeckAndSideboard(results);
+				}
+			}
+		} else if(searchDeck.isSelected()) {
+			for(JandorView view : getLinkedViews()) {
+				if(view instanceof DeckEditorView) {
+					((DeckEditorView) view).setFilterByDeck(results);
+				}
+			}
+		} else if(searchSideboard.isSelected()) {
+			for(JandorView view : getLinkedViews()) {
+				if(view instanceof DeckEditorView) {
+					((DeckEditorView) view).setFilterBySideboard(results);
+				}
+			}
+		}
 	}
-	
+
 	@Override
 	public void reset() {
-		
+		for(JandorView view : getLinkedViews()) {
+			if(view instanceof DeckEditorView) {
+				((DeckEditorView) view).setFilterBySideboard(null);
+			}
+		}
 	}
 
 }

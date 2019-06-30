@@ -20,6 +20,7 @@ import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -197,6 +198,9 @@ public class DeckEditorView extends JandorView {
 	protected int deckId;
 	protected boolean ignoreNextSave = false;
 	protected boolean showPrice = isDefaultShowPrice();
+
+	protected Deck filterByDeck = null;
+	protected Deck filterBySideboard = null;
 
 	private static String toDeckName(int deckId) {
 		DeckHeader header = Session.getInstance().getDeckHeader(deckId);
@@ -873,8 +877,8 @@ public class DeckEditorView extends JandorView {
 			sideboardPanel.c.reset();
 		}
 
-		buildEditor(getDeckText(), deck, deckPanel, 4, "<html>&rarr;</html>", deck.getSideboard());
-		buildEditor(getSideboardText(), deck.getSideboard(), sideboardPanel, 1, "<html>&larr;</html>", deck);
+		buildEditor(getDeckText(), deck, deckPanel, 4, "<html>&rarr;</html>", deck.getSideboard(), filterByDeck);
+		buildEditor(getSideboardText(), deck.getSideboard(), sideboardPanel, 1, "<html>&larr;</html>", deck, filterBySideboard);
 
 		if(revalidate) {
 			deckPanel.revalidate();
@@ -974,7 +978,7 @@ public class DeckEditorView extends JandorView {
 
 	}
 
-	protected void buildEditor(final String title, final Deck deck, PPanel p, int defaultCardCountPerRow, final String otherDeckName, final Deck otherDeck) {
+	protected void buildEditor(final String title, final Deck deck, PPanel p, int defaultCardCountPerRow, final String otherDeckName, final Deck otherDeck, final Deck filterBy) {
 		if(deck == null) {
 			return;
 		}
@@ -1166,6 +1170,11 @@ public class DeckEditorView extends JandorView {
 				int count = cards.get(card);
 				total += count;
 				DeckEditorRow row = new DeckEditorRow(this, deck, count, card.getName(), otherDeckName, otherDeck);
+
+				if(filterBy != null && filterBy.getCount(card.getName()) > 0) {
+					row.setBorder(BorderFactory.createLineBorder(Color.GREEN));
+				}
+
 				p.add(row, p.c);
 				GlassPane gp = row.buildGlassPane();
 				p.add(gp, p.c);
@@ -1349,6 +1358,31 @@ public class DeckEditorView extends JandorView {
 		DeckEditorView.addDeckEditorView(getAccordion(), deckId, getAccordionData().getParent());
 		getAccordionData().getAccordionPanel().remove();
 		getAccordion().rebuild();
+	}
+
+	public void setFilterByDeck(Deck filterByDeck) {
+		this.filterByDeck = filterByDeck;
+
+		SwingUtilities.invokeLater(() -> {
+			rebuildDeckRows();
+		});
+	}
+
+	public void setFilterBySideboard(Deck filterBySideboard) {
+		this.filterBySideboard = filterBySideboard;
+
+		SwingUtilities.invokeLater(() -> {
+			rebuildDeckRows();
+		});
+	}
+
+	public void setFilterByDeckAndSideboard(Deck filterBy) {
+		this.filterByDeck = filterBy;
+		this.filterBySideboard = filterBy;
+
+		SwingUtilities.invokeLater(() -> {
+			rebuildDeckRows();
+		});
 	}
 
 	public static void main(String[] args) {
