@@ -29,7 +29,7 @@ public class WebUtil {
 
 	public static final String URL_MTG_JSON = "https://www.mtgjson.com";
 	public static final String URL_MTG_CHANGE_LOG = URL_MTG_JSON + "/json/version.json";
-	public static final String URL_MTG_JSON_SETS = URL_MTG_JSON + "/json/AllSets.json.zip";
+	public static final String URL_MTG_JSON_SETS = URL_MTG_JSON + "/json/AllPrintings.json.zip";
 	public static final String URL_MTG_JSON_CARDS = URL_MTG_JSON + "/json/AllCards.json.zip";
 
 	private static final String SCRAPE_START_VERSION = "\"version\": \"";

@@ -707,7 +707,9 @@ public class JUtil {
 		dialog.setContentPane(optionPane);
 		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialog.pack();
-		dialog.setLocation((parent.getWidth())/2 - dialog.getWidth()/2, (parent.getHeight())/2 - dialog.getHeight()/2);
+		if(parent != null) {
+			dialog.setLocation((parent.getWidth())/2 - dialog.getWidth()/2, (parent.getHeight())/2 - dialog.getHeight()/2);
+		}
 		//dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width)/2 - dialog.getWidth()/2, (Toolkit.getDefaultToolkit().getScreenSize().height)/2 - dialog.getHeight()/2);
 		return dialog;
 	}

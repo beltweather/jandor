@@ -7,10 +7,10 @@ import session.User;
 
 public class VersionUtil {
 
-	public static final String VERSION = "2.5";
-	public static final String DATE = "6/29/2019";
+	public static final String VERSION = "2.6";
+	public static final String DATE = "11/11/2019";
 
-	public static String MTG_JSON_VERSION = "4.3.2"; // Latest version when I last modified code
+	public static String MTG_JSON_VERSION = "4.6.0+20191110"; // Latest version when I last modified code
 
 
 	private VersionUtil() {}
