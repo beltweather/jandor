@@ -91,7 +91,7 @@ public class ImageUtil {
 		if(multiverseId == 461091) {
 			int j = 0;
 		}
-		return "https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=" + multiverseId;
+		return "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + multiverseId + "&type=card";
 	}
 
 	public static String getResourceUrl(String fileName) {
