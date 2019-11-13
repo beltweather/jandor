@@ -48,6 +48,7 @@ public class CardUtil {
 		bannedSets.add("UST");
 		bannedSets.add("PZ2");
 		bannedSets.add("PAL04");
+		bannedSets.add("PWAR");
 	}
 
 	private static Set<String> cardKeysWithValues = new LinkedHashSet<String>();

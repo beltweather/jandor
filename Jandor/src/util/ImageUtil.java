@@ -88,7 +88,10 @@ public class ImageUtil {
     	if(multiverseId != -1 && cachedImageFile.exists()) {
     		return cachedImageFile.toURI().toString();
     	}*/
-		return "https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + multiverseId + "&type=card";
+		if(multiverseId == 461091) {
+			int j = 0;
+		}
+		return "https://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=" + multiverseId;
 	}
 
 	public static String getResourceUrl(String fileName) {

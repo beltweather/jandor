@@ -2,10 +2,9 @@ package jackson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -35,7 +34,13 @@ public class AllSetsJson extends HashMap<String, SetJson> {
 		protected void cache() {
 			multiverseIdsByName = new HashMap<>();
 			cardsByName = new HashMap<>();
-			for(SetCardJson card : cards) {
+			Iterator<SetCardJson> it = cards.iterator();
+			while(it.hasNext()) {
+				SetCardJson card = it.next();
+				if(card.multiverseId == 0) {
+					it.remove();
+					continue;
+				}
 				if(!multiverseIdsByName.containsKey(card.name)) {
 					multiverseIdsByName.put(card.name, new ArrayList<Integer>(1));
 				}

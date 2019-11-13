@@ -120,7 +120,11 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public int getMultiverseId() {
-		return getSetCardInfo().multiverseId;
+		int multiverseId = getSetCardInfo().multiverseId;
+		if(multiverseId == 0) {
+			System.out.println("Warning: Multiverse ID not found for " + getName());
+		}
+		return multiverseId;
 	}
 
 	public boolean isLand() {
@@ -224,6 +228,9 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		if(set != null) {
 			sb.append("<br><span><i>" + set + " - " + getRarity() + "</i></span>");
 		}
+
+		//sb.append("<br><span><i>Multiverse ID: " + getMultiverseId() + "</i></span>");
+		//sb.append("<br><span><i>Image URL: " + getImageUrl() + "</i></span>");
 
 		if(text != null) {
 			if(insertImages) {
