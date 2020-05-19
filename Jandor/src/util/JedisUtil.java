@@ -17,9 +17,9 @@ public class JedisUtil {
 
 	//public static final String host = "redis-13983.c1.us-central1-2.gce.cloud.redislabs.com";
 	//public static final int port = 13983;
-	public static final String host = "redis-14460.c124.us-central1-1.gce.cloud.redislabs.com";
-	public static final int port = 14460;
-	public static final String password = "jandor88";
+	public static final String host = "redis-14622.c228.us-central1-1.gce.cloud.redislabs.com";
+	public static final int port = 14622;
+	public static final String password = "EpmLlaHietrvgJI3aTI5VokkMWVA3rbO";
 	public static final int timeout = 0;
 
 	private static JedisPool jedisPool;
