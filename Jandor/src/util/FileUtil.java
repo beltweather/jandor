@@ -17,6 +17,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -35,6 +36,7 @@ public class FileUtil {
 	public static final String RESOURCE_CARDS_LESS_JSONS = "AllCards-less.json";
 	public static final String RESOURCE_SETS_LESS_JSONS = "AllSets-less.json";
 	public static final String RESOURCE_MTG_JSON_VERSION = "mtg-json-version.txt";
+	public static final String RESOURCE_REDIS_PROPERTIES = "redis.properties";
 
 	public static final String DEFAULT_EXT = "dec";
 	private static final String DEFAULT_EXT_DESCRIPTION = "Apprentice Deck File (*.dec)";
@@ -263,6 +265,36 @@ public class FileUtil {
         }
 
 		return reader;
+	}
+
+	public static InputStream getResourceStream(String filename) {
+		InputStream input = null;
+
+		// If we have a copy of this resource in our external resources file,
+		// use this one. Otherwise, use the one from our internal resources folder.
+		// This allows the user to override resources by placing them in "Jandor-Data\Resources"
+		File externalFile = getExternalResourcesFile(filename);
+		if(externalFile != null && externalFile.exists()) {
+			try {
+				input = new FileInputStream(externalFile);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		} else {
+			input = Jandor.class.getResourceAsStream("/" + filename);
+		}
+
+		return input;
+	}
+
+	public static Properties getResourceAsProperties(String filename) {
+		Properties props = new Properties();
+		try {
+			props.load(getResourceStream(filename));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return props;
 	}
 
 	public static List<String> getLines(BufferedReader reader) {
