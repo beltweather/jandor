@@ -2,12 +2,17 @@ package ui.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,6 +43,7 @@ import ui.pwidget.PPanel;
 import util.ApprenticeUtil;
 import util.CardUtil;
 import util.DebugUtil;
+import util.DeckEncoder;
 import util.FileUtil;
 import util.IDUtil;
 import util.LoginUtil;
@@ -188,6 +194,39 @@ public class CollectionEditorView extends JandorView {
 
 		});
 
+		PButton decodeButton = new PButton("+ Deck by Code");
+
+		decodeButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					String encodedDeck = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+					encodedDeck = JUtil.showInputDialog(CollectionEditorView.this, "Add New Deck by Code", "Paste a deck code:", encodedDeck);
+					if(encodedDeck == null || encodedDeck.length() == 0) {
+						return;
+					}
+
+					Deck deck = DeckEncoder.decode(encodedDeck);
+					if(deck != null && deck.size() > 0) {
+						PAccordion accordion = getAccordion();
+						for(PAccordionPanel p : accordion.getAccordionPanels()) {
+							p.contract();
+						}
+						DeckEditorView deckEditorView = DeckEditorView.addDeckEditorView(accordion, CollectionEditorView.this);
+						deckEditorView.setDeck(deck);
+						accordion.rebuild();
+						deckEditorView.flagModified();
+					} else {
+						JUtil.showWarningDialog(CollectionEditorView.this, "Could Not Decode Deck", "Could not find a valid deck string to decode. Please copy a deck string to the clipboard and try again.");
+					}
+				} catch (HeadlessException | UnsupportedFlavorException | IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+
+		});
+
 		PButton draftButton = new PButton("+ New Set Draft");
 
 		draftButton.addActionListener(new ActionListener() {
@@ -207,6 +246,8 @@ public class CollectionEditorView extends JandorView {
 		pageHeader.c.weightx = 0.01;
 		pageHeader.c.gridx++;
 		pageHeader.addc(draftButton);
+		pageHeader.c.gridx++;
+		pageHeader.addc(decodeButton);
 		pageHeader.c.gridx++;
 		pageHeader.addc(deckButton);
 

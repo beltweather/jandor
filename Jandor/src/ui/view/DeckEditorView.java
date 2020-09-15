@@ -3,6 +3,9 @@ package ui.view;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -17,6 +20,7 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -52,6 +56,7 @@ import ui.pwidget.PScrollPane;
 import ui.pwidget.PTabPane;
 import ui.pwidget.PTextField;
 import util.CardUtil;
+import util.DeckEncoder;
 import util.IDUtil;
 import util.ImageUtil;
 import util.PriceUtil;
@@ -195,6 +200,7 @@ public class DeckEditorView extends JandorView {
 	protected PButton highlanderButton;
 	protected PButton editDraftButton;
 	protected PButton editDeckButton;
+	protected PButton encodeButton;
 	protected PCheckBox showPriceCheck;
 	protected PCheckBox showFullCardsCheck;
 	protected PPanel commanderPanel;
@@ -376,6 +382,16 @@ public class DeckEditorView extends JandorView {
 
 			});
 
+			encodeButton = new PButton("Deck Code");
+			encodeButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					encode();
+				}
+
+			});
+
 			editDraftButton = new PButton("Edit as Draft");
 			editDraftButton.addActionListener(new ActionListener() {
 
@@ -539,6 +555,8 @@ public class DeckEditorView extends JandorView {
 			headerPanel.addc(saveButton);
 			headerPanel.c.gridx++;
 			headerPanel.addc(copyButton);
+			headerPanel.c.gridx++;
+			headerPanel.addc(encodeButton);
 			headerPanel.c.gridx++;
 			headerPanel.addc(clearButton);
 			headerPanel.c.gridx++;
@@ -974,6 +992,43 @@ public class DeckEditorView extends JandorView {
 		}
 		DeckEditorView.addDeckEditorView(accordion, copyHeader.getId(), (CollectionEditorView) getAccordionData().getParent().getComponent());
 		accordion.rebuild();
+	}
+
+	private void copyToClipboard(String s) {
+		StringSelection stringSelection = new StringSelection(s);
+		Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clpbrd.setContents(stringSelection, null);
+	}
+
+	public void encode() {
+		String encoded = DeckEncoder.encode(deck);
+		copyToClipboard(encoded);
+
+		PPanel p = new PPanel();
+		JTextArea area = new JTextArea(5, 20);
+		area.setLineWrap(true);
+		area.setMargin(new Insets(10,10,10,10));
+		area.setText(encoded);
+		area.setEditable(false);
+
+		PButton copyButton = new PButton("Copy to Clipboard");
+
+		p.addc(new PScrollPane(area));
+		p.down();
+		p.addc(copyButton);
+
+		p.revalidate();
+
+		JDialog dialog = JUtil.buildBlankDialog(this, (deck.getName() == null ? "Untitled" : deck.getName()) + " Deck Code", p);
+		dialog.setSize(300, 100 + area.getHeight());
+
+		copyButton.addActionListener((e) -> {
+			copyToClipboard(area.getText());
+			dialog.setVisible(false);
+		});
+
+		area.selectAll();
+		dialog.setVisible(true);
 	}
 
 	public void clear() {

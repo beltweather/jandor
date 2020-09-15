@@ -1,5 +1,6 @@
 package deck;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,19 @@ public class CardList extends RenderableList<Card> {
 			countsByCard.put(card, counts.get(name));
 		}
 		return countsByCard;
+	}
+
+	public Map<Integer, List<Card>> getCardsByCount() {
+		Map<Integer, List<Card>> cardsByCount = new LinkedHashMap<Integer, List<Card>>();
+		Map<Card, Integer> countsByCard = getCountsByCard();
+		for(Card card : countsByCard.keySet()) {
+			int count = countsByCard.get(card);
+			if(!cardsByCount.containsKey(count)) {
+				cardsByCount.put(count, new ArrayList<>());
+			}
+			cardsByCount.get(count).add(card);
+		}
+		return cardsByCount;
 	}
 
 	public int getMaxConvertedManaCost() {

@@ -120,6 +120,11 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 	}
 
 	public int getMultiverseId() {
+		if(getSetCardInfo() == null) {
+			getSetCardInfo();
+			System.out.println("Warning: Multiverse ID not found for " + getName() + " because no set info found");
+			return 0;
+		}
 		int multiverseId = getSetCardInfo().multiverseId;
 		if(multiverseId == 0) {
 			System.out.println("Warning: Multiverse ID not found for " + getName());
@@ -404,6 +409,7 @@ public class Card extends CardRenderer implements IRenderable<Card> {
 		SetCardJson setCard = getSetCardInfo(set);
 		if(setCard == null) {
 			System.out.println("No set info for " + name);
+			getSetCardInfo(set);
 		}
 		if(setCard == null) {
 			return null;

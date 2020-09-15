@@ -680,6 +680,10 @@ public class JUtil {
 		 JOptionPane.showMessageDialog(SwingUtilities.getRoot(parent), message, title, JOptionPane.PLAIN_MESSAGE);
 	}
 
+	public static void showMessageDialog(Component parent, String title, Component component) {
+		 JOptionPane.showMessageDialog(SwingUtilities.getRoot(parent), component, title, JOptionPane.PLAIN_MESSAGE);
+	}
+
 	public static String showInputDialog(Component parent, String title, String message, String defaultText) {
 		Object obj = JOptionPane.showInputDialog(SwingUtilities.getRoot(parent), message, title, JOptionPane.PLAIN_MESSAGE, null, null, defaultText);
 		if(obj == null) {
@@ -708,7 +712,8 @@ public class JUtil {
 		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialog.pack();
 		if(parent != null) {
-			dialog.setLocation((parent.getWidth())/2 - dialog.getWidth()/2, (parent.getHeight())/2 - dialog.getHeight()/2);
+			Point p = parent.getLocationOnScreen();
+			dialog.setLocation((int) p.getX() + (parent.getParent().getWidth())/2 - dialog.getWidth()/2, (int) p.getY() + (parent.getParent().getHeight())/2 - dialog.getHeight()/2);
 		}
 		//dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width)/2 - dialog.getWidth()/2, (Toolkit.getDefaultToolkit().getScreenSize().height)/2 - dialog.getHeight()/2);
 		return dialog;

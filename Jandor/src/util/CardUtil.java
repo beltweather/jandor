@@ -92,6 +92,7 @@ public class CardUtil {
 	private static AllCardsJson allCardsJson = null;
 	private static List<String> allCardNames = new ArrayList<String>();
 	private static Map<String, String> cardNamesByLowerCase = new HashMap<String, String>();
+	private static Map<Integer, String> cardNamesByMultiverseId = new HashMap<Integer, String>();
 	private static List<String> cardAttributes = null;
 	private static Map<String, HashSet<String>> valuesByKey = new HashMap<String, HashSet<String>>();
 
@@ -271,6 +272,11 @@ public class CardUtil {
 		top: for(String name : allCardsJson.keySet()) {
 			CardJson info = allCardsJson.get(name);
 			cardNamesByLowerCase.put(name.toLowerCase(), name);
+			for(List<Integer> multiverseIds : info.multiverseIdsBySetCode.values()) {
+				for(Integer multiverseId : multiverseIds) {
+					cardNamesByMultiverseId.put(multiverseId, name);
+				}
+			}
 
 			if(info.types != null) {
 				for(String type : info.types) {
@@ -325,6 +331,13 @@ public class CardUtil {
 			}
 		}
 		return false;
+	}
+
+	public static String getCardName(int multiverseId) {
+		if(cardNamesByMultiverseId.containsKey(multiverseId)) {
+			return cardNamesByMultiverseId.get(multiverseId);
+		}
+		return null;
 	}
 
 	public static SetCardJson getSetCardInfo(Card card) {
