@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -42,6 +43,11 @@ public class PButton extends JButton {
 	public PButton(String text) {
 		super(text);
 		init();
+	}
+
+	public PButton(String text, ActionListener actionListener) {
+		super(text);
+		addActionListener(actionListener);
 	}
 
 	private void init() {

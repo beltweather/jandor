@@ -712,10 +712,12 @@ public class JUtil {
 		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialog.pack();
 		if(parent != null) {
-			Point p = parent.getLocationOnScreen();
-			dialog.setLocation((int) p.getX() + (parent.getParent().getWidth())/2 - dialog.getWidth()/2, (int) p.getY() + (parent.getParent().getHeight())/2 - dialog.getHeight()/2);
+			Component root = SwingUtilities.getRoot(parent);
+			Point p = root.getLocationOnScreen();
+			int x = (int) p.getX() + (root.getWidth())/2 - dialog.getWidth()/2;
+			int y = (int) p.getY() + (root.getHeight())/2 - dialog.getHeight()/2;
+			dialog.setLocation(x, y);
 		}
-		//dialog.setLocation((Toolkit.getDefaultToolkit().getScreenSize().width)/2 - dialog.getWidth()/2, (Toolkit.getDefaultToolkit().getScreenSize().height)/2 - dialog.getHeight()/2);
 		return dialog;
 	}
 

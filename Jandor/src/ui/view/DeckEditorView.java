@@ -994,41 +994,8 @@ public class DeckEditorView extends JandorView {
 		accordion.rebuild();
 	}
 
-	private void copyToClipboard(String s) {
-		StringSelection stringSelection = new StringSelection(s);
-		Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clpbrd.setContents(stringSelection, null);
-	}
-
 	public void encode() {
-		String encoded = DeckEncoder.encode(deck);
-		copyToClipboard(encoded);
-
-		PPanel p = new PPanel();
-		JTextArea area = new JTextArea(5, 20);
-		area.setLineWrap(true);
-		area.setMargin(new Insets(10,10,10,10));
-		area.setText(encoded);
-		area.setEditable(false);
-
-		PButton copyButton = new PButton("Copy to Clipboard");
-
-		p.addc(new PScrollPane(area));
-		p.down();
-		p.addc(copyButton);
-
-		p.revalidate();
-
-		JDialog dialog = JUtil.buildBlankDialog(this, (deck.getName() == null ? "Untitled" : deck.getName()) + " Deck Code", p);
-		dialog.setSize(300, 100 + area.getHeight());
-
-		copyButton.addActionListener((e) -> {
-			copyToClipboard(area.getText());
-			dialog.setVisible(false);
-		});
-
-		area.selectAll();
-		dialog.setVisible(true);
+		DeckEncoder.showEncodeDialog(this, deck);
 	}
 
 	public void clear() {

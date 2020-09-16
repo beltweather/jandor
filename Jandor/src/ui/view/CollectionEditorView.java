@@ -200,14 +200,7 @@ public class CollectionEditorView extends JandorView {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {
-					String encodedDeck = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-					encodedDeck = JUtil.showInputDialog(CollectionEditorView.this, "Add New Deck by Code", "Paste a deck code:", encodedDeck);
-					if(encodedDeck == null || encodedDeck.length() == 0) {
-						return;
-					}
-
-					Deck deck = DeckEncoder.decode(encodedDeck);
+				DeckEncoder.showDecodeDialog(CollectionEditorView.this, (deck) -> {
 					if(deck != null && deck.size() > 0) {
 						PAccordion accordion = getAccordion();
 						for(PAccordionPanel p : accordion.getAccordionPanels()) {
@@ -217,12 +210,12 @@ public class CollectionEditorView extends JandorView {
 						deckEditorView.setDeck(deck);
 						accordion.rebuild();
 						deckEditorView.flagModified();
+						return true;
 					} else {
 						JUtil.showWarningDialog(CollectionEditorView.this, "Could Not Decode Deck", "Could not find a valid deck string to decode. Please copy a deck string to the clipboard and try again.");
+						return false;
 					}
-				} catch (HeadlessException | UnsupportedFlavorException | IOException e1) {
-					e1.printStackTrace();
-				}
+				});
 			}
 
 		});

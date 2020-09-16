@@ -1,21 +1,47 @@
 package util;
 
+import java.awt.Component;
+import java.awt.HeadlessException;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JDialog;
+import javax.swing.JTextArea;
+
 import deck.Card;
 import deck.Deck;
+import jackson.AllCardsJson.CardJson;
+import run.Jandor;
+import ui.pwidget.JUtil;
+import ui.pwidget.PButton;
+import ui.pwidget.PCheckBox;
+import ui.pwidget.PPanel;
+import ui.pwidget.PScrollPane;
 
 public class DeckEncoder {
 
+	private static final int DIGIT_COUNT = 2;
 	private static List<String> CHAR_SET;
+
+	private static List<Integer> UNIQUE_MULTIVERSE_IDS;
+	private static Map<Integer, Integer> INDICES_BY_MULTIVERSE_ID;
 
 	// Uncomment this to use hard-coded character set
 	static {
+		String CHARS = "!\"#$%&'()*+,./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ";
 		//String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzªµºÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ`~!@#$%^&*()_-+={}[]\\|:;\"'?/>.<,";
-		String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzªµºÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ";
+		//String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzªµºÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ";
 		//String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		List<String> chars = new ArrayList<>();
 		for(int i = 0; i < CHARS.length(); i++) {
@@ -37,6 +63,48 @@ public class DeckEncoder {
 	}*/
 
 	private DeckEncoder() {}
+
+	private static void initUniqueMultiverseIds() {
+		List<Integer> uniqueMultiverseIds = new ArrayList<>();
+		Map<Integer, Integer> indicesByMultiverseId = new HashMap<>();
+		Map<Integer, List<Integer>> multiverseIdsByUniqueMultiverseId = new HashMap<>();
+		for(String name : CardUtil.getAllCardNames()) {
+			List<Integer> multiverseIds = new ArrayList<>();
+			CardJson info = CardUtil.getCardInfo(name);
+			for(List<Integer> ids : info.multiverseIdsBySetCode.values()) {
+				multiverseIds.addAll(ids);
+			}
+			multiverseIds.sort((a, b) -> a - b);
+			if(multiverseIds.size() > 0) {
+				uniqueMultiverseIds.add(multiverseIds.get(0));
+				multiverseIdsByUniqueMultiverseId.put(multiverseIds.get(0), multiverseIds);
+			}
+		}
+		uniqueMultiverseIds.sort((a, b) -> a - b);
+		UNIQUE_MULTIVERSE_IDS = uniqueMultiverseIds;
+
+		for(int i = 0 ; i < uniqueMultiverseIds.size(); i++) {
+			int uniqueMultiverseId = uniqueMultiverseIds.get(i);
+			for(int mId : multiverseIdsByUniqueMultiverseId.get(uniqueMultiverseId)) {
+				indicesByMultiverseId.put(mId, i);
+			}
+		}
+		INDICES_BY_MULTIVERSE_ID = indicesByMultiverseId;
+	}
+
+	public static int getIndexFromMultiverseId(int multiverseId) {
+		if(INDICES_BY_MULTIVERSE_ID == null) {
+			initUniqueMultiverseIds();
+		}
+		return INDICES_BY_MULTIVERSE_ID.get(multiverseId);
+	}
+
+	public static int getMultiverseIdFromIndex(int index) {
+		if(INDICES_BY_MULTIVERSE_ID == null) {
+			initUniqueMultiverseIds();
+		}
+		return UNIQUE_MULTIVERSE_IDS.get(index);
+	}
 
 	public static String toASCII(int n) {
 		return Character.toString((char) n);
@@ -131,7 +199,7 @@ public class DeckEncoder {
 			sb.append(fromDigitToCharSet(n));
 		}
 		String charSetStr = sb.toString();
-		while(charSetStr.length() < 3) {
+		while(charSetStr.length() < DIGIT_COUNT) {
 			charSetStr = getCharSetZero() + charSetStr;
 		}
 		return charSetStr;
@@ -180,7 +248,7 @@ public class DeckEncoder {
 				sb.append(count);
 			}
 			for(Card card : cardsByCount.get(count)) {
-				sb.append(toCharSetString(card.getMultiverseId()));
+				sb.append(toCharSetString(getIndexFromMultiverseId(card.getMultiverseId())));
 			}
 		}
 		String e = sb.toString();
@@ -191,7 +259,7 @@ public class DeckEncoder {
 	}
 
 	private static void add(Deck deck, String count, String code) {
-		String name = CardUtil.getCardName(fromCharSet(code));
+		String name = CardUtil.getCardName(getMultiverseIdFromIndex(fromCharSet(code)));
 		if(name != null) {
 			deck.add(new Card(name), Integer.valueOf(count));
 		}
@@ -235,7 +303,7 @@ public class DeckEncoder {
 				code += c;
 			}
 
-			if(code.length() == 3) {
+			if(code.length() == DIGIT_COUNT) {
 				add(deck, num, code);
 				code = "";
 			}
@@ -244,12 +312,155 @@ public class DeckEncoder {
 		String sideStr = toks.length > 1 ? toks[1] : null;
 		if(sideStr != null) {
 			deck.setSideboard(decode(sideStr, 1));
+		} else {
+			deck.setSideboard(new Deck());
 		}
 
 		return deck;
 	}
 
+	private static void copyToClipboard(String s) {
+		StringSelection stringSelection = new StringSelection(s);
+		Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clpbrd.setContents(stringSelection, null);
+	}
+
+	private static String readFromClipboard() {
+		try {
+			return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+		} catch (HeadlessException | UnsupportedFlavorException | IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static void showEncodeDialog(Component parent, Deck deck) {
+		String encoded = DeckEncoder.encode(deck);
+		copyToClipboard(encoded);
+
+		PPanel p = new PPanel();
+		JTextArea area = new JTextArea(5, 30);
+		area.setLineWrap(true);
+		area.setMargin(new Insets(10,10,10,10));
+		area.setText(encoded);
+		area.setEditable(false);
+
+		PButton copyButton = new PButton("Copy to Clipboard");
+		PCheckBox sbCheck = new PCheckBox("Include Sideboard", true);
+		sbCheck.addActionListener((e) -> {
+			String code;
+			if(sbCheck.isSelected()) {
+				code = DeckEncoder.encode(deck);
+			} else {
+				Deck copy = deck.copyRenderable();
+				copy.setSideboard(null);
+				code = DeckEncoder.encode(copy);
+			}
+			copyToClipboard(code);
+			area.setText(code);
+			area.selectAll();
+		});
+
+		p.addc(new PScrollPane(area));
+		p.c.insets(10);
+		p.down();
+		p.addc(sbCheck);
+		p.down();
+		p.addc(copyButton);
+		p.down();
+		p.fill();
+
+		p.revalidate();
+
+		JDialog dialog = JUtil.buildBlankDialog(parent, (deck.getName() == null ? "Untitled" : deck.getName()) + " Deck Code", p);
+		dialog.setSize(400, 150 + area.getHeight());
+
+		copyButton.addActionListener((e) -> {
+			copyToClipboard(area.getText());
+			dialog.setVisible(false);
+		});
+
+		area.selectAll();
+		dialog.setVisible(true);
+	}
+
+	public static interface OnAddDeck {
+
+		public boolean onAdd(Deck deck);
+
+	}
+
+	public static void showDecodeDialog(Component parent, OnAddDeck onAddDeck) {
+		String encoded = readFromClipboard();
+
+		PPanel p = new PPanel();
+		JTextArea area = new JTextArea(5, 30);
+		area.setLineWrap(true);
+		area.setMargin(new Insets(10,10,10,10));
+		area.setText(encoded);
+
+		PButton addButton = new PButton("Create Deck");
+		PButton cancelButton = new PButton("Cancel");
+		p.addc(new PScrollPane(area));
+		p.c.insets(10);
+		p.down();
+
+		PPanel bp = new PPanel();
+		bp.addc(addButton);
+		bp.c.insets(0, 10);
+		bp.right();
+		bp.addc(cancelButton);
+
+		p.addc(bp);
+		p.left();
+		p.down();
+		p.fill();
+
+		p.revalidate();
+
+		JDialog dialog = JUtil.buildBlankDialog(parent, "Add Deck by Code", p);
+		dialog.setSize(400, 100 + area.getHeight());
+
+		addButton.addActionListener((e) -> {
+			Deck deck = DeckEncoder.decode(area.getText());
+			if(onAddDeck.onAdd(deck)) {
+				dialog.setVisible(false);
+			}
+		});
+
+		cancelButton.addActionListener((e) -> {
+			dialog.setVisible(false);
+		});
+
+		area.selectAll();
+		dialog.setVisible(true);
+	}
+
 	public static void main(String[] arg) {
+
+		Jandor.init();
+		System.out.println("Card Names: " + CardUtil.getAllCardNames().size());
+
+		List<Integer> originalMultiverseIds = new ArrayList<>();
+		for(String name : CardUtil.getAllCardNames()) {
+			List<Integer> multiverseIds = new ArrayList<>();
+			CardJson info = CardUtil.getCardInfo(name);
+			for(List<Integer> ids : info.multiverseIdsBySetCode.values()) {
+				multiverseIds.addAll(ids);
+			}
+			multiverseIds.sort((a, b) -> a - b);
+			if(multiverseIds.size() > 0) {
+				originalMultiverseIds.add(multiverseIds.get(0));
+			} else {
+				int j = 0;
+			}
+		}
+		originalMultiverseIds.sort((a, b) -> a - b);
+
+		for(int i = 0; i < originalMultiverseIds.size(); i++) {
+			System.out.println(i + ": " + originalMultiverseIds.get(i));
+		}
+
 		/*System.out.println("There are " + CHAR_SET.size() + " unique characters");
 
 		StringBuilder cs = new StringBuilder();
@@ -290,15 +501,26 @@ public class DeckEncoder {
 		System.out.println(sb.toString());
 		System.out.println(essbee.toString());*/
 
-		int maxLength = 0;
+		/*int maxLength = 0;
 		for(int i = 0; i < 1000000; i++) {
 			String s = toCharSetString(i);
 			if(s.length() > maxLength) {
 				maxLength = s.length();
 			}
 			//System.out.println(i + ": " + s);
+		}*/
+		//System.out.println("Max length: " + maxLength);
+
+		/*StringBuilder sb = new StringBuilder();
+		for(int i = 33; i < 256; i++) {
+			if(i == 45 || i == 127 || (i >= 48 && i <= 57)) {
+				continue;
+			}
+			sb.append(toASCII(i));
 		}
-		System.out.println("Max length: " + maxLength);
+		System.out.println(sb);*/
+
+
 	}
 
 	// Each multiverseID gets 3 characters exactly
